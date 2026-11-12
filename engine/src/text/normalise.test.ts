@@ -126,6 +126,13 @@ describe('normaliseText', () => {
     expect(normaliseText('one one')).toBe('1 1');
   });
 
+  it('reads spoken decimals ("nine point nine" -> 9.9)', () => {
+    expect(normaliseText('nine point nine percent')).toBe('9.9 percent');
+    expect(normaliseText('zero point five milligrams')).toBe('0.5 milligrams');
+    expect(normaliseText('two point two five')).toBe('2.25');
+    expect(normaliseText('the main point is this')).toBe('the main point is this');
+  });
+
   it('drops pure disfluencies so they cannot split or create numbers', () => {
     expect(normaliseText('five, um, hundred milligrams')).toBe('500 milligrams');
     expect(normaliseText('uh take it er twice daily')).toBe('take it twice daily');

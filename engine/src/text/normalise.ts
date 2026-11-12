@@ -221,5 +221,10 @@ export function normaliseText(text: string): string {
 
   result = numberWordsToDigits(result);
 
+  // Spoken decimals: "9 point 9" -> "9.9", "2 point 2 5" -> "2.25" (single digits after "point").
+  result = result.replace(/\b(\d+) point ((?:\d )*\d)\b(?!\.)/g, (_, whole: string, frac: string) =>
+    `${whole}.${frac.replace(/ /g, '')}`
+  );
+
   return result.replace(/\s+/g, ' ').trim();
 }

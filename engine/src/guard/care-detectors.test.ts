@@ -248,3 +248,10 @@ describe('Property PB6: Flag completeness', () => {
     );
   });
 });
+
+describe('numberDetector spoken units', () => {
+  it('flags micrograms and millilitres with their unit', () => {
+    const tokens = numberDetector.detect(makeSegment(0, 0, 4000, 'one hundred micrograms or five millilitres'));
+    expect(tokens.map((t) => t.value)).toEqual(['100 micrograms', '5 millilitres']);
+  });
+});

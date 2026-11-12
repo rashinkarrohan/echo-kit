@@ -73,7 +73,7 @@ export const numberDetector: EntityDetector = {
     const tokens: FlaggedToken[] = [];
 
     // Pattern: digit(s) with optional decimal and optional unit
-    const units = ['mg', 'mcg', 'g', 'ml', 'units?', 'tablets?', 'capsules?', 'drops?', 'puffs?', 'milligrams?', 'grams?'];
+    const units = ['mg', 'mcg', 'g', 'ml', 'units?', 'tablets?', 'capsules?', 'drops?', 'puffs?', 'milligrams?', 'micrograms?', 'millilitres?', 'milliliters?', 'grams?'];
     const unitPattern = units.join('|');
     
     // Match number with unit or bare number
