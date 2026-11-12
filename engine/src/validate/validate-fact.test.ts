@@ -238,6 +238,112 @@ describe('validateFact', () => {
     });
   });
 
+  describe('Anchor must point at the right audio', () => {
+    it('rejects a quote that is in the transcript but not in the referenced segments', () => {
+      const raw: RawFact = {
+        key: 'follow_up',
+        fields: { when: 'in 2 weeks' },
+        quote: 'come back in two weeks',
+        segmentIds: ['seg-0001']
+      };
+      expect(validateFact(raw, segments).ok).toBe(false);
+    });
+
+    it('rejects non-contiguous segment ids', () => {
+      const raw: RawFact = {
+        key: 'test',
+        fields: { value: 'metformin' },
+        quote: 'metformin',
+        segmentIds: ['seg-0001', 'seg-0003']
+      };
+      expect(validateFact(raw, segments).ok).toBe(false);
+    });
+
+    it('rejects an empty quote or empty segment list', () => {
+      expect(
+        validateFact({ key: 'k', fields: {}, quote: '  ', segmentIds: ['seg-0001'] }, segments).ok
+      ).toBe(false);
+      expect(
+        validateFact({ key: 'k', fields: {}, quote: 'metformin', segmentIds: [] }, segments).ok
+      ).toBe(false);
+    });
+
+    it('keeps the original wording of the quote for display', () => {
+      const result = validateFact(
+        {
+          key: 'medicine',
+          fields: { name: 'metformin' },
+          quote: 'metformin five hundred milligrams',
+          segmentIds: ['seg-0001']
+        },
+        segments
+      );
+      expect(result.ok && result.value.anchor.quote).toBe('metformin five hundred milligrams');
+    });
+  });
+
+  describe('PB5 enforced: every number in fields appears in the quote', () => {
+    it('rejects a fact whose field number is missing from its quote', () => {
+      const raw: RawFact = {
+        key: 'medicine',
+        fields: { name: 'metformin', dose: '1000 mg' },
+        quote: 'metformin five hundred milligrams',
+        segmentIds: ['seg-0001']
+      };
+      expect(validateFact(raw, segments).ok).toBe(false);
+    });
+
+    it('property: an accepted fact never carries a number absent from its quote', () => {
+      fc.assert(
+        fc.property(fc.integer({ min: 0, max: 5000 }), (n) => {
+          const raw: RawFact = {
+            key: 'medicine',
+            fields: { name: 'metformin', dose: `${n} milligrams` },
+            quote: 'metformin five hundred milligrams',
+            segmentIds: ['seg-0001']
+          };
+          const result = validateFact(raw, segments);
+          expect(result.ok).toBe(n === 500);
+        }),
+        { numRuns: 200 }
+      );
+    });
+  });
+
+  describe('PB3 property: filler words never create new accepted facts', () => {
+    const vocab = ['take', 'metformin', 'five', 'hundred', 'milligrams', 'twice', 'daily', 'after', 'food', 'come', 'back'];
+    // Pure disfluencies only; normaliseText drops them. Real words such as "like" are never dropped.
+    const fillers = ['um', 'uh', 'er', 'erm', 'hmm', 'Um,', 'uh...'];
+
+    it('accepted(noisy) is a subset of accepted(clean)', () => {
+      fc.assert(
+        fc.property(
+          fc.array(fc.constantFrom(...vocab), { minLength: 1, maxLength: 4 }),
+          fc.array(fc.nat({ max: 30 }), { maxLength: 5 }),
+          fc.constantFrom(...fillers),
+          (quoteWords, positions, filler) => {
+            const clean = segments;
+            const noisy = clean.map((s) => {
+              const words = s.text.split(' ');
+              for (const p of positions) words.splice(p % (words.length + 1), 0, filler);
+              return { ...s, text: words.join(' ') };
+            });
+            const raw: RawFact = {
+              key: 'test',
+              fields: {},
+              quote: quoteWords.join(' '),
+              segmentIds: ['seg-0001', 'seg-0002']
+            };
+            if (validateFact(raw, noisy).ok) {
+              expect(validateFact(raw, clean).ok).toBe(true);
+            }
+          }
+        ),
+        { numRuns: 300 }
+      );
+    });
+  });
+
   describe('Segment validation', () => {
     it('rejects if segment IDs not found', () => {
       const raw: RawFact = {
