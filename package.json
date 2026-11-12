@@ -1,0 +1,27 @@
+{
+  "name": "echo-kit",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "pnpm -r test",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "pnpm -r typecheck",
+    "evals": "pnpm --filter @echo/evals start",
+    "dev:care": "pnpm --filter echo-care dev",
+    "dev:cover": "pnpm --filter echo-cover dev",
+    "ci:check-gitignore": "node scripts/check-gitignore.mjs"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "8.18.2",
+    "@typescript-eslint/parser": "8.18.2",
+    "eslint": "9.17.0",
+    "eslint-config-prettier": "9.1.0",
+    "eslint-plugin-prettier": "5.2.1",
+    "prettier": "3.4.2",
+    "typescript": "5.7.2",
+    "vitest": "2.1.8"
+  }
+}

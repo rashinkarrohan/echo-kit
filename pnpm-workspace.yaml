@@ -1,0 +1,14 @@
+packages:
+  - "engine"
+  - "ui"
+  - "apps/*"
+  - "evals"
+allowBuilds:
+  esbuild: true
+minimumReleaseAgeExclude:
+  - "@babel/helper-module-transforms@7.29.14"
+  - "@babel/traverse@7.29.14"
+  - "@babel/generator@7.29.14"
+  - "@babel/helper-string-parser@7.29.14"
+  - "@babel/parser@7.29.14"
+  - "@babel/types@7.29.14"

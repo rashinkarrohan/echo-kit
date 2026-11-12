@@ -1,0 +1,2 @@
+# Design: Echo Cover
+Vite + React app using `@echo/ui` (skin `cover`) and `@echo/engine`. Routes: `/consent`, `/questions`, `/record`, `/compare`, `/confirm`, `/trust`. Schema: `apps/echo-cover/schemas/hearing-aid-sale.yaml` enabling detectors `money`, `percent`, `duration`, `commission`. `compareQuotes` from the engine produces the table; the confirm message is plain text built from facts and Not discussed items.

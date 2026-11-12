@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+.turbo/
+
+# Local environment
+.env
+.env.local
+.env.*.local
+
+# OS artefacts
+.DS_Store
+Thumbs.db
+
+# Editor state
+*.swp
+*.swo
+.vscode/settings.json
+
+# Private (never commit)
+private/
+
+# Playwright
+test-results/
+playwright-report/
+
+# Vitest coverage
+coverage/
+
+# pnpm
+.pnpm-debug.log
+
+# NOTE: .kiro/ must NEVER appear in .gitignore — it is required by the Kiroween rules.

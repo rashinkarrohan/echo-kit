@@ -1,0 +1,2 @@
+# Design: Echo Care
+Vite + React app using `@echo/ui` (skin `care`: card-based, calm, single column) and `@echo/engine`. Routes: `/consent`, `/doctor-card`, `/record`, `/read-back`, `/receipt`, `/pharmacy`, `/label`, `/share`, `/trust`. State comes from `ConversationSession` events (`caption`, `flags`, `receipt`, `error`). Schemas live in `apps/echo-care/schemas/` (`doctor-visit.yaml`, `pharmacy-counter.yaml`). No shared logic is copied from the other app; anything shared belongs in `engine/` or `ui/`.

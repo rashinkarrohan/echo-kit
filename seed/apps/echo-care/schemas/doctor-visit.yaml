@@ -1,0 +1,50 @@
+id: doctor-visit
+skin: care
+detectors: [number, drug, frequency, date]
+disclaimer: "Echo records and summarises what was said. It is not medical advice and not an interpreter."
+facts:
+  - key: medicine
+    fields: [name, dose, frequency, duration]
+    cues:
+      anchor: "@drug"
+      windowWords: 25
+      optional: ["@number", "@frequency", "@date"]
+  - key: follow_up
+    fields: [when, what]
+    cues:
+      any: ["come back", "follow[- ]up", "review", "next appointment", "see you", "see me"]
+      windowWords: 15
+      optional: ["@date"]
+  - key: warning_sign
+    fields: [description]
+    cues:
+      any: ["if you", "call the (clinic|doctor|surgery)", "emergency", "go to (the )?hospital", "urgent", "straight away"]
+      windowWords: 25
+checklist:
+  - id: q-medicine-purpose
+    text: "What is the name and purpose of each new medicine?"
+    sourceUrl: user-planned
+    cues:
+      all: [["@drug"], ["sugar|diabetes|pressure|infection|pain|cholesterol|thyroid|allerg|asthma"]]
+  - id: q-how-to-take
+    text: "How much, how often and for how long should I take it?"
+    sourceUrl: user-planned
+    cues:
+      all: [["@number"], ["@frequency"]]
+  - id: q-side-effects
+    text: "What side effects should I expect?"
+    sourceUrl: user-planned
+    cues:
+      any: ["side effect", "may cause", "can cause", "feel sick", "upset stomach", "dizz"]
+  - id: q-warning-signs
+    text: "When should I call or come back sooner?"
+    sourceUrl: user-planned
+    cues:
+      any: ["if you", "call the (clinic|doctor|surgery)", "emergency", "straight away"]
+  - id: q-follow-up
+    text: "When is my next appointment?"
+    sourceUrl: user-planned
+    cues:
+      all: [["come back|follow[- ]up|review|next appointment|see me"], ["@date"]]
+nextSteps:
+  - label: "Ask your doctor to confirm anything marked Check this"

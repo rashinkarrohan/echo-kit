@@ -1,0 +1,51 @@
+# Tasks: Echo Engine (see docs/BUILD-GUIDE.md for the full step text)
+
+- [ ] 0. Repo and tooling (S0)
+  - pnpm workspace, strict TypeScript, Vitest, fast-check, lint, CI that fails if `.kiro` is ignored
+  - _Requirements: 12_
+- [x] 1. Types and schema loader (S1)
+  - types from the PRD; loadSchema; validateSchema; three schema files with TODO-SOURCE
+  - _Requirements: 11_
+- [x] 2. Text normalisation (S2)
+  - property tests first: idempotence, fifty vs fifteen
+  - _Requirements: 3_
+- [ ] 3. Segments and time utilities (S3)
+  - PB9
+  - _Requirements: 2_
+- [ ] 4. Care entity detectors and flagTokens (S4)
+  - PB6 first; never auto-correct
+  - _Requirements: 4_
+- [ ] 5. Cover entity detectors (S5)
+  - _Requirements: 4_
+- [ ] 6. Rules extractor (S6)
+  - deterministic; no model, no network
+  - _Requirements: 5_
+- [ ] 7. Anchor validator (S7)
+  - PB1 to PB5 first; plain code
+  - _Requirements: 6_
+- [ ] 8. Verifier (S8)
+  - _Requirements: 7_
+- [ ] 9. Gap check (S9)
+  - _Requirements: 8_
+- [ ] 10. Label comparison (S10)
+  - PB7
+  - _Requirements: 12_
+- [ ] 11. Quote comparison (S11)
+  - PB11
+  - _Requirements: 12_
+- [ ] 12. Read-back (S12)
+  - PB8
+  - _Requirements: 12_
+- [ ] 13. Consent ledger and local store (S13)
+  - PB10
+  - _Requirements: 1, 9_
+- [ ] 14. Eval harness with 15 scripted consults (S14)
+  - `pnpm evals` exits 0; `--break` exits non-zero
+  - _Requirements: 10_
+- [ ] 15. Audio capture and segmenter (S15)
+  - _Requirements: 1, 2_
+- [ ] 16. Speech adapter and latency spike (S16)
+  - write docs/SPIKES.md
+  - _Requirements: 3_
+- [ ] 17. Live session pipeline (S17)
+  - _Requirements: 3, 4, 5, 6, 7, 8, 9_

@@ -1,0 +1,30 @@
+# Sources, models, datasets and licences
+Record the licence and the date opened for every item. Anything not written during the submission period must be disclosed.
+
+## Rules and hackathon
+- Kiroween 2026 official rules and overview (Devpost), saved Nov 12, 2026: https://kiroween.devpost.com/rules
+
+## Problem evidence (from the validation doc v2; open and verify each)
+- WHO deafness and hearing loss: https://www.who.int/health-topics/hearing-loss
+- Global Burden of Disease 2019, hearing loss (Lancet): https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(21)00516-X/fulltext
+- RNID evidence review: https://rnid.org.uk/what-we-do/evidence-hub/access-to-healthcare-evidence-pack/evidence-review/consequences-for-healthcare/
+- Physician-patient communication failure and medication errors: https://pubmed.ncbi.nlm.nih.gov/22904014
+- Hearing loss at the pharmacy (Hearing Journal): https://www.ovid.com/jnls/thehearingjournal/fulltext/10.1097/01.hj.0000935968.26392.01~hearing-loss-at-the-pharmacy-a-qualitative-study-of
+- Pharmacy Times, deaf patients: https://www.pharmacytimes.com/view/how-pharmacists-can-better-assist-deaf-patients (opened)
+- E-prescription discrepancies (AHRQ PSNet): https://psnet.ahrq.gov/issue/physician-intent-pharmacy-label-prevalence-and-description-discrepancies-cross-sectional
+- Sig quality (JMCP): https://www.jmcp.org/doi/10.18553/jmcp.2018.17404
+- Consultation recording for patients 50+: https://www.tandfonline.com/doi/full/10.1080/10410236.2019.1669270
+- ACCC hearing-aid sales (ABC): https://www.abc.net.au/news/2017-03-02/consumer-watchdog-puts-hearing-aid-industry-on-notice/8319738 ; CHOICE: https://www.choice.com.au/health-and-body/optical-and-hearing/hearing/articles/profit-hungry-hearing-clinics-put-on-notice-by-the-accc-030317
+- AI scribe error study: https://www.researchgate.net/publication/395991766_Clinical_AI_Scribes_in_primary_care_accuracy_error_severity_and_implications_for_clinical_practice ; Abridge feedback: https://arxiv.org/pdf/2512.04118
+- US one-party and all-party recording states (AHCJ): https://healthjournalism.org/blog/2026/07/dear-doctor-your-patient-may-be-recording-this-visit/
+- DOJ Trinity Health settlement: https://www.justice.gov/opa/pr/justice-department-reaches-americans-disabilities-act-settlement-trinity-health-systems-iowa
+
+## Models, libraries, datasets (fill as chosen; record licence)
+- On-device English speech model (spike T1): licence ____
+- Drug-name list (spike): source and licence ____
+- Label OCR approach (spike): licence ____
+- Hosted model for extraction (capped proxy): terms ____
+- Hindi/Hinglish model Shruti (stretch only): https://huggingface.co/udgamlabs/Shruti , Apache-2.0 per its card
+
+## Pre-existing work disclosed
+None, unless listed here: ____

@@ -1,0 +1,15 @@
+rules:
+  - capability: shell
+    effect: allow
+    match:
+      - npm *
+      - npx *
+      - git status*
+      - git diff*
+      - ls *
+      - mkdir *
+      - touch *
+      - cp *
+      - mv *
+policies:
+  - approve-for-me
