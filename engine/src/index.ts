@@ -45,3 +45,6 @@ export { runGapCheck } from './gap/gap-check';
 
 // Label comparison
 export { canonicalFrequency, canonicalDose, compareLabel } from './label/compare';
+
+// Quote comparison (Echo Cover)
+export { compareQuotes, quoteRecordFromFacts } from './compare/compare-quotes';

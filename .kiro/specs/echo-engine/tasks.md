@@ -30,7 +30,7 @@
 - [x] 10. Label comparison (S10)
   - PB7
   - _Requirements: 12_
-- [ ] 11. Quote comparison (S11)
+- [x] 11. Quote comparison (S11)
   - PB11
   - _Requirements: 12_
 - [ ] 12. Read-back (S12)

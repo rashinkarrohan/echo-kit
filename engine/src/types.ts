@@ -121,12 +121,29 @@ export interface Receipt {
   nextSteps: Array<{ label: string }>;
 }
 
-/** Quote record for comparison across conversations */
+/** What one seller said in one conversation, by fact key (Echo Cover). */
 export interface QuoteRecord {
   conversationId: string;
-  sellerId?: string;
+  /** Name the user typed for this seller */
+  seller: string;
+  /** Fact key -> value as heard, with its anchor. A missing key means "Not discussed". */
   fields: Record<string, { value: string; anchor: Anchor }>;
-  missing: string[];
+}
+
+/** One cell of the comparison table: a seller's value, or null for "Not discussed". */
+export interface QuoteCell {
+  conversationId: string;
+  seller: string;
+  value: string | null;
+  anchor?: Anchor;
+}
+
+/** One row of the comparison table. Neutral by design: no ranking, no recommendation. */
+export interface QuoteComparisonRow {
+  field: string;
+  cells: QuoteCell[];
+  /** true when at least two sellers discussed this field and their values differ */
+  differs: boolean;
 }
 
 /** Entity detector definition */
