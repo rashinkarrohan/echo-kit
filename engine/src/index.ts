@@ -9,3 +9,25 @@ export type { ValidateOptions } from './schema/loadSchema';
 
 // Text normalisation
 export { normaliseText, numberWordsToDigits } from './text/normalise';
+
+// Segments
+export { makeSegment, assertOrdered, segmentsText, rangeOf } from './segments';
+
+// Guard (entity detection)
+export { 
+  flagTokens, 
+  numberDetector, 
+  frequencyDetector, 
+  dateDetector, 
+  drugDetector,
+  moneyDetector,
+  percentDetector,
+  durationDetector,
+  commissionDetector
+} from './guard/index';
+
+// Extraction
+export { RulesExtractor } from './extract/rules-extractor';
+
+// Validation
+export { validateFact, validateFacts } from './validate/validate-fact';

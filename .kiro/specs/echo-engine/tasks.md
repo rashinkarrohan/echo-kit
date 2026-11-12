@@ -9,18 +9,18 @@
 - [x] 2. Text normalisation (S2)
   - property tests first: idempotence, fifty vs fifteen
   - _Requirements: 3_
-- [ ] 3. Segments and time utilities (S3)
+- [x] 3. Segments and time utilities (S3)
   - PB9
   - _Requirements: 2_
-- [ ] 4. Care entity detectors and flagTokens (S4)
+- [x] 4. Care entity detectors and flagTokens (S4)
   - PB6 first; never auto-correct
   - _Requirements: 4_
-- [ ] 5. Cover entity detectors (S5)
+- [x] 5. Cover entity detectors (S5)
   - _Requirements: 4_
-- [ ] 6. Rules extractor (S6)
+- [x] 6. Rules extractor (S6)
   - deterministic; no model, no network
   - _Requirements: 5_
-- [ ] 7. Anchor validator (S7)
+- [x] 7. Anchor validator (S7)
   - PB1 to PB5 first; plain code
   - _Requirements: 6_
 - [ ] 8. Verifier (S8)

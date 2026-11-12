@@ -1,0 +1,5 @@
+{
+  "sample": true,
+  "note": "Sample of common generic names for tests only. The real list, its source and licence are an open spike (docs/SPIKES.md).",
+  "drugs": ["metformin","amlodipine","atorvastatin","simvastatin","losartan","lisinopril","ramipril","atenolol","metoprolol","bisoprolol","omeprazole","pantoprazole","paracetamol","ibuprofen","aspirin","clopidogrel","warfarin","levothyroxine","amoxicillin","azithromycin","ciprofloxacin","doxycycline","cetirizine","loratadine","salbutamol","prednisolone","gabapentin","sertraline","furosemide","glimepiride"]
+}
