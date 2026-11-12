@@ -43,7 +43,8 @@
 - [x] 14. Eval harness with 15 scripted consults (S14)
   - `pnpm evals` exits 0; `--break` exits non-zero
   - _Requirements: 10_
-- [ ] 15. Audio capture and segmenter (S15)
+- [x] 15. Audio capture and segmenter (S15)
+  - segmenter and resampler are pure engine code (13 tests incl. a fast-check property); `ui/src/platform/capture.ts` is tested with fake browser APIs (consent gate, 48 kHz fallback, stop); a real-microphone check on the reference phone is still open
   - _Requirements: 1, 2_
 - [ ] 16. Speech adapter and latency spike (S16)
   - write docs/SPIKES.md

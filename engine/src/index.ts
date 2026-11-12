@@ -64,3 +64,8 @@ export { MemoryStore } from "./store/store";
 export type { EchoStore } from "./store/store";
 export { runStoreContract } from "./store/store-contract";
 export type { ContractRunner, ContractSamples } from "./store/store-contract";
+
+// Audio (pure): segmenter and resampler
+export { Segmenter } from "./audio/segmenter";
+export type { AudioSegment, SegmenterOptions } from "./audio/segmenter";
+export { resample } from "./audio/resample";
