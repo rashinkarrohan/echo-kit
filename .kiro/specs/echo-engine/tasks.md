@@ -25,7 +25,7 @@
   - _Requirements: 6_
 - [x] 8. Verifier (S8)
   - _Requirements: 7_
-- [ ] 9. Gap check (S9)
+- [x] 9. Gap check (S9)
   - _Requirements: 8_
 - [ ] 10. Label comparison (S10)
   - PB7

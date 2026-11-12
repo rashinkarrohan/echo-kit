@@ -34,3 +34,6 @@ export { validateFact, validateFacts } from './validate/validate-fact';
 
 // Verification
 export { verifyFacts } from './verify/verify';
+
+// Gap check
+export { runGapCheck } from './gap/gap-check';
