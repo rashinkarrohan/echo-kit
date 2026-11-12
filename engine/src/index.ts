@@ -31,3 +31,6 @@ export { RulesExtractor } from './extract/rules-extractor';
 
 // Validation
 export { validateFact, validateFacts } from './validate/validate-fact';
+
+// Verification
+export { verifyFacts } from './verify/verify';

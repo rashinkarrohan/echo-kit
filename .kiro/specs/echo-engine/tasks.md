@@ -23,7 +23,7 @@
 - [x] 7. Anchor validator (S7)
   - PB1 to PB5 first; plain code
   - _Requirements: 6_
-- [ ] 8. Verifier (S8)
+- [x] 8. Verifier (S8)
   - _Requirements: 7_
 - [ ] 9. Gap check (S9)
   - _Requirements: 8_
