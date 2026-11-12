@@ -33,3 +33,6 @@ export { numberDetector, frequencyDetector, dateDetector, drugDetector } from '.
 
 // Re-export Cover detectors
 export { moneyDetector, percentDetector, durationDetector, commissionDetector } from './cover-detectors';
+
+// Registry and shared cue matcher
+export { DETECTORS, DRUG_DICTIONARY, getDetector, detectorsFor, detectWith, matchesCue } from './registry';

@@ -192,6 +192,45 @@ describe('runGapCheck', () => {
     expect(item?.stamp).toBe('Answered');
   });
 
+  it('handles a detector reference mixed with regex alternatives ("@frequency|morning")', () => {
+    const schema: ConversationSchema = {
+      id: 'mixed',
+      skin: 'care',
+      detectors: ['frequency'],
+      disclaimer: 'Test',
+      facts: [],
+      checklist: [
+        {
+          id: 'q-how-when',
+          text: 'How and when?',
+          sourceUrl: 'user-planned',
+          cues: { all: [['@frequency|morning|evening|night'], ['food|meal']] },
+        },
+      ],
+      nextSteps: [],
+    };
+    const segs = [makeSegment(0, 0, 4000, 'Take one tablet in the evening, with food.')];
+    expect(runGapCheck([], schema, segs)[0].stamp).toBe('Answered');
+  });
+
+  it('matches cues written with apostrophes against the original wording', () => {
+    const schema: ConversationSchema = {
+      ...mockSchema,
+      detectors: [],
+      checklist: [
+        { id: 'q-avoid', text: 'Avoid?', sourceUrl: 'user-planned', cues: { any: ["don't drink"] } },
+      ],
+    };
+    const segs = [makeSegment(0, 0, 4000, "Please don't drink alcohol with these.")];
+    expect(runGapCheck([], schema, segs)[0].stamp).toBe('Answered');
+  });
+
+  it('answered anchors carry the verbatim text of the matched segments', () => {
+    const results = runGapCheck([], mockSchema, mockSegments);
+    const warning = results.find((r) => r.item.id === 'q-warning');
+    expect(warning?.anchor?.quote).toBe('if you feel dizzy call the clinic');
+  });
+
   it('empty checklist returns empty results', () => {
     const schema: ConversationSchema = {
       ...mockSchema,

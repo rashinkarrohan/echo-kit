@@ -23,14 +23,19 @@ export {
   moneyDetector,
   percentDetector,
   durationDetector,
-  commissionDetector
+  commissionDetector,
+  DETECTORS,
+  DRUG_DICTIONARY,
+  getDetector,
+  detectorsFor,
+  matchesCue
 } from './guard/index';
 
 // Extraction
 export { RulesExtractor } from './extract/rules-extractor';
 
 // Validation
-export { validateFact, validateFacts } from './validate/validate-fact';
+export { validateFact, validateFacts, containsPhrase, numbersIn } from './validate/validate-fact';
 
 // Verification
 export { verifyFacts } from './verify/verify';
