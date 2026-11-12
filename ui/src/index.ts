@@ -2,3 +2,5 @@
 export { IdbStore } from "./platform/idb-store";
 export { startCapture, browserDeps, TARGET_SAMPLE_RATE } from "./platform/capture";
 export type { CaptureDeps, CaptureError, CaptureHandle, CaptureOptions } from "./platform/capture";
+export { createWhisperAdapter, workerTransport } from "./platform/whisper";
+export type { WorkerLike } from "./platform/whisper";

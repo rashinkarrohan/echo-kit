@@ -206,9 +206,20 @@ export interface EntityDetector {
   detect: (segment: Segment, dictionary?: DrugDictionary) => FlaggedToken[];
 }
 
-/** ASR adapter interface */
+/** What a speech engine heard in one segment. `words` only when the engine really provides confidence. */
+export interface AsrTranscript {
+  text: string;
+  words?: WordConf[];
+}
+
+/**
+ * Speech adapter: on-device speech engines (and test doubles) sit behind this interface.
+ * One call per 3 to 8 s segment of mono audio. Errors are Result values.
+ */
 export interface AsrAdapter {
-  transcribe: (audioData: ArrayBuffer) => Promise<Segment[]>;
+  /** e.g. "mock" or "whisper:Xenova/whisper-tiny.en" */
+  readonly id: string;
+  transcribe: (samples: Float32Array, sampleRate: number) => Promise<Result<AsrTranscript>>;
 }
 
 /** Extractor interface for fact extraction */

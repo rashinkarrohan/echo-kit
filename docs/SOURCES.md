@@ -21,7 +21,8 @@ Record the licence and the date opened for every item. Anything not written duri
 
 ## Models, libraries, datasets (fill as chosen; record licence)
 - `idb` 8.0.4 (IndexedDB wrapper, used by `ui/src/platform/idb-store.ts`): ISC licence, checked on the npm registry Nov 12, 2026: https://www.npmjs.com/package/idb
-- On-device English speech model (spike T1): licence ____
+- On-device English speech model (spike S16, provisional): `Xenova/whisper-tiny.en`, Apache-2.0 per its Hugging Face model card (checked Nov 12, 2026): https://huggingface.co/Xenova/whisper-tiny.en . Alternative under evaluation: `Xenova/whisper-base.en`, Apache-2.0: https://huggingface.co/Xenova/whisper-base.en . Both are ONNX conversions of OpenAI Whisper.
+- `@huggingface/transformers` 4.3.2 (runs the speech model on the device, `ui/src/platform/asr-worker.ts`): Apache-2.0, checked on the npm registry Nov 12, 2026: https://www.npmjs.com/package/@huggingface/transformers . Pulls in `onnxruntime-web` and `onnxruntime-node` (MIT), `sharp` (Apache-2.0), `@huggingface/jinja` (MIT) and `@huggingface/tokenizers` (Apache-2.0) as its own dependencies (licences checked on npm the same day).
 - Drug-name list (spike): source and licence ____
 - Label OCR approach (spike): licence ____
 - Hosted model for extraction (capped proxy): terms ____

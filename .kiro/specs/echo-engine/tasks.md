@@ -48,6 +48,9 @@
   - _Requirements: 1, 2_
 - [ ] 16. Speech adapter and latency spike (S16)
   - write docs/SPIKES.md
+  - [x] AsrAdapter is per segment; MockAdapter; WhisperAdapter (engine, message transport); worker and `createWhisperAdapter` in `ui/src/platform/`; confidence recorded as unavailable
+  - [ ] Playwright test transcribing a bundled 10 s clip (needs a consenting-actor recording)
+  - [ ] latency per 5 s segment on the reference phone (WebGPU and WebAssembly); choose tiny.en or base.en
   - _Requirements: 3_
 - [ ] 17. Live session pipeline (S17)
   - _Requirements: 3, 4, 5, 6, 7, 8, 9_

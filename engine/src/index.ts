@@ -69,3 +69,14 @@ export type { ContractRunner, ContractSamples } from "./store/store-contract";
 export { Segmenter } from "./audio/segmenter";
 export type { AudioSegment, SegmenterOptions } from "./audio/segmenter";
 export { resample } from "./audio/resample";
+
+// Speech adapters
+export { MockAdapter } from "./asr/mock-adapter";
+export { WhisperAdapter, cleanWhisperText, DEFAULT_WHISPER_MODEL } from "./asr/whisper-adapter";
+export type {
+  AsrDevice,
+  AsrTransport,
+  WhisperOptions,
+  WorkerReply,
+  WorkerRequest,
+} from "./asr/whisper-adapter";
