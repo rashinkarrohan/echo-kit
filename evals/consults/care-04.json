@@ -1,0 +1,22 @@
+{
+  "id": "care-04",
+  "app": "echo-care",
+  "schemaId": "doctor-visit",
+  "note": "Scripted by actors. No real person or data. Filler words; fifteen; label dose mismatch.",
+  "segments": [
+    {"id": "seg-0001", "startMs": 0, "endMs": 6000, "text": "Um, so, your asthma has been, uh, quite bad this week."},
+    {"id": "seg-0002", "startMs": 6000, "endMs": 13000, "text": "I'm going to give you prednisolone, fifteen milligrams, once daily, er, for five days."},
+    {"id": "seg-0003", "startMs": 13000, "endMs": 19500, "text": "And use your salbutamol inhaler, two puffs, when you need it."},
+    {"id": "seg-0004", "startMs": 19500, "endMs": 26500, "text": "If you get very short of breath, go to the hospital straight away."},
+    {"id": "seg-0005", "startMs": 26500, "endMs": 32000, "text": "Uh, see me again in two weeks, on Friday."}
+  ],
+  "planted": [
+    {"key": "medicine", "fields": {"name": "prednisolone", "dose": "15 milligrams", "frequency": "once daily", "duration": "5 days"}, "quote": "prednisolone, fifteen milligrams, once daily, er, for five days"},
+    {"key": "medicine", "fields": {"name": "salbutamol", "dose": "2 puffs", "frequency": "when you need it"}, "quote": "salbutamol inhaler, two puffs, when you need it"},
+    {"key": "warning_sign", "fields": {"description": "very short of breath, go to the hospital straight away"}, "quote": "If you get very short of breath, go to the hospital straight away"},
+    {"key": "follow_up", "fields": {"when": "in 2 weeks"}, "quote": "see me again in two weeks, on Friday"}
+  ],
+  "plantedGapItemIds": ["q-side-effects"],
+  "label": {"medicine": "prednisolone", "dose": "5 mg", "frequency": "once daily"},
+  "expectedLabelFlags": ["dose"]
+}

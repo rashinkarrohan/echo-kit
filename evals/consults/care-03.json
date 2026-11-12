@@ -1,0 +1,20 @@
+{
+  "id": "care-03",
+  "app": "echo-care",
+  "schemaId": "doctor-visit",
+  "note": "Scripted by actors. No real person or data. Dose and frequency in different segments; fifty.",
+  "segments": [
+    {"id": "seg-0001", "startMs": 0, "endMs": 5500, "text": "Morning Mr Patel. Your blood pressure is still a bit high today."},
+    {"id": "seg-0002", "startMs": 5500, "endMs": 12000, "text": "I am adding atenolol, fifty milligrams, to help with your blood pressure."},
+    {"id": "seg-0003", "startMs": 12000, "endMs": 17500, "text": "Take it once a day, in the morning."},
+    {"id": "seg-0004", "startMs": 17500, "endMs": 24000, "text": "It may cause tiredness or cold hands for the first few weeks."},
+    {"id": "seg-0005", "startMs": 24000, "endMs": 30500, "text": "Come back next month so we can check your pressure again."}
+  ],
+  "planted": [
+    {"key": "medicine", "fields": {"name": "atenolol", "dose": "50 milligrams", "frequency": "once a day"}, "quote": "atenolol, fifty milligrams, to help with your blood pressure. Take it once a day"},
+    {"key": "follow_up", "fields": {"when": "next month"}, "quote": "Come back next month"}
+  ],
+  "plantedGapItemIds": ["q-warning-signs"],
+  "label": {"medicine": "Atenolol", "dose": "50 mg", "frequency": "once daily"},
+  "expectedLabelFlags": []
+}

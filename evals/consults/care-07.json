@@ -1,0 +1,21 @@
+{
+  "id": "care-07",
+  "app": "echo-care",
+  "schemaId": "pharmacy-counter",
+  "note": "Scripted by actors. No real person or data. Every N hours; storage never mentioned.",
+  "segments": [
+    {"id": "seg-0001", "startMs": 0, "endMs": 6000, "text": "This is amoxicillin, five hundred milligram capsules, for your chest infection."},
+    {"id": "seg-0002", "startMs": 6000, "endMs": 12500, "text": "Take one capsule every eight hours, with or without food."},
+    {"id": "seg-0003", "startMs": 12500, "endMs": 19500, "text": "It may cause diarrhoea or a rash. Tell us if you get a rash."},
+    {"id": "seg-0004", "startMs": 19500, "endMs": 26000, "text": "If you miss a dose, take it as soon as you remember."},
+    {"id": "seg-0005", "startMs": 26000, "endMs": 32000, "text": "Avoid alcohol while you are taking these."}
+  ],
+  "planted": [
+    {"key": "medicine", "fields": {"name": "amoxicillin", "strength": "500 milligram", "how_to_take": "one capsule every eight hours, with or without food"}, "quote": "amoxicillin, five hundred milligram capsules, for your chest infection. Take one capsule every eight hours, with or without food"},
+    {"key": "side_effects", "fields": {"description": "diarrhoea or a rash"}, "quote": "It may cause diarrhoea or a rash"},
+    {"key": "missed_dose", "fields": {"description": "take it as soon as you remember"}, "quote": "If you miss a dose, take it as soon as you remember"}
+  ],
+  "plantedGapItemIds": ["q-storage"],
+  "label": {"medicine": "Amoxicillin", "dose": "500 mg", "frequency": "every 8 hours"},
+  "expectedLabelFlags": []
+}

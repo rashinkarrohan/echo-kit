@@ -1,0 +1,20 @@
+{
+  "id": "cover-03",
+  "app": "echo-cover",
+  "schemaId": "hearing-aid-sale",
+  "seller": "Seller C",
+  "note": "Scripted by actors. Fictional prices. No real business. Price per aid; bonus wording; financing never mentioned.",
+  "segments": [
+    {"id": "seg-0001", "startMs": 0, "endMs": 6500, "text": "This model costs two thousand nine hundred dollars each, so five thousand eight hundred for both."},
+    {"id": "seg-0002", "startMs": 6500, "endMs": 13000, "text": "The price includes a three year warranty and free batteries for a year."},
+    {"id": "seg-0003", "startMs": 13000, "endMs": 20000, "text": "You can try them for forty five days and return them for a full refund."},
+    {"id": "seg-0004", "startMs": 20000, "endMs": 26500, "text": "Some of our audiologists receive a bonus when they hit sales targets."}
+  ],
+  "planted": [
+    {"key": "price", "fields": {"amount": "2900 dollars", "per": "each"}, "quote": "This model costs two thousand nine hundred dollars each"},
+    {"key": "inclusions", "fields": {"description": "a 3 year warranty and free batteries for a year"}, "quote": "includes a three year warranty and free batteries for a year"},
+    {"key": "trial_returns", "fields": {"period": "45 days", "terms": "full refund"}, "quote": "try them for forty five days and return them for a full refund"},
+    {"key": "commission", "fields": {"statement": "audiologists receive a bonus when they hit sales targets"}, "quote": "Some of our audiologists receive a bonus when they hit sales targets"}
+  ],
+  "plantedGapItemIds": ["q-financing"]
+}

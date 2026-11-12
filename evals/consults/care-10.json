@@ -1,0 +1,18 @@
+{
+  "id": "care-10",
+  "app": "echo-care",
+  "schemaId": "pharmacy-counter",
+  "note": "Scripted by actors. No real person or data. Take-when-needed medicine; missed dose never mentioned.",
+  "segments": [
+    {"id": "seg-0001", "startMs": 0, "endMs": 6000, "text": "These are paracetamol, five hundred milligram tablets, for the pain."},
+    {"id": "seg-0002", "startMs": 6000, "endMs": 13000, "text": "Take two tablets when needed, up to four times a day, with or without food."},
+    {"id": "seg-0003", "startMs": 13000, "endMs": 20000, "text": "Leave at least four hours between doses, and do not take more than eight in a day."},
+    {"id": "seg-0004", "startMs": 20000, "endMs": 26500, "text": "Side effects are rare at the usual dose."},
+    {"id": "seg-0005", "startMs": 26500, "endMs": 32500, "text": "Do not drink alcohol heavily while taking these, and store them out of reach of children."}
+  ],
+  "planted": [
+    {"key": "medicine", "fields": {"name": "paracetamol", "strength": "500 milligram", "how_to_take": "two tablets when needed, up to four times a day, with or without food"}, "quote": "paracetamol, five hundred milligram tablets, for the pain. Take two tablets when needed, up to four times a day, with or without food"},
+    {"key": "side_effects", "fields": {"description": "rare at the usual dose"}, "quote": "Side effects are rare at the usual dose"}
+  ],
+  "plantedGapItemIds": ["q-missed-dose"]
+}

@@ -1,0 +1,23 @@
+{
+  "id": "care-06",
+  "app": "echo-care",
+  "schemaId": "doctor-visit",
+  "note": "Scripted by actors. No real person or data. Speech engine wrote digits; two medicines; side effects never mentioned.",
+  "segments": [
+    {"id": "seg-0001", "startMs": 0, "endMs": 6000, "text": "Thanks for waiting. I have looked at your blood test results."},
+    {"id": "seg-0002", "startMs": 6000, "endMs": 12500, "text": "Start atorvastatin 20 mg at night, for your cholesterol."},
+    {"id": "seg-0003", "startMs": 12500, "endMs": 19000, "text": "Keep taking your amlodipine 5 mg once daily as before."},
+    {"id": "seg-0004", "startMs": 19000, "endMs": 25500, "text": "Try to take the new one at the same time each evening."},
+    {"id": "seg-0005", "startMs": 25500, "endMs": 32000, "text": "If you notice dark urine or bad muscle weakness, stop it and ring us."},
+    {"id": "seg-0006", "startMs": 32000, "endMs": 37500, "text": "Come back for a blood test in 3 months."}
+  ],
+  "planted": [
+    {"key": "medicine", "fields": {"name": "atorvastatin", "dose": "20 mg", "frequency": "at night"}, "quote": "Start atorvastatin 20 mg at night"},
+    {"key": "medicine", "fields": {"name": "amlodipine", "dose": "5 mg", "frequency": "once daily"}, "quote": "amlodipine 5 mg once daily as before"},
+    {"key": "warning_sign", "fields": {"description": "dark urine or bad muscle weakness, stop it and ring us"}, "quote": "If you notice dark urine or bad muscle weakness, stop it and ring us"},
+    {"key": "follow_up", "fields": {"when": "in 3 months"}, "quote": "Come back for a blood test in 3 months"}
+  ],
+  "plantedGapItemIds": ["q-side-effects"],
+  "label": {"medicine": "atorvastatin", "dose": "20 mg", "frequency": "once daily at night"},
+  "expectedLabelFlags": []
+}

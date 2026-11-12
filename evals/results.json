@@ -1,21 +1,21 @@
 {
-  "date": "2026-11-12T18:36:29.924Z",
-  "runs": 4,
+  "date": "2026-11-12T18:46:18.900Z",
+  "runs": 7,
   "extractor": "rules",
   "passed": true,
   "totals": {
-    "consults": 4,
-    "plantedFacts": 14,
-    "kept": 14,
+    "consults": 15,
+    "plantedFacts": 49,
+    "kept": 49,
     "dropped": 0,
     "invented": 0,
     "unanchored": 0,
     "rejectedByValidator": 0,
-    "fieldRecall": 1,
+    "fieldRecall": 0.9880952380952381,
     "flaggedTokenRecall": 1,
     "checklistAccuracy": 1,
-    "labelChecks": 1,
-    "comparisonChecks": 1
+    "labelChecks": 7,
+    "comparisonChecks": 3
   },
   "failures": [],
   "consults": [
@@ -126,6 +126,430 @@
       }
     },
     {
+      "id": "care-03",
+      "schemaId": "doctor-visit",
+      "failures": [],
+      "planted": 2,
+      "kept": 2,
+      "dropped": 0,
+      "invented": 0,
+      "unanchored": 0,
+      "rejectedByValidator": 0,
+      "fieldsPlanted": 4,
+      "fieldsKept": 4,
+      "tokensExpected": 2,
+      "tokensFound": 2,
+      "checklistTotal": 5,
+      "checklistCorrect": 5,
+      "details": {
+        "droppedFacts": [],
+        "inventedFacts": [],
+        "missedTokens": [],
+        "checklist": [
+          {
+            "id": "q-medicine-purpose",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-how-to-take",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-side-effects",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-warning-signs",
+            "expected": "Not discussed",
+            "actual": "Not discussed"
+          },
+          {
+            "id": "q-follow-up",
+            "expected": "Answered",
+            "actual": "Answered"
+          }
+        ],
+        "label": {
+          "expected": [],
+          "actual": []
+        }
+      }
+    },
+    {
+      "id": "care-04",
+      "schemaId": "doctor-visit",
+      "failures": [],
+      "planted": 4,
+      "kept": 4,
+      "dropped": 0,
+      "invented": 0,
+      "unanchored": 0,
+      "rejectedByValidator": 0,
+      "fieldsPlanted": 9,
+      "fieldsKept": 8,
+      "tokensExpected": 6,
+      "tokensFound": 6,
+      "checklistTotal": 5,
+      "checklistCorrect": 5,
+      "details": {
+        "droppedFacts": [],
+        "inventedFacts": [],
+        "missedTokens": [],
+        "checklist": [
+          {
+            "id": "q-medicine-purpose",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-how-to-take",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-side-effects",
+            "expected": "Not discussed",
+            "actual": "Not discussed"
+          },
+          {
+            "id": "q-warning-signs",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-follow-up",
+            "expected": "Answered",
+            "actual": "Answered"
+          }
+        ],
+        "label": {
+          "expected": [
+            "dose"
+          ],
+          "actual": [
+            "dose"
+          ]
+        }
+      }
+    },
+    {
+      "id": "care-05",
+      "schemaId": "doctor-visit",
+      "failures": [],
+      "planted": 2,
+      "kept": 2,
+      "dropped": 0,
+      "invented": 0,
+      "unanchored": 0,
+      "rejectedByValidator": 0,
+      "fieldsPlanted": 4,
+      "fieldsKept": 4,
+      "tokensExpected": 2,
+      "tokensFound": 2,
+      "checklistTotal": 5,
+      "checklistCorrect": 5,
+      "details": {
+        "droppedFacts": [],
+        "inventedFacts": [],
+        "missedTokens": [],
+        "checklist": [
+          {
+            "id": "q-medicine-purpose",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-how-to-take",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-side-effects",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-warning-signs",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-follow-up",
+            "expected": "Not discussed",
+            "actual": "Not discussed"
+          }
+        ],
+        "label": {
+          "expected": [
+            "medicine"
+          ],
+          "actual": [
+            "medicine"
+          ]
+        }
+      }
+    },
+    {
+      "id": "care-06",
+      "schemaId": "doctor-visit",
+      "failures": [],
+      "planted": 4,
+      "kept": 4,
+      "dropped": 0,
+      "invented": 0,
+      "unanchored": 0,
+      "rejectedByValidator": 0,
+      "fieldsPlanted": 8,
+      "fieldsKept": 8,
+      "tokensExpected": 5,
+      "tokensFound": 5,
+      "checklistTotal": 5,
+      "checklistCorrect": 5,
+      "details": {
+        "droppedFacts": [],
+        "inventedFacts": [],
+        "missedTokens": [],
+        "checklist": [
+          {
+            "id": "q-medicine-purpose",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-how-to-take",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-side-effects",
+            "expected": "Not discussed",
+            "actual": "Not discussed"
+          },
+          {
+            "id": "q-warning-signs",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-follow-up",
+            "expected": "Answered",
+            "actual": "Answered"
+          }
+        ],
+        "label": {
+          "expected": [],
+          "actual": []
+        }
+      }
+    },
+    {
+      "id": "care-07",
+      "schemaId": "pharmacy-counter",
+      "failures": [],
+      "planted": 3,
+      "kept": 3,
+      "dropped": 0,
+      "invented": 0,
+      "unanchored": 0,
+      "rejectedByValidator": 0,
+      "fieldsPlanted": 5,
+      "fieldsKept": 5,
+      "tokensExpected": 4,
+      "tokensFound": 4,
+      "checklistTotal": 5,
+      "checklistCorrect": 5,
+      "details": {
+        "droppedFacts": [],
+        "inventedFacts": [],
+        "missedTokens": [],
+        "checklist": [
+          {
+            "id": "q-how-when",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-side-effects",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-missed-dose",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-avoid",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-storage",
+            "expected": "Not discussed",
+            "actual": "Not discussed"
+          }
+        ],
+        "label": {
+          "expected": [],
+          "actual": []
+        }
+      }
+    },
+    {
+      "id": "care-08",
+      "schemaId": "pharmacy-counter",
+      "failures": [],
+      "planted": 2,
+      "kept": 2,
+      "dropped": 0,
+      "invented": 0,
+      "unanchored": 0,
+      "rejectedByValidator": 0,
+      "fieldsPlanted": 4,
+      "fieldsKept": 4,
+      "tokensExpected": 2,
+      "tokensFound": 2,
+      "checklistTotal": 5,
+      "checklistCorrect": 5,
+      "details": {
+        "droppedFacts": [],
+        "inventedFacts": [],
+        "missedTokens": [],
+        "checklist": [
+          {
+            "id": "q-how-when",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-side-effects",
+            "expected": "Not discussed",
+            "actual": "Not discussed"
+          },
+          {
+            "id": "q-missed-dose",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-avoid",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-storage",
+            "expected": "Answered",
+            "actual": "Answered"
+          }
+        ],
+        "label": {
+          "expected": [],
+          "actual": []
+        }
+      }
+    },
+    {
+      "id": "care-09",
+      "schemaId": "doctor-visit",
+      "failures": [],
+      "planted": 4,
+      "kept": 4,
+      "dropped": 0,
+      "invented": 0,
+      "unanchored": 0,
+      "rejectedByValidator": 0,
+      "fieldsPlanted": 4,
+      "fieldsKept": 4,
+      "tokensExpected": 2,
+      "tokensFound": 2,
+      "checklistTotal": 5,
+      "checklistCorrect": 5,
+      "details": {
+        "droppedFacts": [],
+        "inventedFacts": [],
+        "missedTokens": [],
+        "checklist": [
+          {
+            "id": "q-medicine-purpose",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-how-to-take",
+            "expected": "Not discussed",
+            "actual": "Not discussed"
+          },
+          {
+            "id": "q-side-effects",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-warning-signs",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-follow-up",
+            "expected": "Answered",
+            "actual": "Answered"
+          }
+        ]
+      }
+    },
+    {
+      "id": "care-10",
+      "schemaId": "pharmacy-counter",
+      "failures": [],
+      "planted": 2,
+      "kept": 2,
+      "dropped": 0,
+      "invented": 0,
+      "unanchored": 0,
+      "rejectedByValidator": 0,
+      "fieldsPlanted": 4,
+      "fieldsKept": 4,
+      "tokensExpected": 4,
+      "tokensFound": 4,
+      "checklistTotal": 5,
+      "checklistCorrect": 5,
+      "details": {
+        "droppedFacts": [],
+        "inventedFacts": [],
+        "missedTokens": [],
+        "checklist": [
+          {
+            "id": "q-how-when",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-side-effects",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-missed-dose",
+            "expected": "Not discussed",
+            "actual": "Not discussed"
+          },
+          {
+            "id": "q-avoid",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-storage",
+            "expected": "Answered",
+            "actual": "Answered"
+          }
+        ]
+      }
+    },
+    {
       "id": "cover-01",
       "schemaId": "hearing-aid-sale",
       "seller": "Seller A",
@@ -188,6 +612,156 @@
       "rejectedByValidator": 0,
       "fieldsPlanted": 5,
       "fieldsKept": 5,
+      "tokensExpected": 2,
+      "tokensFound": 2,
+      "checklistTotal": 5,
+      "checklistCorrect": 5,
+      "details": {
+        "droppedFacts": [],
+        "inventedFacts": [],
+        "missedTokens": [],
+        "checklist": [
+          {
+            "id": "q-total-price",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-inclusions",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-trial-returns",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-financing",
+            "expected": "Not discussed",
+            "actual": "Not discussed"
+          },
+          {
+            "id": "q-commission",
+            "expected": "Answered",
+            "actual": "Answered"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cover-03",
+      "schemaId": "hearing-aid-sale",
+      "seller": "Seller C",
+      "failures": [],
+      "planted": 4,
+      "kept": 4,
+      "dropped": 0,
+      "invented": 0,
+      "unanchored": 0,
+      "rejectedByValidator": 0,
+      "fieldsPlanted": 6,
+      "fieldsKept": 6,
+      "tokensExpected": 3,
+      "tokensFound": 3,
+      "checklistTotal": 5,
+      "checklistCorrect": 5,
+      "details": {
+        "droppedFacts": [],
+        "inventedFacts": [],
+        "missedTokens": [],
+        "checklist": [
+          {
+            "id": "q-total-price",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-inclusions",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-trial-returns",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-financing",
+            "expected": "Not discussed",
+            "actual": "Not discussed"
+          },
+          {
+            "id": "q-commission",
+            "expected": "Answered",
+            "actual": "Answered"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cover-04",
+      "schemaId": "hearing-aid-sale",
+      "seller": "Seller D",
+      "failures": [],
+      "planted": 4,
+      "kept": 4,
+      "dropped": 0,
+      "invented": 0,
+      "unanchored": 0,
+      "rejectedByValidator": 0,
+      "fieldsPlanted": 7,
+      "fieldsKept": 7,
+      "tokensExpected": 4,
+      "tokensFound": 4,
+      "checklistTotal": 5,
+      "checklistCorrect": 5,
+      "details": {
+        "droppedFacts": [],
+        "inventedFacts": [],
+        "missedTokens": [],
+        "checklist": [
+          {
+            "id": "q-total-price",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-inclusions",
+            "expected": "Not discussed",
+            "actual": "Not discussed"
+          },
+          {
+            "id": "q-trial-returns",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-financing",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-commission",
+            "expected": "Answered",
+            "actual": "Answered"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cover-05",
+      "schemaId": "hearing-aid-sale",
+      "seller": "Seller E",
+      "failures": [],
+      "planted": 4,
+      "kept": 4,
+      "dropped": 0,
+      "invented": 0,
+      "unanchored": 0,
+      "rejectedByValidator": 0,
+      "fieldsPlanted": 6,
+      "fieldsKept": 6,
       "tokensExpected": 2,
       "tokensFound": 2,
       "checklistTotal": 5,

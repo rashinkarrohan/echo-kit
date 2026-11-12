@@ -1,0 +1,21 @@
+{
+  "id": "care-09",
+  "app": "echo-care",
+  "schemaId": "doctor-visit",
+  "note": "Scripted by actors. No real person or data. Medicine switched ('stop taking'); no dose or frequency said.",
+  "segments": [
+    {"id": "seg-0001", "startMs": 0, "endMs": 6000, "text": "Your blood pressure is fine, but the cough is from the ramipril."},
+    {"id": "seg-0002", "startMs": 6000, "endMs": 12500, "text": "So stop taking ramipril, and start losartan instead."},
+    {"id": "seg-0003", "startMs": 12500, "endMs": 19000, "text": "The pharmacist will go through how to take it with you."},
+    {"id": "seg-0004", "startMs": 19000, "endMs": 25500, "text": "A dry cough can be a side effect, and it should settle in a few weeks."},
+    {"id": "seg-0005", "startMs": 25500, "endMs": 32000, "text": "If you feel faint or your lips swell, call the surgery straight away."},
+    {"id": "seg-0006", "startMs": 32000, "endMs": 37500, "text": "And come back next month so we can check your kidneys."}
+  ],
+  "planted": [
+    {"key": "medicine", "fields": {"name": "ramipril"}, "quote": "the cough is from the ramipril"},
+    {"key": "medicine", "fields": {"name": "losartan"}, "quote": "start losartan instead"},
+    {"key": "warning_sign", "fields": {"description": "feel faint or your lips swell, call the surgery straight away"}, "quote": "If you feel faint or your lips swell, call the surgery straight away"},
+    {"key": "follow_up", "fields": {"when": "next month"}, "quote": "come back next month"}
+  ],
+  "plantedGapItemIds": ["q-how-to-take"]
+}

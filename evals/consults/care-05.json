@@ -1,0 +1,20 @@
+{
+  "id": "care-05",
+  "app": "echo-care",
+  "schemaId": "doctor-visit",
+  "note": "Scripted by actors. No real person or data. Speech engine misheard 'metformine'; a 'do not take' sentence; label name mismatch.",
+  "segments": [
+    {"id": "seg-0001", "startMs": 0, "endMs": 6000, "text": "Your sugar levels are higher than last time, Mrs Okafor."},
+    {"id": "seg-0002", "startMs": 6000, "endMs": 13000, "text": "We will start metformine, five hundred milligrams, twice a day with meals."},
+    {"id": "seg-0003", "startMs": 13000, "endMs": 19000, "text": "Do not take ibuprofen for your knee while you are on this."},
+    {"id": "seg-0004", "startMs": 19000, "endMs": 26000, "text": "It can cause an upset stomach at first, which usually settles."},
+    {"id": "seg-0005", "startMs": 26000, "endMs": 32500, "text": "If you are sick and cannot keep fluids down, call the surgery."}
+  ],
+  "planted": [
+    {"key": "medicine", "fields": {"name": "metformine", "dose": "500 milligrams", "frequency": "twice a day"}, "quote": "start metformine, five hundred milligrams, twice a day with meals"},
+    {"key": "warning_sign", "fields": {"description": "sick and cannot keep fluids down, call the surgery"}, "quote": "If you are sick and cannot keep fluids down, call the surgery"}
+  ],
+  "plantedGapItemIds": ["q-follow-up"],
+  "label": {"medicine": "Metformin", "dose": "500 mg", "frequency": "twice daily"},
+  "expectedLabelFlags": ["medicine"]
+}

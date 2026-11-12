@@ -1,0 +1,20 @@
+{
+  "id": "care-08",
+  "app": "echo-care",
+  "schemaId": "pharmacy-counter",
+  "note": "Scripted by actors. No real person or data. Micrograms; filler word; side effects never mentioned.",
+  "segments": [
+    {"id": "seg-0001", "startMs": 0, "endMs": 5500, "text": "Here is your levothyroxine, fifty micrograms."},
+    {"id": "seg-0002", "startMs": 5500, "endMs": 12500, "text": "Take it once a day in the morning, on an empty stomach, um, before breakfast."},
+    {"id": "seg-0003", "startMs": 12500, "endMs": 19000, "text": "Avoid taking it at the same time as iron or calcium tablets."},
+    {"id": "seg-0004", "startMs": 19000, "endMs": 25500, "text": "If you forget to take it, take it when you remember that day."},
+    {"id": "seg-0005", "startMs": 25500, "endMs": 31500, "text": "Keep the tablets in the box, away from heat and light."}
+  ],
+  "planted": [
+    {"key": "medicine", "fields": {"name": "levothyroxine", "strength": "50 micrograms", "how_to_take": "once a day in the morning, on an empty stomach, before breakfast"}, "quote": "levothyroxine, fifty micrograms. Take it once a day in the morning, on an empty stomach, um, before breakfast"},
+    {"key": "missed_dose", "fields": {"description": "take it when you remember that day"}, "quote": "If you forget to take it, take it when you remember that day"}
+  ],
+  "plantedGapItemIds": ["q-side-effects"],
+  "label": {"medicine": "levothyroxine", "dose": "50 mcg", "frequency": "once daily"},
+  "expectedLabelFlags": []
+}
