@@ -183,6 +183,128 @@ describe('RulesExtractor', () => {
     });
   });
 
+  describe('Schema-driven fields (seed consult lines)', () => {
+    const doctor: ConversationSchema = {
+      ...careSchema,
+      facts: [
+        ...careSchema.facts,
+        {
+          key: 'warning_sign',
+          fields: ['description'],
+          cues: { any: ['if you (feel|get|have|notice|start|develop|are)', 'call the (clinic|doctor|surgery)', 'emergency', 'straight away'], windowWords: 25 },
+        },
+      ],
+    };
+
+    it('spans the next segment when it carries a missing field (dose and duration in different segments)', () => {
+      const segments = [
+        makeSegment(0, 0, 7000, 'I want to start you on metformin, five hundred milligrams, twice daily after food.'),
+        makeSegment(1, 7000, 12500, 'Take it for three months and then we will review how you are getting on.'),
+      ];
+      const med = extractor.extract(segments, doctor).find((f) => f.key === 'medicine')!;
+      expect(med.fields).toEqual({ name: 'metformin', dose: '500 milligrams', frequency: 'twice daily', duration: '3 months' });
+      expect(med.segmentIds).toEqual(['seg-0001', 'seg-0002']);
+      expect(med.quote).toBe(segments.map((s) => s.text).join(' '));
+    });
+
+    it('stores frequency as heard, never as a canonical code', () => {
+      const med = extractor.extract([makeSegment(0, 0, 5000, 'metformin 500 mg twice daily')], doctor)[0];
+      expect(med.fields.frequency).toBe('twice daily');
+    });
+
+    it('never fills a field with a placeholder', () => {
+      const facts = extractor.extract([makeSegment(0, 0, 5000, 'Please come back and see me in three months.')], doctor);
+      const followUp = facts.find((f) => f.key === 'follow_up')!;
+      expect(followUp.fields).toEqual({ when: 'in 3 months' });
+    });
+
+    it('skips a follow-up cue with nothing to fill', () => {
+      const facts = extractor.extract([makeSegment(0, 0, 5000, 'Then we will review how you are getting on.')], doctor);
+      expect(facts.filter((f) => f.key === 'follow_up')).toEqual([]);
+    });
+
+    it('takes a description from the sentence that holds the cue', () => {
+      const segments = [makeSegment(0, 0, 7000, 'Good. If you feel very dizzy, call the clinic straight away. Bye now.')];
+      const warning = extractor.extract(segments, doctor).find((f) => f.key === 'warning_sign')!;
+      expect(warning.fields.description).toBe('If you feel very dizzy, call the clinic straight away');
+    });
+
+    it('does not turn "do not take <drug>" into a medicine to take', () => {
+      const segments = [makeSegment(0, 0, 6000, 'Do not take ibuprofen while you are on this.')];
+      expect(extractor.extract(segments, doctor).filter((f) => f.key === 'medicine')).toEqual([]);
+    });
+
+    it('keeps a misheard drug name as heard (never auto-corrects)', () => {
+      const med = extractor.extract([makeSegment(0, 0, 5000, 'start metformine 500 mg once daily')], doctor)[0];
+      expect(med.fields.name).toBe('metformine');
+    });
+
+    it('does not pull the next medicine into this fact', () => {
+      const segments = [
+        makeSegment(0, 0, 5000, 'Keep taking amlodipine.'),
+        makeSegment(1, 5000, 10000, 'And atorvastatin 20 milligrams at night.'),
+      ];
+      const meds = extractor.extract(segments, doctor).filter((f) => f.key === 'medicine');
+      expect(meds.map((m) => m.fields)).toEqual([
+        { name: 'amlodipine' },
+        { name: 'atorvastatin', dose: '20 milligrams', frequency: 'at night' },
+      ]);
+    });
+
+    it('pharmacy: strength and how_to_take', () => {
+      const pharmacy: ConversationSchema = {
+        ...careSchema,
+        detectors: ['number', 'drug', 'frequency'],
+        facts: [{ key: 'medicine', fields: ['name', 'strength', 'how_to_take'], cues: { anchor: '@drug', windowWords: 30 } }],
+      };
+      const segments = [
+        makeSegment(0, 0, 5500, 'Here is your metformin, five hundred milligram tablets.'),
+        makeSegment(1, 5500, 12500, 'Take one tablet in the morning and one tablet in the evening, with food.'),
+      ];
+      const med = extractor.extract(segments, pharmacy)[0];
+      expect(med.fields).toEqual({
+        name: 'metformin',
+        strength: '500 milligram',
+        how_to_take: 'Take one tablet in the morning and one tablet in the evening, with food',
+      });
+    });
+  });
+
+  describe('Cover fields (seed consult lines)', () => {
+    const sale: ConversationSchema = {
+      ...coverSchema,
+      facts: [
+        { key: 'price', fields: ['amount', 'per'], cues: { anchor: '@money', windowWords: 15, near: ['price', 'cost', 'total', 'for the pair', 'each'] } },
+        { key: 'inclusions', fields: ['description'], cues: { any: ['includes?', 'included', 'fitting', 'warranty'], windowWords: 25 } },
+        { key: 'trial_returns', fields: ['period', 'terms'], cues: { any: ['trial', 'try them', 'return', 'refund'], windowWords: 20 } },
+        { key: 'financing', fields: ['rate', 'term', 'monthly'], cues: { any: ['finance', 'pay monthly', 'interest'], windowWords: 25 } },
+        { key: 'commission', fields: ['statement'], cues: { any: ['@commission'], windowWords: 20 } },
+      ],
+    };
+    const segments = [
+      makeSegment(0, 0, 6500, 'These are our premium devices, and the price is three thousand eight hundred dollars for the pair.'),
+      makeSegment(1, 6500, 13000, 'That includes fitting and three follow up visits in the first year.'),
+      makeSegment(2, 13000, 19500, 'You can try them for thirty days and return them for a full refund.'),
+      makeSegment(3, 19500, 27000, 'If you prefer to pay monthly, we offer finance at twelve percent interest over three years.'),
+      makeSegment(4, 27000, 33000, 'Our staff do earn a commission on every sale, which is normal.'),
+    ];
+    const facts = extractor.extract(segments, sale);
+    const byKey = (k: string) => facts.filter((f) => f.key === k).map((f) => f.fields);
+
+    it('price', () => expect(byKey('price')).toEqual([{ amount: '3800 dollars', per: 'pair' }]));
+    it('inclusions', () =>
+      expect(byKey('inclusions')).toEqual([{ description: 'That includes fitting and three follow up visits in the first year' }]));
+    it('trial and returns', () => expect(byKey('trial_returns')).toEqual([{ period: '30 days', terms: 'full refund' }]));
+    it('financing', () => expect(byKey('financing')).toEqual([{ rate: '12 percent', term: '3 years' }]));
+    it('commission', () =>
+      expect(byKey('commission')).toEqual([{ statement: 'Our staff do earn a commission on every sale, which is normal' }]));
+    it('a monthly amount is read as monthly, not as the price', () => {
+      const f = extractor.extract([makeSegment(0, 0, 5000, 'Or finance it at 250 dollars a month.')], sale);
+      expect(f.filter((x) => x.key === 'financing').map((x) => x.fields)).toEqual([{ monthly: '250 dollars' }]);
+      expect(f.filter((x) => x.key === 'price')).toEqual([]);
+    });
+  });
+
   describe('Empty cases', () => {
     it('returns empty array for empty segments', () => {
       const facts = extractor.extract([], careSchema);
