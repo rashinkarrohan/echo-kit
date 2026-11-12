@@ -106,6 +106,39 @@ describe('normaliseText', () => {
     expect(normaliseText('five thousand')).toBe('5000');
     expect(normaliseText('fifteen thousand')).toBe('15000');
   });
+
+  it('combines thousands with hundreds (spoken prices)', () => {
+    expect(normaliseText('three thousand eight hundred dollars')).toBe('3800 dollars');
+    expect(normaliseText('four thousand two hundred')).toBe('4200');
+    expect(normaliseText('one thousand two hundred and thirty four')).toBe('1234');
+    expect(normaliseText('two hundred and fifty')).toBe('250');
+  });
+
+  it('never adds separate numbers joined by "and" (dose safety)', () => {
+    expect(normaliseText('between 2 and 3 tablets')).toBe('between 2 and 3 tablets');
+    expect(normaliseText('one and two')).toBe('1 and 2');
+    expect(normaliseText('take five and then ten')).toBe('take 5 and then 10');
+  });
+
+  it('keeps adjacent numbers that cannot combine apart', () => {
+    expect(normaliseText('fifty fifteen')).toBe('50 15');
+    expect(normaliseText('twenty twenty')).toBe('20 20');
+    expect(normaliseText('one one')).toBe('1 1');
+  });
+
+  it('drops pure disfluencies so they cannot split or create numbers', () => {
+    expect(normaliseText('five, um, hundred milligrams')).toBe('500 milligrams');
+    expect(normaliseText('uh take it er twice daily')).toBe('take it twice daily');
+    expect(normaliseText('I like the summer')).toBe('i like the summer');
+  });
+
+  it('handles hyphenated tens and punctuation after number words', () => {
+    expect(normaliseText('twenty-five')).toBe('25');
+    expect(normaliseText('metformin, five hundred milligrams, twice daily')).toBe(
+      'metformin 500 milligrams twice daily'
+    );
+    expect(normaliseText('sixty day trial')).toBe('60 day trial');
+  });
 });
 
 describe('numberWordsToDigits', () => {

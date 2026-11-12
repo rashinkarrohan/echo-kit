@@ -1,10 +1,11 @@
 /**
  * Text normalisation for Echo Kit.
- * Converts number words to digits, lowercases, removes punctuation (except %, ., $, £, €),
- * and collapses whitespace. Used for fact checking and entity detection.
+ * Lowercases, removes punctuation (except %, ., $, £, € and digits), collapses
+ * whitespace and converts spoken number words to digits. Used only for checking;
+ * the original text is kept elsewhere for display.
  */
 
-const DIGIT_WORDS: Record<string, number> = {
+const UNIT_WORDS: Record<string, number> = {
   zero: 0,
   one: 1,
   two: 2,
@@ -38,104 +39,187 @@ const TENS_WORDS: Record<string, number> = {
   ninety: 90,
 };
 
+type Kind = 'unit' | 'tens' | 'hundred' | 'thousand' | 'and' | 'a' | 'half' | 'other';
+
+interface Item {
+  lower: string;
+  start: number;
+  end: number;
+  /** true when only whitespace (or a hyphen inside one word) separates it from the previous item */
+  joinable: boolean;
+}
+
+function kindOf(word: string): Kind {
+  if (word in UNIT_WORDS) return 'unit';
+  if (word in TENS_WORDS) return 'tens';
+  if (word === 'hundred') return 'hundred';
+  if (word === 'thousand') return 'thousand';
+  if (word === 'and') return 'and';
+  if (word === 'a') return 'a';
+  if (word === 'half') return 'half';
+  return 'other';
+}
+
+function isNumberKind(k: Kind): boolean {
+  return k === 'unit' || k === 'tens' || k === 'hundred' || k === 'thousand';
+}
+
+function tokenise(text: string): Item[] {
+  const items: Item[] = [];
+  const wordRe = /[A-Za-z]+(?:-[A-Za-z]+)*/g;
+  let prevEnd = -1;
+  let match: RegExpExecArray | null;
+  while ((match = wordRe.exec(text)) !== null) {
+    const start = match.index;
+    const gap = prevEnd < 0 ? '' : text.slice(prevEnd, start);
+    const joinable = prevEnd >= 0 && /^\s+$/.test(gap);
+    const parts = match[0].split('-');
+    const allNumberParts = parts.length > 1 && parts.every((p) => isNumberKind(kindOf(p.toLowerCase())));
+    if (allNumberParts) {
+      // "twenty-five": parts share the span of the whole word.
+      parts.forEach((p, idx) => {
+        items.push({
+          lower: p.toLowerCase(),
+          start,
+          end: start + match![0].length,
+          joinable: idx === 0 ? joinable : true,
+        });
+      });
+    } else {
+      items.push({ lower: match[0].toLowerCase(), start, end: start + match[0].length, joinable });
+    }
+    prevEnd = start + match[0].length;
+  }
+  return items;
+}
+
+/**
+ * Parse one run of number words starting at index i.
+ * Only grammatical English number phrases are combined; anything else ends the run,
+ * so "fifty fifteen" stays "50 15" and "one and two" stays "1 and 2".
+ */
+function parseRun(items: Item[], i: number): { value: number; last: number } {
+  let total = 0;
+  let hundreds = 0;
+  let tens = 0;
+  let unit = -1;
+  let hasHundreds = false;
+  let hasThousand = false;
+  let lastKind: Kind = 'other';
+  let last = i - 1;
+
+  for (let j = i; j < items.length; j++) {
+    const item = items[j];
+    if (j > i && !item.joinable) break;
+    const k = kindOf(item.lower);
+    const next = items[j + 1];
+    const nextKind = next && next.joinable ? kindOf(next.lower) : 'other';
+
+    if (k === 'a') {
+      if (j !== i || (nextKind !== 'hundred' && nextKind !== 'thousand')) break;
+      unit = 1;
+    } else if (k === 'unit') {
+      const v = UNIT_WORDS[item.lower];
+      if (unit !== -1) break;
+      if (tens > 0 && (v >= 10 || v === 0)) break;
+      if ((hasHundreds || hasThousand) && v === 0) break;
+      unit = v;
+    } else if (k === 'tens') {
+      if (tens > 0 || unit !== -1) break;
+      tens = TENS_WORDS[item.lower];
+    } else if (k === 'hundred') {
+      if (hasHundreds || tens > 0 || unit === 0) break;
+      hundreds = (unit === -1 ? 1 : unit) * 100;
+      unit = -1;
+      hasHundreds = true;
+    } else if (k === 'thousand') {
+      if (hasThousand || unit === 0) break;
+      const chunk = hundreds + tens + Math.max(unit, 0);
+      total = (chunk === 0 ? 1 : chunk) * 1000;
+      hundreds = 0;
+      tens = 0;
+      unit = -1;
+      hasHundreds = false;
+      hasThousand = true;
+    } else if (k === 'and') {
+      if (lastKind !== 'hundred' && lastKind !== 'thousand') break;
+      if (nextKind !== 'unit' && nextKind !== 'tens') break;
+    } else {
+      break;
+    }
+    lastKind = k;
+    last = j;
+  }
+
+  return { value: total + hundreds + tens + Math.max(unit, 0), last };
+}
+
 /**
  * Convert number words to digits in text.
- * Handles 0-19, tens (20-90), hundreds, thousands, and "half".
- * Never merges "fifty" and "fifteen" - they remain distinct.
+ * Handles 0-19, tens, hundreds, thousands, "a hundred", "a thousand" and "half" (0.5).
+ * Never merges "fifty" and "fifteen", and never adds numbers that are only joined by "and".
+ * Digits that are already present are left unchanged.
  */
 export function numberWordsToDigits(text: string): string {
-  let result = text;
+  const items = tokenise(text);
+  const replacements: Array<{ start: number; end: number; value: string }> = [];
 
-  // Handle "half" -> 0.5
-  result = result.replace(/\bhalf\b/gi, '0.5');
+  let i = 0;
+  while (i < items.length) {
+    const k = kindOf(items[i].lower);
+    const next = items[i + 1];
+    const startsWithA =
+      k === 'a' && next !== undefined && next.joinable && ['hundred', 'thousand'].includes(kindOf(next.lower));
 
-  // Handle "a hundred" -> 100, "a thousand" -> 1000
-  result = result.replace(/\ba\s+hundred\b/gi, '100');
-  result = result.replace(/\ba\s+thousand\b/gi, '1000');
-
-  // Handle compound numbers with hundred/thousand
-  // e.g., "five hundred" -> "500", "two thousand" -> "2000"
-  for (const [word, value] of Object.entries(DIGIT_WORDS)) {
-    const pattern = new RegExp(`\\b${word}\\s+hundred\\b`, 'gi');
-    result = result.replace(pattern, String(value * 100));
-    
-    const thousandPattern = new RegExp(`\\b${word}\\s+thousand\\b`, 'gi');
-    result = result.replace(thousandPattern, String(value * 1000));
-  }
-  
-  for (const [word, value] of Object.entries(TENS_WORDS)) {
-    const pattern = new RegExp(`\\b${word}\\s+thousand\\b`, 'gi');
-    result = result.replace(pattern, String(value * 1000));
-  }
-
-  // Handle "hundred and <number>" patterns (e.g., "a hundred and twenty" -> "120")
-  // Must happen before standalone replacements
-  // Also handle cases where "and" connects adjacent numbers
-  result = result.replace(/\b(\d+)\s+and\s+(\d+)\b/gi, (_, first, second) => {
-    return String(parseInt(first, 10) + parseInt(second, 10));
-  });
-
-  // Handle standalone "hundred" (if any remain)
-  result = result.replace(/\bhundred\b/gi, '100');
-  result = result.replace(/\bthousand\b/gi, '1000');
-
-  // Handle compound tens + digits (e.g., "twenty five" -> "25")
-  for (const [tensWord, tensValue] of Object.entries(TENS_WORDS)) {
-    for (const [digitWord, digitValue] of Object.entries(DIGIT_WORDS)) {
-      if (digitValue === 0) continue; // Skip zero in compounds
-      const pattern = new RegExp(`\\b${tensWord}\\s+${digitWord}\\b`, 'gi');
-      result = result.replace(pattern, String(tensValue + digitValue));
+    if (k === 'half') {
+      replacements.push({ start: items[i].start, end: items[i].end, value: '0.5' });
+      i += 1;
+    } else if (isNumberKind(k) || startsWithA) {
+      const { value, last } = parseRun(items, i);
+      replacements.push({ start: items[i].start, end: items[last].end, value: String(value) });
+      i = last + 1;
+    } else {
+      i += 1;
     }
   }
 
-  // Handle standalone tens (e.g., "twenty" -> "20")
-  for (const [word, value] of Object.entries(TENS_WORDS)) {
-    const pattern = new RegExp(`\\b${word}\\b`, 'gi');
-    result = result.replace(pattern, String(value));
+  let result = '';
+  let cursor = 0;
+  for (const r of replacements) {
+    if (r.start < cursor) continue; // parts of one hyphenated word share a span
+    result += text.slice(cursor, r.start) + r.value;
+    cursor = r.end;
   }
-
-  // Handle standalone digits and teens (e.g., "five" -> "5", "fifteen" -> "15")
-  for (const [word, value] of Object.entries(DIGIT_WORDS)) {
-    const pattern = new RegExp(`\\b${word}\\b`, 'gi');
-    result = result.replace(pattern, String(value));
-  }
-
-  return result;
+  return result + text.slice(cursor);
 }
 
 /**
  * Normalise text for entity detection and fact checking.
- * 
+ *
  * Process:
  * 1. Lowercase
- * 2. Convert number words to digits (handles "and" between numbers)
- * 3. Remove punctuation except %, ., $, £, €
+ * 2. Hyphens and dashes become spaces ("follow-up" -> "follow up")
+ * 3. Remove punctuation except %, ., $, £, € (periods are kept only inside decimals)
  * 4. Collapse whitespace
- * 
+ * 5. Convert number words to digits
+ *
  * Idempotent: normalising a normalised string returns it unchanged.
  */
 export function normaliseText(text: string): string {
-  // Step 1: Lowercase
   let result = text.toLowerCase();
 
-  // Step 2: Convert number words to digits
-  result = numberWordsToDigits(result);
-  
-  // Step 2.5: Handle any remaining "N and M" patterns (in case they weren't caught)
-  result = result.replace(/\b(\d+)\s+and\s+(\d+)\b/gi, (_, first, second) => {
-    return String(parseInt(first, 10) + parseInt(second, 10));
-  });
-
-  // Step 3: Remove punctuation except %, ., $, £, € and digits
-  // Keep: alphanumeric, spaces, %, ., $, £, €
+  result = result.replace(/[-\u2010-\u2015]/g, ' ');
   result = result.replace(/[^a-z0-9\s%.£€$]+/g, '');
-
-  // Step 3.5: Remove periods that are not part of decimals (i.e., not between digits)
-  result = result.replace(/\.(?!\d)/g, ''); // Remove . not followed by digit
-  result = result.replace(/(?<!\d)\./g, ''); // Remove . not preceded by digit
-
-  // Step 4: Collapse whitespace
+  result = result.replace(/\.(?!\d)/g, '');
+  result = result.replace(/(?<!\d)\./g, '');
   result = result.replace(/\s+/g, ' ').trim();
 
-  return result;
+  // Pure disfluencies carry no content and must never split or create a number.
+  // ("mm" is deliberately not here: it can mean millimetres.)
+  result = result.replace(/\b(?:um+|uh+|uhm|er|erm|hmm+)\b/g, ' ');
+  result = result.replace(/\s+/g, ' ').trim();
+
+  result = numberWordsToDigits(result);
+
+  return result.replace(/\s+/g, ' ').trim();
 }
