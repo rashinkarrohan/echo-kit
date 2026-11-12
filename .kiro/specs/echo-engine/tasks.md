@@ -27,7 +27,7 @@
   - _Requirements: 7_
 - [x] 9. Gap check (S9)
   - _Requirements: 8_
-- [ ] 10. Label comparison (S10)
+- [x] 10. Label comparison (S10)
   - PB7
   - _Requirements: 12_
 - [ ] 11. Quote comparison (S11)

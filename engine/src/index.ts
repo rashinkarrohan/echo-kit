@@ -42,3 +42,6 @@ export { verifyFacts } from './verify/verify';
 
 // Gap check
 export { runGapCheck } from './gap/gap-check';
+
+// Label comparison
+export { canonicalFrequency, canonicalDose, compareLabel } from './label/compare';

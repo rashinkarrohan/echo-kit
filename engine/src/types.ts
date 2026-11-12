@@ -89,14 +89,25 @@ export interface ReadBackItem {
   confirmed: boolean;
 }
 
-/** Label comparison flag */
+/** The three fields the user confirms from a medicine label (typed or read on device). */
+export interface LabelFields {
+  medicine: string;
+  dose: string;
+  frequency: string;
+}
+
+/**
+ * A difference between what was said and what is printed.
+ * Shows both values and the audio anchors; never says which one is right.
+ */
 export interface LabelFlag {
-  field: string;
-  doctorValue: string;
-  pharmacyValue: string;
-  match: boolean;
-  doctorAnchor: Anchor;
-  pharmacyAnchor: Anchor;
+  field: 'medicine' | 'dose' | 'frequency';
+  /** What was said, as heard */
+  said: string;
+  /** What is printed on the label, as confirmed by the user */
+  printed: string;
+  /** Anchors of every spoken fact that gave the `said` value */
+  anchors: Anchor[];
 }
 
 /** Receipt: collection of facts and checklist results */
