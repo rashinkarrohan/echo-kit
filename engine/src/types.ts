@@ -1,7 +1,7 @@
 // Core data model for Echo Kit
 
 /** Separate consent per purpose. `cloud` covers the optional capped proxy. */
-export type ConsentPurpose = 'record' | 'transcribe' | 'share' | 'cloud';
+export type ConsentPurpose = "record" | "transcribe" | "share" | "cloud";
 
 /**
  * One entry in the append-only consent ledger. A grant and a later withdrawal are
@@ -34,7 +34,7 @@ export interface Segment {
 
 /** Token flagged by entity detector */
 export interface FlaggedToken {
-  kind: 'number' | 'drug' | 'frequency' | 'date' | 'money' | 'percent' | 'duration' | 'commission';
+  kind: "number" | "drug" | "frequency" | "date" | "money" | "percent" | "duration" | "commission";
   value: string;
   canonical?: string;
   lowConfidence: boolean;
@@ -50,7 +50,7 @@ export interface Anchor {
 }
 
 /** Stamp for checklist item status */
-export type Stamp = 'Answered' | 'Not discussed' | 'Unclear';
+export type Stamp = "Answered" | "Not discussed" | "Unclear";
 
 /** Validated fact extracted from transcript */
 export interface Fact {
@@ -60,7 +60,7 @@ export interface Fact {
 }
 
 /** Stamp on a fact after verification */
-export type FactStamp = 'heard_clearly' | 'check_this';
+export type FactStamp = "heard_clearly" | "check_this";
 
 /** A validated fact with its verification stamp */
 export interface VerifiedFact extends Fact {
@@ -73,7 +73,7 @@ export interface ChecklistItem {
   text: string;
   sourceUrl: string;
   verified?: boolean;
-  cues?: Record<string, any>;
+  cues?: Record<string, unknown>;
 }
 
 /** Checklist item result */
@@ -86,20 +86,20 @@ export interface ChecklistResult {
 /** Conversation schema defining facts and checklist */
 export interface ConversationSchema {
   id: string;
-  skin: 'care' | 'cover';
+  skin: "care" | "cover";
   detectors: string[];
   disclaimer: string;
   facts: Array<{
     key: string;
     fields: string[];
-    cues?: Record<string, any>;
+    cues?: Record<string, unknown>;
   }>;
   checklist: ChecklistItem[];
   nextSteps: Array<{ label: string }>;
 }
 
 /** The user's mark on a read-back item. Only an explicit tap changes it from "unmarked". */
-export type ReadBackMark = 'unmarked' | 'right' | 'not_right';
+export type ReadBackMark = "unmarked" | "right" | "not_right";
 
 /** One "I heard: ..." line read back to the speaker. */
 export interface ReadBackItem {
@@ -118,7 +118,7 @@ export interface ReadBackItem {
 /** How a spoken or typed answer compares with one read-back item. Never marks the item. */
 export interface ReadBackScore {
   factKey: string;
-  match: 'full' | 'partial' | 'none';
+  match: "full" | "partial" | "none";
   /** Numbers and names from the item that the answer contained */
   found: string[];
   /** Numbers and names from the item that the answer did not contain */
@@ -137,7 +137,7 @@ export interface LabelFields {
  * Shows both values and the audio anchors; never says which one is right.
  */
 export interface LabelFlag {
-  field: 'medicine' | 'dose' | 'frequency';
+  field: "medicine" | "dose" | "frequency";
   /** What was said, as heard */
   said: string;
   /** What is printed on the label, as confirmed by the user */
@@ -195,10 +195,15 @@ export interface QuoteComparisonRow {
   differs: boolean;
 }
 
+/** Drug-name dictionary used by the drug detector */
+export interface DrugDictionary {
+  drugs: readonly string[];
+}
+
 /** Entity detector definition */
 export interface EntityDetector {
   id: string;
-  detect: (segment: Segment, dictionary?: any) => FlaggedToken[];
+  detect: (segment: Segment, dictionary?: DrugDictionary) => FlaggedToken[];
 }
 
 /** ASR adapter interface */

@@ -3,8 +3,8 @@
  * Detects: money, percent, duration, commission
  */
 
-import type { Segment, FlaggedToken, EntityDetector } from '../types';
-import { normaliseText } from '../text/normalise';
+import type { Segment, FlaggedToken, EntityDetector } from "../types";
+import { normaliseText } from "../text/normalise";
 
 /**
  * Check if any word in the segment has low confidence (< 0.6).
@@ -18,11 +18,12 @@ function hasLowConfidence(segment: Segment, value: string): boolean {
   const words = normValue.split(/\s+/);
 
   for (const word of words) {
-    const wordData = segment.words.find(w => 
-      normaliseText(w.word).toLowerCase().includes(word) ||
-      word.includes(normaliseText(w.word).toLowerCase())
+    const wordData = segment.words.find(
+      (w) =>
+        normaliseText(w.word).toLowerCase().includes(word) ||
+        word.includes(normaliseText(w.word).toLowerCase()),
     );
-    
+
     if (wordData && wordData.confidence < 0.6) {
       return true;
     }
@@ -37,7 +38,7 @@ function hasLowConfidence(segment: Segment, value: string): boolean {
  * Also detects "per month", "a month", "monthly" patterns
  */
 export const moneyDetector: EntityDetector = {
-  id: 'money',
+  id: "money",
   detect: (segment: Segment): FlaggedToken[] => {
     const normalized = normaliseText(segment.text);
     const tokens: FlaggedToken[] = [];
@@ -49,9 +50,9 @@ export const moneyDetector: EntityDetector = {
     while ((match = symbolPattern.exec(normalized)) !== null) {
       const value = match[0].trim();
       tokens.push({
-        kind: 'money',
+        kind: "money",
         value,
-        lowConfidence: hasLowConfidence(segment, value)
+        lowConfidence: hasLowConfidence(segment, value),
       });
     }
 
@@ -60,11 +61,11 @@ export const moneyDetector: EntityDetector = {
     while ((match = symbolPattern2.exec(normalized)) !== null) {
       const value = match[0].trim();
       // Only add if not already found
-      if (!tokens.some(t => t.value === value)) {
+      if (!tokens.some((t) => t.value === value)) {
         tokens.push({
-          kind: 'money',
+          kind: "money",
           value,
-          lowConfidence: hasLowConfidence(segment, value)
+          lowConfidence: hasLowConfidence(segment, value),
         });
       }
     }
@@ -75,9 +76,9 @@ export const moneyDetector: EntityDetector = {
     while ((match = wordPattern.exec(normalized)) !== null) {
       const value = match[0].trim();
       tokens.push({
-        kind: 'money',
+        kind: "money",
         value,
-        lowConfidence: hasLowConfidence(segment, value)
+        lowConfidence: hasLowConfidence(segment, value),
       });
     }
 
@@ -86,21 +87,21 @@ export const moneyDetector: EntityDetector = {
     while ((match = reversedPattern.exec(normalized)) !== null) {
       const value = match[0].trim();
       tokens.push({
-        kind: 'money',
+        kind: "money",
         value,
-        lowConfidence: hasLowConfidence(segment, value)
+        lowConfidence: hasLowConfidence(segment, value),
       });
     }
 
     return tokens;
-  }
+  },
 };
 
 /**
  * Percent detector: %, "percent", "per cent".
  */
 export const percentDetector: EntityDetector = {
-  id: 'percent',
+  id: "percent",
   detect: (segment: Segment): FlaggedToken[] => {
     const normalized = normaliseText(segment.text);
     const tokens: FlaggedToken[] = [];
@@ -112,9 +113,9 @@ export const percentDetector: EntityDetector = {
     while ((match = symbolPattern.exec(normalized)) !== null) {
       const value = match[0].trim();
       tokens.push({
-        kind: 'percent',
+        kind: "percent",
         value,
-        lowConfidence: hasLowConfidence(segment, value)
+        lowConfidence: hasLowConfidence(segment, value),
       });
     }
 
@@ -123,21 +124,21 @@ export const percentDetector: EntityDetector = {
     while ((match = wordPattern.exec(normalized)) !== null) {
       const value = match[0].trim();
       tokens.push({
-        kind: 'percent',
+        kind: "percent",
         value,
-        lowConfidence: hasLowConfidence(segment, value)
+        lowConfidence: hasLowConfidence(segment, value),
       });
     }
 
     return tokens;
-  }
+  },
 };
 
 /**
  * Duration detector: N + days/weeks/months/years, or keywords like "trial period", "warranty".
  */
 export const durationDetector: EntityDetector = {
-  id: 'duration',
+  id: "duration",
   detect: (segment: Segment): FlaggedToken[] => {
     const normalized = normaliseText(segment.text);
     const tokens: FlaggedToken[] = [];
@@ -148,9 +149,9 @@ export const durationDetector: EntityDetector = {
     while ((match = numberPattern.exec(normalized)) !== null) {
       const value = match[0].trim();
       tokens.push({
-        kind: 'duration',
+        kind: "duration",
         value,
-        lowConfidence: hasLowConfidence(segment, value)
+        lowConfidence: hasLowConfidence(segment, value),
       });
     }
 
@@ -159,25 +160,25 @@ export const durationDetector: EntityDetector = {
     while ((match = keywordPattern.exec(normalized)) !== null) {
       const value = match[0].trim();
       tokens.push({
-        kind: 'duration',
+        kind: "duration",
         value,
-        lowConfidence: hasLowConfidence(segment, value)
+        lowConfidence: hasLowConfidence(segment, value),
       });
     }
 
     return tokens;
-  }
+  },
 };
 
 /**
  * Commission detector: flags commission-related words.
  * Words: commission, incentive, bonus, "paid per sale", kickback
- * 
+ *
  * Note: The detector flags the word; the user decides what it means.
  * This includes negative contexts like "no commission".
  */
 export const commissionDetector: EntityDetector = {
-  id: 'commission',
+  id: "commission",
   detect: (segment: Segment): FlaggedToken[] => {
     const normalized = normaliseText(segment.text);
     const tokens: FlaggedToken[] = [];
@@ -187,7 +188,7 @@ export const commissionDetector: EntityDetector = {
       /\bincentives?\b/i,
       /\bbonus(?:es)?\b/i,
       /\bpaid\s+per\s+sale\b/i,
-      /\bkickbacks?\b/i
+      /\bkickbacks?\b/i,
     ];
 
     for (const pattern of patterns) {
@@ -195,13 +196,13 @@ export const commissionDetector: EntityDetector = {
       if (match) {
         const value = match[0];
         tokens.push({
-          kind: 'commission',
+          kind: "commission",
           value,
-          lowConfidence: hasLowConfidence(segment, value)
+          lowConfidence: hasLowConfidence(segment, value),
         });
       }
     }
 
     return tokens;
-  }
+  },
 };

@@ -13,15 +13,22 @@
  * avoided a question.
  */
 
-import type { Anchor, ChecklistItem, ChecklistResult, ConversationSchema, Fact, Segment } from '../types';
-import { matchesCue } from '../guard/registry';
+import type {
+  Anchor,
+  ChecklistItem,
+  ChecklistResult,
+  ConversationSchema,
+  Fact,
+  Segment,
+} from "../types";
+import { matchesCue } from "../guard/registry";
 
 const WINDOW_SEGMENTS = 3;
 
 export function runGapCheck(
   _facts: Fact[],
   schema: ConversationSchema,
-  segments: Segment[]
+  segments: Segment[],
 ): ChecklistResult[] {
   return schema.checklist.map((item) => checkItem(item, segments, schema.detectors));
 }
@@ -33,14 +40,14 @@ function anchorFor(segments: Segment[], from: number, to: number): Anchor {
     segmentIds: span.map((s) => s.id),
     startMs: span[0].startMs,
     endMs: span[span.length - 1].endMs,
-    quote: span.map((s) => s.text).join(' '),
+    quote: span.map((s) => s.text).join(" "),
   };
 }
 
-function toGroups(cues: ChecklistItem['cues']): string[][] | null {
+function toGroups(cues: ChecklistItem["cues"]): string[][] | null {
   if (!cues) return null;
-  const all: unknown = cues['all'];
-  const any: unknown = cues['any'];
+  const all: unknown = cues["all"];
+  const any: unknown = cues["any"];
   if (Array.isArray(all) && all.length > 0) {
     return all.map((g: unknown) => (Array.isArray(g) ? g.map(String) : [String(g)]));
   }
@@ -53,12 +60,12 @@ function toGroups(cues: ChecklistItem['cues']): string[][] | null {
 function checkItem(item: ChecklistItem, segments: Segment[], enabled: string[]): ChecklistResult {
   const groups = toGroups(item.cues);
   if (!groups || segments.length === 0) {
-    return { item, stamp: 'Not discussed' };
+    return { item, stamp: "Not discussed" };
   }
 
   // hits[g][i] = group g matches segment i
   const hits = groups.map((group) =>
-    segments.map((segment) => group.some((alt) => matchesCue(alt, segment, enabled)))
+    segments.map((segment) => group.some((alt) => matchesCue(alt, segment, enabled))),
   );
 
   // Answered: earliest window of <= 3 consecutive segments where every group matches.
@@ -78,7 +85,7 @@ function checkItem(item: ChecklistItem, segments: Segment[], enabled: string[]):
     if (everyGroup) {
       return {
         item,
-        stamp: 'Answered',
+        stamp: "Answered",
         anchor: anchorFor(segments, Math.min(...matchedIdx), Math.max(...matchedIdx)),
       };
     }
@@ -87,8 +94,8 @@ function checkItem(item: ChecklistItem, segments: Segment[], enabled: string[]):
   // Unclear: some group matched somewhere; anchor the first segment that matched.
   const firstHit = segments.findIndex((_, i) => hits.some((row) => row[i]));
   if (firstHit >= 0) {
-    return { item, stamp: 'Unclear', anchor: anchorFor(segments, firstHit, firstHit) };
+    return { item, stamp: "Unclear", anchor: anchorFor(segments, firstHit, firstHit) };
   }
 
-  return { item, stamp: 'Not discussed' };
+  return { item, stamp: "Not discussed" };
 }

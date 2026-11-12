@@ -5,21 +5,21 @@
  * design, so that capture can never start by accident without consent.
  */
 
-import type { ConsentPurpose, ConsentRecord, Result } from '../types';
-import type { EchoStore } from '../store/store';
+import type { ConsentPurpose, ConsentRecord, Result } from "../types";
+import type { EchoStore } from "../store/store";
 
 /** All-party wording, used everywhere (docs/appendix/UI-SPEC.md, docs/PRIVACY.md). */
 export const CONSENT_WORDING =
-  'Echo will record this conversation on your phone. Everyone in the conversation must agree. ' +
-  'Audio and text stay on your phone unless you choose to share. You can stop and delete at any time.';
+  "Echo will record this conversation on your phone. Everyone in the conversation must agree. " +
+  "Audio and text stay on your phone unless you choose to share. You can stop and delete at any time.";
 
-export const CONSENT_WORDING_VERSION = 'v1-2026-11-12';
+export const CONSENT_WORDING_VERSION = "v1-2026-11-12";
 
 export class ConsentRequiredError extends Error {
   readonly purpose: ConsentPurpose;
   constructor(purpose: ConsentPurpose, detail?: string) {
     super(detail ?? `Consent for "${purpose}" is required`);
-    this.name = 'ConsentRequiredError';
+    this.name = "ConsentRequiredError";
     this.purpose = purpose;
   }
 }
@@ -63,7 +63,10 @@ export class ConsentLedger {
 
   grant(purpose: ConsentPurpose, wordingVersion: string): ConsentRecord {
     if (wordingVersion.trim().length === 0) {
-      throw new ConsentRequiredError(purpose, 'A consent grant must name the wording version the user saw');
+      throw new ConsentRequiredError(
+        purpose,
+        "A consent grant must name the wording version the user saw",
+      );
     }
     return this.append(purpose, wordingVersion, true);
   }
@@ -78,7 +81,10 @@ export class ConsentLedger {
     if (sessionId !== undefined && this.store) {
       const deleted = await this.store.deleteSession(sessionId);
       if (!deleted.ok) {
-        return { ok: false, error: `Consent withdrawn, but deleting session ${sessionId} failed: ${deleted.error}` };
+        return {
+          ok: false,
+          error: `Consent withdrawn, but deleting session ${sessionId} failed: ${deleted.error}`,
+        };
       }
     }
     return { ok: true, value: record };

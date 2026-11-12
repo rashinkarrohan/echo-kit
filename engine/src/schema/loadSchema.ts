@@ -1,16 +1,16 @@
-import { parse } from 'yaml';
-import type { ConversationSchema, Result } from '../types';
+import { parse } from "yaml";
+import type { ConversationSchema, Result } from "../types";
 
 /** Known entity detector IDs */
 const KNOWN_DETECTORS = new Set([
-  'number',
-  'drug',
-  'frequency',
-  'date',
-  'money',
-  'percent',
-  'duration',
-  'commission'
+  "number",
+  "drug",
+  "frequency",
+  "date",
+  "money",
+  "percent",
+  "duration",
+  "commission",
 ]);
 
 /** Options for schema validation */
@@ -22,79 +22,112 @@ export interface ValidateOptions {
  * Load and parse a conversation schema from YAML text.
  * Returns Result with parsed schema or error message.
  */
+type Obj = Record<string, unknown>;
+
+function isObj(v: unknown): v is Obj {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+
+function nonEmptyString(v: unknown): v is string {
+  return typeof v === "string" && v.length > 0;
+}
+
 export function loadSchema(yamlText: string): Result<ConversationSchema> {
   try {
-    const data = parse(yamlText);
-    
-    if (!data || typeof data !== 'object') {
-      return { ok: false, error: 'Schema must be a YAML object' };
+    const data: unknown = parse(yamlText);
+
+    if (!isObj(data)) {
+      return { ok: false, error: "Schema must be a YAML object" };
     }
 
     // Required fields
-    if (!data.id || typeof data.id !== 'string') {
-      return { ok: false, error: 'Schema must have a string id' };
+    const { id, skin, detectors, disclaimer, facts, checklist, nextSteps } = data;
+    if (!nonEmptyString(id)) {
+      return { ok: false, error: "Schema must have a string id" };
     }
-    if (!data.skin || (data.skin !== 'care' && data.skin !== 'cover')) {
-      return { ok: false, error: 'Schema must have skin: care or cover' };
+    if (skin !== "care" && skin !== "cover") {
+      return { ok: false, error: "Schema must have skin: care or cover" };
     }
-    if (!Array.isArray(data.detectors)) {
-      return { ok: false, error: 'Schema must have detectors array' };
+    if (!Array.isArray(detectors)) {
+      return { ok: false, error: "Schema must have detectors array" };
     }
-    if (!data.disclaimer || typeof data.disclaimer !== 'string') {
-      return { ok: false, error: 'Schema must have a disclaimer string' };
+    if (!nonEmptyString(disclaimer)) {
+      return { ok: false, error: "Schema must have a disclaimer string" };
     }
-    if (!Array.isArray(data.facts)) {
-      return { ok: false, error: 'Schema must have facts array' };
+    if (!Array.isArray(facts)) {
+      return { ok: false, error: "Schema must have facts array" };
     }
-    if (!Array.isArray(data.checklist)) {
-      return { ok: false, error: 'Schema must have checklist array' };
+    if (!Array.isArray(checklist)) {
+      return { ok: false, error: "Schema must have checklist array" };
     }
-    if (!Array.isArray(data.nextSteps)) {
-      return { ok: false, error: 'Schema must have nextSteps array' };
+    if (!Array.isArray(nextSteps)) {
+      return { ok: false, error: "Schema must have nextSteps array" };
     }
 
     // Validate facts structure
-    for (const fact of data.facts) {
-      if (!fact.key || typeof fact.key !== 'string') {
-        return { ok: false, error: 'Each fact must have a string key' };
+    const typedFacts: ConversationSchema["facts"] = [];
+    for (const fact of facts as unknown[]) {
+      if (!isObj(fact) || !nonEmptyString(fact["key"])) {
+        return { ok: false, error: "Each fact must have a string key" };
       }
-      if (!Array.isArray(fact.fields)) {
-        return { ok: false, error: `Fact ${fact.key} must have fields array` };
+      const fields: unknown = fact["fields"];
+      if (!Array.isArray(fields)) {
+        return { ok: false, error: `Fact ${fact["key"]} must have fields array` };
       }
+      const cues: unknown = fact["cues"];
+      typedFacts.push({
+        key: fact["key"],
+        fields: (fields as unknown[]).map(String),
+        ...(isObj(cues) ? { cues } : {}),
+      });
     }
 
     // Validate checklist structure
-    for (const item of data.checklist) {
-      if (!item.id || typeof item.id !== 'string') {
-        return { ok: false, error: 'Each checklist item must have a string id' };
+    const typedChecklist: ConversationSchema["checklist"] = [];
+    for (const item of checklist as unknown[]) {
+      if (!isObj(item) || !nonEmptyString(item["id"])) {
+        return { ok: false, error: "Each checklist item must have a string id" };
       }
-      if (!item.text || typeof item.text !== 'string') {
-        return { ok: false, error: `Checklist item ${item.id} must have text` };
+      if (!nonEmptyString(item["text"])) {
+        return { ok: false, error: `Checklist item ${item["id"]} must have text` };
       }
+      const sourceUrl: unknown = item["sourceUrl"];
+      const verified: unknown = item["verified"];
+      const cues: unknown = item["cues"];
+      typedChecklist.push({
+        id: item["id"],
+        text: item["text"],
+        // A missing or non-string sourceUrl becomes "" and is rejected by validateSchema.
+        sourceUrl: typeof sourceUrl === "string" ? sourceUrl : "",
+        ...(typeof verified === "boolean" ? { verified } : {}),
+        ...(isObj(cues) ? { cues } : {}),
+      });
     }
 
     // Validate nextSteps structure
-    for (const step of data.nextSteps) {
-      if (!step.label || typeof step.label !== 'string') {
-        return { ok: false, error: 'Each nextStep must have a label' };
+    const typedNextSteps: ConversationSchema["nextSteps"] = [];
+    for (const step of nextSteps as unknown[]) {
+      if (!isObj(step) || !nonEmptyString(step["label"])) {
+        return { ok: false, error: "Each nextStep must have a label" };
       }
+      typedNextSteps.push({ label: step["label"] });
     }
 
     const schema: ConversationSchema = {
-      id: data.id,
-      skin: data.skin,
-      detectors: data.detectors,
-      disclaimer: data.disclaimer,
-      facts: data.facts,
-      checklist: data.checklist,
-      nextSteps: data.nextSteps
+      id,
+      skin,
+      detectors: (detectors as unknown[]).map(String),
+      disclaimer,
+      facts: typedFacts,
+      checklist: typedChecklist,
+      nextSteps: typedNextSteps,
     };
 
     return { ok: true, value: schema };
   } catch (error) {
     return {
       ok: false,
-      error: `Failed to parse YAML: ${error instanceof Error ? error.message : String(error)}`
+      error: `Failed to parse YAML: ${error instanceof Error ? error.message : String(error)}`,
     };
   }
 }
@@ -105,14 +138,14 @@ export function loadSchema(yamlText: string): Result<ConversationSchema> {
  */
 export function validateSchema(
   schema: ConversationSchema,
-  options: ValidateOptions = {}
+  options: ValidateOptions = {},
 ): Result<void> {
   // Validate detector IDs
   for (const detectorId of schema.detectors) {
     if (!KNOWN_DETECTORS.has(detectorId)) {
       return {
         ok: false,
-        error: `Unknown detector id: ${detectorId}. Known detectors: ${Array.from(KNOWN_DETECTORS).join(', ')}`
+        error: `Unknown detector id: ${detectorId}. Known detectors: ${Array.from(KNOWN_DETECTORS).join(", ")}`,
       };
     }
   }
@@ -120,19 +153,19 @@ export function validateSchema(
   // Validate checklist items
   for (const item of schema.checklist) {
     // Must have sourceUrl
-    if (!item.sourceUrl || item.sourceUrl.trim() === '') {
+    if (!item.sourceUrl || item.sourceUrl.trim() === "") {
       return {
         ok: false,
-        error: `Checklist item ${item.id} must have a sourceUrl`
+        error: `Checklist item ${item.id} must have a sourceUrl`,
       };
     }
 
     // In release mode, non-user-planned items must be verified
-    if (options.release && item.sourceUrl !== 'user-planned') {
+    if (options.release && item.sourceUrl !== "user-planned") {
       if (item.verified === false || item.verified === undefined) {
         return {
           ok: false,
-          error: `Checklist item ${item.id} has unverified source ${item.sourceUrl} (not allowed in release mode)`
+          error: `Checklist item ${item.id} has unverified source ${item.sourceUrl} (not allowed in release mode)`,
         };
       }
     }

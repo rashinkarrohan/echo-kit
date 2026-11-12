@@ -9,9 +9,9 @@
  * - every number in its fields appears as a whole number in its normalised quote (PB5).
  */
 
-import type { RawFact, Fact, Rejected, Segment, Anchor } from '../types';
-import { normaliseText } from '../text/normalise';
-import { rangeOf } from '../segments';
+import type { RawFact, Fact, Rejected, Segment, Anchor } from "../types";
+import { normaliseText } from "../text/normalise";
+import { rangeOf } from "../segments";
 
 /** Whole-word containment on normalised text: "5" never matches inside "500". */
 export function containsPhrase(normalisedHaystack: string, normalisedNeedle: string): boolean {
@@ -36,14 +36,14 @@ function reject(raw: RawFact, reason: string): { ok: false; error: Rejected } {
  */
 export function validateFact(
   raw: RawFact,
-  segments: Segment[]
+  segments: Segment[],
 ): { ok: true; value: Fact } | { ok: false; error: Rejected } {
   const normalisedQuote = normaliseText(raw.quote);
   if (normalisedQuote.length === 0) {
-    return reject(raw, 'Quote is empty');
+    return reject(raw, "Quote is empty");
   }
   if (raw.segmentIds.length === 0) {
-    return reject(raw, 'Fact has no segment ids');
+    return reject(raw, "Fact has no segment ids");
   }
 
   // Segments must exist and be contiguous, in order.
@@ -57,19 +57,19 @@ export function validateFact(
   }
   for (let i = 1; i < indices.length; i++) {
     if (indices[i] !== indices[i - 1] + 1) {
-      return reject(raw, `Segments are not contiguous: ${raw.segmentIds.join(', ')}`);
+      return reject(raw, `Segments are not contiguous: ${raw.segmentIds.join(", ")}`);
     }
   }
 
   // The quote must be in the whole transcript and in the segments it points at.
-  const normalisedTranscript = normaliseText(segments.map((s) => s.text).join(' '));
+  const normalisedTranscript = normaliseText(segments.map((s) => s.text).join(" "));
   if (!containsPhrase(normalisedTranscript, normalisedQuote)) {
     return reject(raw, `Quote not found in transcript. Quote: "${normalisedQuote}"`);
   }
   const referenced = indices.map((i) => segments[i]);
-  const normalisedReferenced = normaliseText(referenced.map((s) => s.text).join(' '));
+  const normalisedReferenced = normaliseText(referenced.map((s) => s.text).join(" "));
   if (!containsPhrase(normalisedReferenced, normalisedQuote)) {
-    return reject(raw, `Quote not found in the referenced segments ${raw.segmentIds.join(', ')}`);
+    return reject(raw, `Quote not found in the referenced segments ${raw.segmentIds.join(", ")}`);
   }
 
   // PB5: every number in the fields must appear in the quote.
@@ -105,7 +105,7 @@ export function validateFact(
  */
 export function validateFacts(
   rawFacts: RawFact[],
-  segments: Segment[]
+  segments: Segment[],
 ): { accepted: Fact[]; rejected: Rejected[] } {
   const accepted: Fact[] = [];
   const rejected: Rejected[] = [];

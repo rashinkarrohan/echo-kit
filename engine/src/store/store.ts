@@ -8,7 +8,7 @@
  * Audio is only saved when the user has opted in; the session decides that.
  */
 
-import type { ConsentRecord, Receipt, Result, StoredSession } from '../types';
+import type { ConsentRecord, Receipt, Result, StoredSession } from "../types";
 
 export interface EchoStore {
   saveSession(session: StoredSession): Promise<Result<void>>;
@@ -26,6 +26,7 @@ export interface EchoStore {
 }
 
 const ok = <T>(value: T): Result<T> => ({ ok: true, value });
+const done = <T>(value: T): Promise<Result<T>> => Promise.resolve(ok(value));
 
 function copy<T>(value: T): T {
   return structuredClone(value);
@@ -37,54 +38,54 @@ export class MemoryStore implements EchoStore {
   private receipts = new Map<string, Receipt>();
   private consent: ConsentRecord[] = [];
 
-  async saveSession(session: StoredSession): Promise<Result<void>> {
+  saveSession(session: StoredSession): Promise<Result<void>> {
     this.sessions.set(session.id, copy(session));
-    return ok(undefined);
+    return done(undefined);
   }
 
-  async getSession(id: string): Promise<Result<StoredSession | undefined>> {
+  getSession(id: string): Promise<Result<StoredSession | undefined>> {
     const s = this.sessions.get(id);
-    return ok(s ? copy(s) : undefined);
+    return done(s ? copy(s) : undefined);
   }
 
-  async saveAudio(sessionId: string, chunk: ArrayBuffer): Promise<Result<void>> {
+  saveAudio(sessionId: string, chunk: ArrayBuffer): Promise<Result<void>> {
     const list = this.audio.get(sessionId) ?? [];
     list.push(chunk.slice(0));
     this.audio.set(sessionId, list);
-    return ok(undefined);
+    return done(undefined);
   }
 
-  async getAudio(sessionId: string): Promise<Result<ArrayBuffer[]>> {
-    return ok((this.audio.get(sessionId) ?? []).map((c) => c.slice(0)));
+  getAudio(sessionId: string): Promise<Result<ArrayBuffer[]>> {
+    return done((this.audio.get(sessionId) ?? []).map((c) => c.slice(0)));
   }
 
-  async saveReceipt(receipt: Receipt): Promise<Result<void>> {
+  saveReceipt(receipt: Receipt): Promise<Result<void>> {
     this.receipts.set(receipt.conversationId, copy(receipt));
-    return ok(undefined);
+    return done(undefined);
   }
 
-  async getReceipt(id: string): Promise<Result<Receipt | undefined>> {
+  getReceipt(id: string): Promise<Result<Receipt | undefined>> {
     const r = this.receipts.get(id);
-    return ok(r ? copy(r) : undefined);
+    return done(r ? copy(r) : undefined);
   }
 
-  async listReceipts(): Promise<Result<Receipt[]>> {
-    return ok([...this.receipts.values()].map(copy).sort((a, b) => a.timestamp - b.timestamp));
+  listReceipts(): Promise<Result<Receipt[]>> {
+    return done([...this.receipts.values()].map(copy).sort((a, b) => a.timestamp - b.timestamp));
   }
 
-  async deleteSession(id: string): Promise<Result<void>> {
+  deleteSession(id: string): Promise<Result<void>> {
     this.sessions.delete(id);
     this.audio.delete(id);
     this.receipts.delete(id);
-    return ok(undefined);
+    return done(undefined);
   }
 
-  async saveConsentRecords(records: ConsentRecord[]): Promise<Result<void>> {
+  saveConsentRecords(records: ConsentRecord[]): Promise<Result<void>> {
     this.consent = copy(records);
-    return ok(undefined);
+    return done(undefined);
   }
 
-  async getConsentRecords(): Promise<Result<ConsentRecord[]>> {
-    return ok(copy(this.consent));
+  getConsentRecords(): Promise<Result<ConsentRecord[]>> {
+    return done(copy(this.consent));
   }
 }

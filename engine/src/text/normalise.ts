@@ -39,7 +39,7 @@ const TENS_WORDS: Record<string, number> = {
   ninety: 90,
 };
 
-type Kind = 'unit' | 'tens' | 'hundred' | 'thousand' | 'and' | 'a' | 'half' | 'other';
+type Kind = "unit" | "tens" | "hundred" | "thousand" | "and" | "a" | "half" | "other";
 
 interface Item {
   lower: string;
@@ -50,18 +50,18 @@ interface Item {
 }
 
 function kindOf(word: string): Kind {
-  if (word in UNIT_WORDS) return 'unit';
-  if (word in TENS_WORDS) return 'tens';
-  if (word === 'hundred') return 'hundred';
-  if (word === 'thousand') return 'thousand';
-  if (word === 'and') return 'and';
-  if (word === 'a') return 'a';
-  if (word === 'half') return 'half';
-  return 'other';
+  if (word in UNIT_WORDS) return "unit";
+  if (word in TENS_WORDS) return "tens";
+  if (word === "hundred") return "hundred";
+  if (word === "thousand") return "thousand";
+  if (word === "and") return "and";
+  if (word === "a") return "a";
+  if (word === "half") return "half";
+  return "other";
 }
 
 function isNumberKind(k: Kind): boolean {
-  return k === 'unit' || k === 'tens' || k === 'hundred' || k === 'thousand';
+  return k === "unit" || k === "tens" || k === "hundred" || k === "thousand";
 }
 
 function tokenise(text: string): Item[] {
@@ -71,10 +71,11 @@ function tokenise(text: string): Item[] {
   let match: RegExpExecArray | null;
   while ((match = wordRe.exec(text)) !== null) {
     const start = match.index;
-    const gap = prevEnd < 0 ? '' : text.slice(prevEnd, start);
+    const gap = prevEnd < 0 ? "" : text.slice(prevEnd, start);
     const joinable = prevEnd >= 0 && /^\s+$/.test(gap);
-    const parts = match[0].split('-');
-    const allNumberParts = parts.length > 1 && parts.every((p) => isNumberKind(kindOf(p.toLowerCase())));
+    const parts = match[0].split("-");
+    const allNumberParts =
+      parts.length > 1 && parts.every((p) => isNumberKind(kindOf(p.toLowerCase())));
     if (allNumberParts) {
       // "twenty-five": parts share the span of the whole word.
       parts.forEach((p, idx) => {
@@ -105,7 +106,7 @@ function parseRun(items: Item[], i: number): { value: number; last: number } {
   let unit = -1;
   let hasHundreds = false;
   let hasThousand = false;
-  let lastKind: Kind = 'other';
+  let lastKind: Kind = "other";
   let last = i - 1;
 
   for (let j = i; j < items.length; j++) {
@@ -113,26 +114,26 @@ function parseRun(items: Item[], i: number): { value: number; last: number } {
     if (j > i && !item.joinable) break;
     const k = kindOf(item.lower);
     const next = items[j + 1];
-    const nextKind = next && next.joinable ? kindOf(next.lower) : 'other';
+    const nextKind = next && next.joinable ? kindOf(next.lower) : "other";
 
-    if (k === 'a') {
-      if (j !== i || (nextKind !== 'hundred' && nextKind !== 'thousand')) break;
+    if (k === "a") {
+      if (j !== i || (nextKind !== "hundred" && nextKind !== "thousand")) break;
       unit = 1;
-    } else if (k === 'unit') {
+    } else if (k === "unit") {
       const v = UNIT_WORDS[item.lower];
       if (unit !== -1) break;
       if (tens > 0 && (v >= 10 || v === 0)) break;
       if ((hasHundreds || hasThousand) && v === 0) break;
       unit = v;
-    } else if (k === 'tens') {
+    } else if (k === "tens") {
       if (tens > 0 || unit !== -1) break;
       tens = TENS_WORDS[item.lower];
-    } else if (k === 'hundred') {
+    } else if (k === "hundred") {
       if (hasHundreds || tens > 0 || unit === 0) break;
       hundreds = (unit === -1 ? 1 : unit) * 100;
       unit = -1;
       hasHundreds = true;
-    } else if (k === 'thousand') {
+    } else if (k === "thousand") {
       if (hasThousand || unit === 0) break;
       const chunk = hundreds + tens + Math.max(unit, 0);
       total = (chunk === 0 ? 1 : chunk) * 1000;
@@ -141,9 +142,9 @@ function parseRun(items: Item[], i: number): { value: number; last: number } {
       unit = -1;
       hasHundreds = false;
       hasThousand = true;
-    } else if (k === 'and') {
-      if (lastKind !== 'hundred' && lastKind !== 'thousand') break;
-      if (nextKind !== 'unit' && nextKind !== 'tens') break;
+    } else if (k === "and") {
+      if (lastKind !== "hundred" && lastKind !== "thousand") break;
+      if (nextKind !== "unit" && nextKind !== "tens") break;
     } else {
       break;
     }
@@ -169,10 +170,13 @@ export function numberWordsToDigits(text: string): string {
     const k = kindOf(items[i].lower);
     const next = items[i + 1];
     const startsWithA =
-      k === 'a' && next !== undefined && next.joinable && ['hundred', 'thousand'].includes(kindOf(next.lower));
+      k === "a" &&
+      next !== undefined &&
+      next.joinable &&
+      ["hundred", "thousand"].includes(kindOf(next.lower));
 
-    if (k === 'half') {
-      replacements.push({ start: items[i].start, end: items[i].end, value: '0.5' });
+    if (k === "half") {
+      replacements.push({ start: items[i].start, end: items[i].end, value: "0.5" });
       i += 1;
     } else if (isNumberKind(k) || startsWithA) {
       const { value, last } = parseRun(items, i);
@@ -183,7 +187,7 @@ export function numberWordsToDigits(text: string): string {
     }
   }
 
-  let result = '';
+  let result = "";
   let cursor = 0;
   for (const r of replacements) {
     if (r.start < cursor) continue; // parts of one hyphenated word share a span
@@ -208,23 +212,24 @@ export function numberWordsToDigits(text: string): string {
 export function normaliseText(text: string): string {
   let result = text.toLowerCase();
 
-  result = result.replace(/[-\u2010-\u2015]/g, ' ');
-  result = result.replace(/[^a-z0-9\s%.£€$]+/g, '');
-  result = result.replace(/\.(?!\d)/g, '');
-  result = result.replace(/(?<!\d)\./g, '');
-  result = result.replace(/\s+/g, ' ').trim();
+  result = result.replace(/[-\u2010-\u2015]/g, " ");
+  result = result.replace(/[^a-z0-9\s%.£€$]+/g, "");
+  result = result.replace(/\.(?!\d)/g, "");
+  result = result.replace(/(?<!\d)\./g, "");
+  result = result.replace(/\s+/g, " ").trim();
 
   // Pure disfluencies carry no content and must never split or create a number.
   // ("mm" is deliberately not here: it can mean millimetres.)
-  result = result.replace(/\b(?:um+|uh+|uhm|er|erm|hmm+)\b/g, ' ');
-  result = result.replace(/\s+/g, ' ').trim();
+  result = result.replace(/\b(?:um+|uh+|uhm|er|erm|hmm+)\b/g, " ");
+  result = result.replace(/\s+/g, " ").trim();
 
   result = numberWordsToDigits(result);
 
   // Spoken decimals: "9 point 9" -> "9.9", "2 point 2 5" -> "2.25" (single digits after "point").
-  result = result.replace(/\b(\d+) point ((?:\d )*\d)\b(?!\.)/g, (_, whole: string, frac: string) =>
-    `${whole}.${frac.replace(/ /g, '')}`
+  result = result.replace(
+    /\b(\d+) point ((?:\d )*\d)\b(?!\.)/g,
+    (_, whole: string, frac: string) => `${whole}.${frac.replace(/ /g, "")}`,
   );
 
-  return result.replace(/\s+/g, ' ').trim();
+  return result.replace(/\s+/g, " ").trim();
 }

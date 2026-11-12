@@ -6,11 +6,11 @@
  * was found and missing; it never marks anything itself.
  */
 
-import type { Fact, ReadBackItem, ReadBackMark, ReadBackScore } from '../types';
-import { normaliseText } from '../text/normalise';
-import { containsPhrase, numbersIn } from '../validate/validate-fact';
+import type { Fact, ReadBackItem, ReadBackMark, ReadBackScore } from "../types";
+import { normaliseText } from "../text/normalise";
+import { containsPhrase, numbersIn } from "../validate/validate-fact";
 
-const NAME_FIELDS = ['name'];
+const NAME_FIELDS = ["name"];
 
 export function buildReadBack(facts: Fact[], keys?: string[]): ReadBackItem[] {
   const counts = new Map<string, number>();
@@ -18,7 +18,9 @@ export function buildReadBack(facts: Fact[], keys?: string[]): ReadBackItem[] {
 
   for (const fact of facts) {
     if (keys && !keys.includes(fact.key)) continue;
-    const values = Object.values(fact.fields).filter((v) => typeof v === 'string' && v.trim().length > 0);
+    const values = Object.values(fact.fields).filter(
+      (v) => typeof v === "string" && v.trim().length > 0,
+    );
     if (values.length === 0) continue;
 
     const n = (counts.get(fact.key) ?? 0) + 1;
@@ -27,9 +29,11 @@ export function buildReadBack(facts: Fact[], keys?: string[]): ReadBackItem[] {
     items.push({
       factKey: `${fact.key}-${n}`,
       key: fact.key,
-      heard: values.join(', '),
-      names: NAME_FIELDS.map((f) => fact.fields[f]).filter((v): v is string => typeof v === 'string' && v.length > 0),
-      mark: 'unmarked',
+      heard: values.join(", "),
+      names: NAME_FIELDS.map((f) => fact.fields[f]).filter(
+        (v): v is string => typeof v === "string" && v.length > 0,
+      ),
+      mark: "unmarked",
       anchor: fact.anchor,
     });
   }
@@ -37,7 +41,11 @@ export function buildReadBack(facts: Fact[], keys?: string[]): ReadBackItem[] {
   return items;
 }
 
-export function applyMark(items: ReadBackItem[], factKey: string, mark: ReadBackMark): ReadBackItem[] {
+export function applyMark(
+  items: ReadBackItem[],
+  factKey: string,
+  mark: ReadBackMark,
+): ReadBackItem[] {
   return items.map((item) => (item.factKey === factKey ? { ...item, mark } : item));
 }
 
@@ -53,8 +61,8 @@ export function scoreReadBack(items: ReadBackItem[], userText: string): ReadBack
     const expected = expectedTokens(item);
     const found = expected.filter((t) => containsPhrase(answer, t));
     const missing = expected.filter((t) => !found.includes(t));
-    const match: ReadBackScore['match'] =
-      expected.length > 0 && missing.length === 0 ? 'full' : found.length > 0 ? 'partial' : 'none';
+    const match: ReadBackScore["match"] =
+      expected.length > 0 && missing.length === 0 ? "full" : found.length > 0 ? "partial" : "none";
     return { factKey: item.factKey, match, found, missing };
   });
 }

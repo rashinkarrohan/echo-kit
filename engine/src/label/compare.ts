@@ -5,8 +5,8 @@
  * anchors. The comparison never says which value is right, and never calculates a dose.
  */
 
-import type { Anchor, Fact, LabelFields, LabelFlag } from '../types';
-import { normaliseText } from '../text/normalise';
+import type { Anchor, Fact, LabelFields, LabelFlag } from "../types";
+import { normaliseText } from "../text/normalise";
 
 const COUNT_WORDS: Record<string, number> = { once: 1, twice: 2, thrice: 3 };
 
@@ -21,7 +21,7 @@ export function canonicalFrequency(text: string): string | undefined {
   const everyHours = t.match(/\bevery (\d+) hours?\b/);
   if (everyHours) return `every-${everyHours[1]}-hours`;
 
-  if (/\b(as needed|when needed|if needed|as required|when required|prn)\b/.test(t)) return 'prn';
+  if (/\b(as needed|when needed|if needed|as required|when required|prn)\b/.test(t)) return "prn";
 
   const counted = t.match(/\b(once|twice|thrice|\d+ times?)( a| per| each)? (day|daily)\b/);
   if (counted) {
@@ -39,21 +39,21 @@ export function canonicalFrequency(text: string): string | undefined {
   ].filter((re) => re.test(t)).length;
   if (timesOfDay > 0) return `${timesOfDay}/day`;
 
-  if (/\b(daily|every day|each day|a day|per day)\b/.test(t)) return '1/day';
+  if (/\b(daily|every day|each day|a day|per day)\b/.test(t)) return "1/day";
 
   return undefined;
 }
 
 const UNIT_ALIASES: Array<[RegExp, string]> = [
-  [/^(mg|milligrams?|mgs)$/, 'mg'],
-  [/^(mcg|micrograms?|µg|ug)$/, 'mcg'],
-  [/^(g|grams?|gm)$/, 'g'],
-  [/^(ml|millilitres?|milliliters?|mls)$/, 'ml'],
-  [/^(units?|iu)$/, 'units'],
-  [/^(tablets?|tabs?)$/, 'tablet'],
-  [/^(capsules?|caps?)$/, 'capsule'],
-  [/^(drops?)$/, 'drop'],
-  [/^(puffs?)$/, 'puff'],
+  [/^(mg|milligrams?|mgs)$/, "mg"],
+  [/^(mcg|micrograms?|µg|ug)$/, "mcg"],
+  [/^(g|grams?|gm)$/, "g"],
+  [/^(ml|millilitres?|milliliters?|mls)$/, "ml"],
+  [/^(units?|iu)$/, "units"],
+  [/^(tablets?|tabs?)$/, "tablet"],
+  [/^(capsules?|caps?)$/, "capsule"],
+  [/^(drops?)$/, "drop"],
+  [/^(puffs?)$/, "puff"],
 ];
 
 /**
@@ -61,7 +61,7 @@ const UNIT_ALIASES: Array<[RegExp, string]> = [
  * Returns undefined when there is no number (never guesses).
  */
 export function canonicalDose(text: string): string | undefined {
-  const t = normaliseText(text).replace(/(\d)([a-zµ]+)/g, '$1 $2');
+  const t = normaliseText(text).replace(/(\d)([a-zµ]+)/g, "$1 $2");
   const m = t.match(/(\d+(?:\.\d+)?)\s*([a-zµ]+)?/);
   if (!m) return undefined;
   const value = String(parseFloat(m[1]));
@@ -72,11 +72,11 @@ export function canonicalDose(text: string): string | undefined {
 }
 
 function doseOf(fact: Fact): string | undefined {
-  return fact.fields['dose'] ?? fact.fields['strength'];
+  return fact.fields["dose"] ?? fact.fields["strength"];
 }
 
 function frequencyOf(fact: Fact): string | undefined {
-  return fact.fields['frequency'] ?? fact.fields['how_to_take'];
+  return fact.fields["frequency"] ?? fact.fields["how_to_take"];
 }
 
 /** Comparison key: the canonical form when known, otherwise the normalised text. */
@@ -85,11 +85,11 @@ function keyOf(value: string, canon: (s: string) => string | undefined): string 
 }
 
 function compareField(
-  field: 'dose' | 'frequency',
+  field: "dose" | "frequency",
   facts: Fact[],
   printed: string,
   getValue: (f: Fact) => string | undefined,
-  canon: (s: string) => string | undefined
+  canon: (s: string) => string | undefined,
 ): LabelFlag[] {
   if (normaliseText(printed).length === 0) return [];
   const printedKey = keyOf(printed, canon);
@@ -117,19 +117,19 @@ function compareField(
  * doses by value and unit, and frequencies by canonical form.
  */
 export function compareLabel(facts: Fact[], label: LabelFields): LabelFlag[] {
-  const medicines = facts.filter((f) => f.key === 'medicine');
-  const named = medicines.filter((f) => normaliseText(f.fields['name'] ?? '').length > 0);
+  const medicines = facts.filter((f) => f.key === "medicine");
+  const named = medicines.filter((f) => normaliseText(f.fields["name"] ?? "").length > 0);
   if (named.length === 0) return [];
 
   const labelName = normaliseText(label.medicine);
-  const matching = named.filter((f) => normaliseText(f.fields['name']) === labelName);
+  const matching = named.filter((f) => normaliseText(f.fields["name"]) === labelName);
 
   if (matching.length === 0) {
-    const saidNames = [...new Set(named.map((f) => f.fields['name']))];
+    const saidNames = [...new Set(named.map((f) => f.fields["name"]))];
     return [
       {
-        field: 'medicine',
-        said: saidNames.join(', '),
+        field: "medicine",
+        said: saidNames.join(", "),
         printed: label.medicine,
         anchors: named.map((f) => f.anchor),
       },
@@ -137,7 +137,7 @@ export function compareLabel(facts: Fact[], label: LabelFields): LabelFlag[] {
   }
 
   return [
-    ...compareField('dose', matching, label.dose, doseOf, canonicalDose),
-    ...compareField('frequency', matching, label.frequency, frequencyOf, canonicalFrequency),
+    ...compareField("dose", matching, label.dose, doseOf, canonicalDose),
+    ...compareField("frequency", matching, label.frequency, frequencyOf, canonicalFrequency),
   ];
 }

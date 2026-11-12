@@ -3,11 +3,11 @@
  * Flags tokens by kind: number, drug, frequency, date, money, percent, duration, commission.
  */
 
-import type { Segment, FlaggedToken, EntityDetector } from '../types';
+import type { Segment, FlaggedToken, EntityDetector, DrugDictionary } from "../types";
 
 /**
  * Flag tokens in a segment using the specified detectors.
- * 
+ *
  * @param segment - The segment to analyze
  * @param detectors - Array of entity detectors to apply
  * @param dictionary - Optional dictionary for detectors that need it (e.g., drug list)
@@ -16,7 +16,7 @@ import type { Segment, FlaggedToken, EntityDetector } from '../types';
 export function flagTokens(
   segment: Segment,
   detectors: EntityDetector[],
-  dictionary?: any
+  dictionary?: DrugDictionary,
 ): FlaggedToken[] {
   const tokens: FlaggedToken[] = [];
 
@@ -29,10 +29,22 @@ export function flagTokens(
 }
 
 // Re-export Care detectors
-export { numberDetector, frequencyDetector, dateDetector, drugDetector } from './care-detectors';
+export { numberDetector, frequencyDetector, dateDetector, drugDetector } from "./care-detectors";
 
 // Re-export Cover detectors
-export { moneyDetector, percentDetector, durationDetector, commissionDetector } from './cover-detectors';
+export {
+  moneyDetector,
+  percentDetector,
+  durationDetector,
+  commissionDetector,
+} from "./cover-detectors";
 
 // Registry and shared cue matcher
-export { DETECTORS, DRUG_DICTIONARY, getDetector, detectorsFor, detectWith, matchesCue } from './registry';
+export {
+  DETECTORS,
+  DRUG_DICTIONARY,
+  getDetector,
+  detectorsFor,
+  detectWith,
+  matchesCue,
+} from "./registry";
