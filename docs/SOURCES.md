@@ -20,6 +20,7 @@ Record the licence and the date opened for every item. Anything not written duri
 - DOJ Trinity Health settlement: https://www.justice.gov/opa/pr/justice-department-reaches-americans-disabilities-act-settlement-trinity-health-systems-iowa
 
 ## Models, libraries, datasets (fill as chosen; record licence)
+- `idb` 8.0.4 (IndexedDB wrapper, used by `ui/src/platform/idb-store.ts`): ISC licence, checked on the npm registry Nov 12, 2026: https://www.npmjs.com/package/idb
 - On-device English speech model (spike T1): licence ____
 - Drug-name list (spike): source and licence ____
 - Label OCR approach (spike): licence ____

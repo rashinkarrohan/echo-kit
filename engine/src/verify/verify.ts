@@ -9,15 +9,10 @@
  * Otherwise it gets check_this.
  */
 
-import type { Fact, Segment } from '../types';
+import type { Fact, Segment, VerifiedFact } from '../types';
 import { normaliseText } from '../text/normalise';
 
-/**
- * Stamped fact with verification result.
- */
-export interface VerifiedFact extends Fact {
-  stamp: 'heard_clearly' | 'check_this';
-}
+export type { VerifiedFact } from '../types';
 
 /**
  * Check if any word in the segment's quote region has low confidence.

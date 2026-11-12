@@ -36,8 +36,9 @@
 - [x] 12. Read-back (S12)
   - PB8
   - _Requirements: 12_
-- [ ] 13. Consent ledger and local store (S13)
+- [x] 13. Consent ledger and local store (S13)
   - PB10
+  - IndexedDB store lives in `ui/src/platform/idb-store.ts` (engine stays free of browser APIs); its browser run of the shared store contract is pending a Playwright test (Step 19)
   - _Requirements: 1, 9_
 - [ ] 14. Eval harness with 15 scripted consults (S14)
   - `pnpm evals` exits 0; `--break` exits non-zero

@@ -1,9 +1,17 @@
 // Core data model for Echo Kit
 
-/** Consent record stored per purpose */
+/** Separate consent per purpose. `cloud` covers the optional capped proxy. */
+export type ConsentPurpose = 'record' | 'transcribe' | 'share' | 'cloud';
+
+/**
+ * One entry in the append-only consent ledger. A grant and a later withdrawal are
+ * two entries; the latest entry for a purpose decides.
+ */
 export interface ConsentRecord {
   id: string;
-  purpose: string;
+  purpose: ConsentPurpose;
+  /** Version of the (all-party) wording the user saw */
+  wordingVersion: string;
   timestamp: number;
   granted: boolean;
 }
@@ -49,6 +57,14 @@ export interface Fact {
   key: string;
   fields: Record<string, string>;
   anchor: Anchor;
+}
+
+/** Stamp on a fact after verification */
+export type FactStamp = 'heard_clearly' | 'check_this';
+
+/** A validated fact with its verification stamp */
+export interface VerifiedFact extends Fact {
+  stamp: FactStamp;
 }
 
 /** Checklist item definition */
@@ -130,15 +146,28 @@ export interface LabelFlag {
   anchors: Anchor[];
 }
 
-/** Receipt: collection of facts and checklist results */
+/** Receipt: what was said, stamped and anchored, for one conversation */
 export interface Receipt {
+  /** Same as the session id; deleting the session deletes the receipt */
   conversationId: string;
   schemaId: string;
   timestamp: number;
-  facts: Fact[];
+  /** Echo Cover: the seller name the user typed */
+  seller?: string;
+  facts: VerifiedFact[];
   checklist: ChecklistResult[];
+  readBack: ReadBackItem[];
+  labelFlags: LabelFlag[];
   disclaimer: string;
   nextSteps: Array<{ label: string }>;
+}
+
+/** A conversation's transcript as stored on the device (audio is stored separately, only by opt-in). */
+export interface StoredSession {
+  id: string;
+  schemaId: string;
+  createdAt: number;
+  segments: Segment[];
 }
 
 /** What one seller said in one conversation, by fact key (Echo Cover). */

@@ -51,3 +51,11 @@ export { compareQuotes, quoteRecordFromFacts } from './compare/compare-quotes';
 
 // Read-back
 export { buildReadBack, applyMark, scoreReadBack, unexpectedNumbers } from './readback/readback';
+
+// Consent ledger and local store
+export { ConsentLedger, ConsentRequiredError, CONSENT_WORDING, CONSENT_WORDING_VERSION } from './consent/ledger';
+export type { LedgerOptions } from './consent/ledger';
+export { MemoryStore } from './store/store';
+export type { EchoStore } from './store/store';
+export { runStoreContract } from './store/store-contract';
+export type { ContractRunner, ContractSamples } from './store/store-contract';
