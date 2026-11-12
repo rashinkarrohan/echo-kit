@@ -48,3 +48,6 @@ export { canonicalFrequency, canonicalDose, compareLabel } from './label/compare
 
 // Quote comparison (Echo Cover)
 export { compareQuotes, quoteRecordFromFacts } from './compare/compare-quotes';
+
+// Read-back
+export { buildReadBack, applyMark, scoreReadBack, unexpectedNumbers } from './readback/readback';

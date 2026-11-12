@@ -33,7 +33,7 @@
 - [x] 11. Quote comparison (S11)
   - PB11
   - _Requirements: 12_
-- [ ] 12. Read-back (S12)
+- [x] 12. Read-back (S12)
   - PB8
   - _Requirements: 12_
 - [ ] 13. Consent ledger and local store (S13)

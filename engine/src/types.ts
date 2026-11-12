@@ -82,11 +82,31 @@ export interface ConversationSchema {
   nextSteps: Array<{ label: string }>;
 }
 
-/** Read-back item for verification */
+/** The user's mark on a read-back item. Only an explicit tap changes it from "unmarked". */
+export type ReadBackMark = 'unmarked' | 'right' | 'not_right';
+
+/** One "I heard: ..." line read back to the speaker. */
 export interface ReadBackItem {
-  field: string;
+  /** Unique per fact in this receipt, e.g. "medicine-1" */
+  factKey: string;
+  /** Schema fact key, e.g. "medicine" */
+  key: string;
+  /** Heard text, e.g. "metformin, 500 milligrams, twice daily" */
   heard: string;
-  confirmed: boolean;
+  /** Names to listen for in the user's answer (e.g. the medicine name) */
+  names: string[];
+  mark: ReadBackMark;
+  anchor: Anchor;
+}
+
+/** How a spoken or typed answer compares with one read-back item. Never marks the item. */
+export interface ReadBackScore {
+  factKey: string;
+  match: 'full' | 'partial' | 'none';
+  /** Numbers and names from the item that the answer contained */
+  found: string[];
+  /** Numbers and names from the item that the answer did not contain */
+  missing: string[];
 }
 
 /** The three fields the user confirms from a medicine label (typed or read on device). */
