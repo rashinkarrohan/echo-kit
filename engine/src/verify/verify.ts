@@ -11,6 +11,8 @@
 
 import type { Fact, Segment, VerifiedFact } from '../types';
 import { normaliseText } from '../text/normalise';
+import { drugDetector } from '../guard/care-detectors';
+import { DRUG_DICTIONARY } from '../guard/registry';
 
 export type { VerifiedFact } from '../types';
 
@@ -81,7 +83,15 @@ export function verifyFacts(
       }
     }
 
-    // Check 2: No low confidence tokens in the quote
+    // Check 2: a drug name that is only a near match to the dictionary is unsure
+    if (stamp === 'heard_clearly' && fact.fields['name'] !== undefined) {
+      const probe: Segment = { id: 'probe', index: 0, startMs: 0, endMs: 0, text: fact.fields['name'] };
+      if (drugDetector.detect(probe, DRUG_DICTIONARY).some((t) => t.suggestion !== undefined)) {
+        stamp = 'check_this';
+      }
+    }
+
+    // Check 3: No low confidence tokens in the quote
     if (stamp === 'heard_clearly') {
       // Check all segments referenced by this fact
       for (const segId of fact.anchor.segmentIds) {

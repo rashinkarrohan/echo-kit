@@ -130,6 +130,28 @@ describe('verifyFacts', () => {
     });
   });
 
+  describe('near-match drug names', () => {
+    it('stamps check_this when the heard drug name is only a near match ("metformine")', () => {
+      const segs = [makeSegment(0, 0, 5000, 'start metformine 500 mg once daily')];
+      const fact: Fact = {
+        key: 'medicine',
+        fields: { name: 'metformine', dose: '500 mg', frequency: 'once daily' },
+        anchor: { segmentIds: ['seg-0001'], startMs: 0, endMs: 5000, quote: 'start metformine 500 mg once daily' },
+      };
+      expect(verifyFacts([fact], segs)[0].stamp).toBe('check_this');
+    });
+
+    it('keeps heard_clearly for an exact drug name', () => {
+      const segs = [makeSegment(0, 0, 5000, 'start metformin 500 mg once daily')];
+      const fact: Fact = {
+        key: 'medicine',
+        fields: { name: 'metformin', dose: '500 mg', frequency: 'once daily' },
+        anchor: { segmentIds: ['seg-0001'], startMs: 0, endMs: 5000, quote: 'start metformin 500 mg once daily' },
+      };
+      expect(verifyFacts([fact], segs)[0].stamp).toBe('heard_clearly');
+    });
+  });
+
   describe('Multiple facts', () => {
     it('verifies multiple facts independently', () => {
       const fact1: Fact = {
