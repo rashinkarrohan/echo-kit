@@ -18,7 +18,7 @@ facts:
   - key: warning_sign
     fields: [description]
     cues:
-      any: ["if you", "call the (clinic|doctor|surgery)", "emergency", "go to (the )?hospital", "urgent", "straight away"]
+      any: ["if you (feel|get|have|notice|start|develop|are|become|see)", "call the (clinic|doctor|surgery)", "emergency", "go to (the )?hospital", "urgent", "straight away"]
       windowWords: 25
 checklist:
   - id: q-medicine-purpose
@@ -35,12 +35,12 @@ checklist:
     text: "What side effects should I expect?"
     sourceUrl: user-planned
     cues:
-      any: ["side effect", "may cause", "can cause", "feel sick", "upset stomach", "dizz"]
+      any: ["side effect", "may cause", "can cause", "feel sick", "upset stomach", "make you (feel )?dizz"]
   - id: q-warning-signs
     text: "When should I call or come back sooner?"
     sourceUrl: user-planned
     cues:
-      any: ["if you", "call the (clinic|doctor|surgery)", "emergency", "straight away"]
+      any: ["if you (feel|get|have|notice|start|develop|are|become|see)", "call the (clinic|doctor|surgery)", "emergency", "straight away"]
   - id: q-follow-up
     text: "When is my next appointment?"
     sourceUrl: user-planned

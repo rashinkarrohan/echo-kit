@@ -4,11 +4,16 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node src/run.mjs",
+    "start": "vite-node src/run.ts",
     "test": "vitest run --passWithNoTests",
-    "typecheck": "echo \"no typecheck yet\""
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@types/node": "22.20.5",
+    "vite-node": "2.1.8",
     "vitest": "2.1.8"
+  },
+  "dependencies": {
+    "@echo/engine": "workspace:*"
   }
 }

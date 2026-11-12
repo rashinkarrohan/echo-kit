@@ -1,0 +1,22 @@
+{
+  "id": "care-01",
+  "app": "echo-care",
+  "schemaId": "doctor-visit",
+  "note": "Scripted by actors. No real person or data.",
+  "segments": [
+    {"id": "seg-0001", "startMs": 0, "endMs": 6000, "text": "Good morning Mrs Baker, please sit down. Your blood sugar results are a little high."},
+    {"id": "seg-0002", "startMs": 6000, "endMs": 13000, "text": "I want to start you on metformin, five hundred milligrams, twice daily after food."},
+    {"id": "seg-0003", "startMs": 13000, "endMs": 18500, "text": "Take it for three months and then we will review how you are getting on."},
+    {"id": "seg-0004", "startMs": 18500, "endMs": 25000, "text": "Please come back and see me in three months, on a Tuesday if you can."},
+    {"id": "seg-0005", "startMs": 25000, "endMs": 32000, "text": "If you feel very dizzy or you are sick for more than a day, call the clinic straight away."},
+    {"id": "seg-0006", "startMs": 32000, "endMs": 36500, "text": "Do you have any other questions for me today?"}
+  ],
+  "planted": [
+    {"key": "medicine", "fields": {"name": "metformin", "dose": "500 milligrams", "frequency": "twice daily", "duration": "3 months"}, "quote": "metformin, five hundred milligrams, twice daily after food. Take it for three months"},
+    {"key": "follow_up", "fields": {"when": "in 3 months"}, "quote": "come back and see me in three months"},
+    {"key": "warning_sign", "fields": {"description": "very dizzy or sick for more than a day"}, "quote": "If you feel very dizzy or you are sick for more than a day, call the clinic straight away"}
+  ],
+  "plantedGapItemIds": ["q-side-effects"],
+  "label": {"medicine": "metformin", "dose": "500 mg", "frequency": "once daily"},
+  "expectedLabelFlags": ["frequency"]
+}
