@@ -5,6 +5,8 @@ packages:
   - "evals"
 allowBuilds:
   esbuild: true
+  onnxruntime-node: false
+  protobufjs: false
 minimumReleaseAgeExclude:
   - "@babel/helper-module-transforms@7.29.14"
   - "@babel/traverse@7.29.14"
