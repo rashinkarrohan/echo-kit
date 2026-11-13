@@ -93,3 +93,5 @@ export type {
   SessionOptions,
   SessionState,
 } from "./session/session";
+export { decodeWav } from "./audio/wav";
+export type { DecodedWav } from "./audio/wav";

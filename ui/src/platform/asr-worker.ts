@@ -14,7 +14,20 @@ import type { AsrDevice, WorkerReply, WorkerRequest } from "@echo/engine";
 interface WorkerScope {
   postMessage(message: WorkerReply): void;
   onmessage: ((event: { data: WorkerRequest }) => void) | null;
-  navigator?: { gpu?: unknown };
+  navigator?: { gpu?: { requestAdapter(): Promise<unknown> } };
+}
+
+/**
+ * `navigator.gpu` can exist with no usable adapter (headless browsers, many phones).
+ * Ask for an adapter first, so we never download WebGPU weights we cannot run.
+ */
+async function hasWebGpuAdapter(): Promise<boolean> {
+  try {
+    const adapter = await scope.navigator?.gpu?.requestAdapter();
+    return adapter !== null && adapter !== undefined;
+  } catch {
+    return false;
+  }
 }
 
 type Transcriber = (audio: Float32Array) => Promise<unknown>;
@@ -45,7 +58,7 @@ function message(e: unknown): string {
 async function load(model: string, devices: AsrDevice[]): Promise<AsrDevice> {
   let lastError: unknown;
   for (const device of devices) {
-    if (device === "webgpu" && !scope.navigator?.gpu) continue;
+    if (device === "webgpu" && !(await hasWebGpuAdapter())) continue;
     try {
       const asr = await pipeline("automatic-speech-recognition", model, {
         device,

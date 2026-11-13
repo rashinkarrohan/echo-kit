@@ -1,0 +1,31 @@
+/**
+ * S16 Verify: load the Whisper adapter in a browser and transcribe the bundled actor clip.
+ * Needs network on first run (the model downloads from Hugging Face, then is cached).
+ */
+
+import { test, expect } from "@playwright/test";
+import type { SpikeResult } from "../spike/types";
+
+test("transcribes the bundled 10-second actor clip on the device", async ({ page }) => {
+  test.setTimeout(420_000);
+  await page.goto("/");
+  await page.waitForFunction(() => "__spike" in window, undefined, { timeout: 400_000 });
+  const result = await page.evaluate(() => (window as unknown as { __spike: SpikeResult }).__spike);
+
+  console.log(JSON.stringify(result, null, 2));
+  await test.info().attach("spike-result", {
+    body: JSON.stringify(result, null, 2),
+    contentType: "application/json",
+  });
+
+  expect(result.error).toBeUndefined();
+  expect(result.segments.filter((s) => s.error)).toEqual([]);
+  expect(["webgpu", "wasm"]).toContain(result.device);
+
+  const heard = ` ${result.normalisedText} `;
+  for (const phrase of ["500 milligrams", "twice daily", "come back", "3 months"]) {
+    expect(heard, `expected to hear "${phrase}"`).toContain(` ${phrase} `);
+  }
+  // The drug name is not asserted: on this clip whisper-tiny.en mishears "metformin".
+  // That is a recorded accuracy finding (docs/SPIKES.md), and why drug names get "Check this".
+});

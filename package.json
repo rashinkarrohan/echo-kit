@@ -12,7 +12,8 @@
     "evals": "pnpm --filter @echo/evals start",
     "dev:care": "pnpm --filter echo-care dev",
     "dev:cover": "pnpm --filter echo-cover dev",
-    "ci:check-gitignore": "node scripts/check-gitignore.mjs"
+    "ci:check-gitignore": "node scripts/check-gitignore.mjs",
+    "e2e": "pnpm --filter @echo/ui e2e"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "8.18.2",
