@@ -1,8 +1,6 @@
-/**
- * Hash routes ("#/record"), so the app works on any static host with no server rules.
- */
+/** Echo Care routes, on the shared hash router in @echo/ui. */
 
-import { useEffect, useState } from "react";
+import { goTo, useHashRoute } from "@echo/ui";
 
 export type Route =
   | "/consent"
@@ -13,7 +11,8 @@ export type Route =
   | "/receipt"
   | "/label"
   | "/share";
-const ROUTES: Route[] = [
+
+const ROUTES: readonly Route[] = [
   "/consent",
   "/doctor-card",
   "/pharmacy",
@@ -24,21 +23,10 @@ const ROUTES: Route[] = [
   "/share",
 ];
 
-export function currentRoute(hash: string): Route {
-  const path = hash.replace(/^#/, "") as Route;
-  return ROUTES.includes(path) ? path : "/consent";
-}
-
 export function go(route: Route): void {
-  window.location.hash = route;
+  goTo(route);
 }
 
 export function useRoute(): Route {
-  const [route, setRoute] = useState<Route>(() => currentRoute(window.location.hash));
-  useEffect(() => {
-    const onChange = (): void => setRoute(currentRoute(window.location.hash));
-    window.addEventListener("hashchange", onChange);
-    return () => window.removeEventListener("hashchange", onChange);
-  }, []);
-  return route;
+  return useHashRoute(ROUTES, "/consent").route;
 }

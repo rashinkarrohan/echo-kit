@@ -1,0 +1,54 @@
+/* Echo Cover page layout: a ruled ledger, wider and denser than Echo Care. */
+html,
+body {
+  margin: 0;
+  background: #F3F4F8;
+}
+.cover-page {
+  min-height: 100vh;
+}
+.cover-header {
+  background: var(--accent);
+  color: var(--onAccent);
+  padding: var(--space-3) var(--space-4);
+}
+.cover-header__name {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.cover-page main {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-4) var(--space-7);
+}
+.cover-badge,
+.cover-playing {
+  color: var(--inkSoft);
+  font-size: var(--text-small);
+  min-height: 1.5em;
+}
+.cover-questions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.cover-error {
+  color: var(--check);
+  font-weight: 700;
+  margin: var(--space-2) 0 0;
+}
+.cover-message {
+  white-space: pre-wrap;
+  font: inherit;
+  background: var(--surface);
+  border-left: 4px solid var(--accent);
+  padding: var(--space-4);
+}
+.cover-sellers {
+  margin-top: var(--space-6);
+}
+.cover-sellers ol {
+  margin: 0;
+  padding-left: var(--space-5);
+}

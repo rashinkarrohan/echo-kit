@@ -486,3 +486,9 @@
     transition: none !important;
   }
 }
+.echo-checklist__note {
+  display: block;
+  font-size: var(--text-small);
+  color: var(--inkSoft);
+  font-weight: 700;
+}

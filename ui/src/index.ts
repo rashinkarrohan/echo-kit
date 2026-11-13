@@ -60,3 +60,12 @@ export type {
 export { LabelForm, LabelFlagList } from "./components/LabelCheck";
 export { buildShareFile, shareFileName, shareOrDownload, escapeHtml } from "./share";
 export type { ShareOptions, ShareSections, SharedReceipt } from "./share";
+export {
+  parseHash,
+  goTo,
+  useHashRoute,
+  openDeviceServices,
+  useDeviceServices,
+  useRecording,
+} from "./app-kit";
+export type { HashLocation, DeviceServices } from "./app-kit";

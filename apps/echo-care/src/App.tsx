@@ -1,26 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { ReactElement } from "react";
-import {
-  CONSENT_WORDING_VERSION,
-  ConsentLedger,
-  MemoryStore,
-  applyMark,
-  compareLabel,
-} from "@echo/engine";
-import type {
-  Anchor,
-  EchoStore,
-  LabelFields,
-  LabelFlag,
-  ReadBackMark,
-  Receipt,
-} from "@echo/engine";
+import { CONSENT_WORDING_VERSION, applyMark, compareLabel } from "@echo/engine";
+import type { Anchor, LabelFields, LabelFlag, ReadBackMark, Receipt } from "@echo/engine";
 import {
   CaptionView,
   ChecklistView,
   ConsentSheet,
   FINAL,
-  IdbStore,
   LabelFlagList,
   LabelForm,
   ReadBackPanel,
@@ -32,6 +18,8 @@ import {
   StatusMessage,
   clock,
   createPlayer,
+  useDeviceServices,
+  useRecording,
 } from "@echo/ui";
 import type { ConsentChoices, ViewStatus } from "@echo/ui";
 import { CARE } from "./copy";
@@ -40,32 +28,11 @@ import type { Stage } from "./env";
 import { go, useRoute } from "./router";
 import { SharePanel } from "./SharePanel";
 
-interface Services {
-  store: EchoStore;
-  ledger: ConsentLedger;
-  persistent: boolean;
-}
-
 /** One finished recording (doctor or pharmacy), with its in-memory audio. */
 interface Visit {
   stage: Stage;
   receipt: Receipt;
   controller: RecordingController;
-}
-
-async function openServices(): Promise<Services> {
-  const opened = await IdbStore.open("echo-care");
-  const store: EchoStore = opened.ok ? opened.value : new MemoryStore();
-  const records = await store.getConsentRecords();
-  const ledger = ConsentLedger.fromRecords(records.ok ? records.value : [], { store });
-  return { store, ledger, persistent: opened.ok };
-}
-
-function useController(controller: RecordingController | undefined) {
-  return useSyncExternalStore(
-    useCallback((cb: () => void) => controller?.subscribe(cb) ?? (() => {}), [controller]),
-    () => controller?.state,
-  );
 }
 
 const fieldsFor = (stage: Stage) =>
@@ -74,7 +41,7 @@ const fieldsFor = (stage: Stage) =>
 export function App(): ReactElement {
   const route = useRoute();
   const launch = useMemo(() => readLaunch(window.location.search), []);
-  const [services, setServices] = useState<Services>();
+  const services = useDeviceServices("echo-care");
   const [choices, setChoices] = useState<ConsentChoices>({
     record: false,
     transcribe: false,
@@ -89,11 +56,7 @@ export function App(): ReactElement {
   const [deleted, setDeleted] = useState(false);
   const [labelFlags, setLabelFlags] = useState<LabelFlag[]>();
   const player = useRef(createPlayer());
-  const rec = useController(controller);
-
-  useEffect(() => {
-    void openServices().then(setServices);
-  }, []);
+  const rec = useRecording(controller);
 
   if (!services) {
     return (

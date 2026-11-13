@@ -16,12 +16,15 @@ export function ChecklistView({
   onPlay,
   status = "ready",
   showSources = false,
+  notes = {},
 }: {
   results: ChecklistResult[];
   title?: string;
   onPlay?: PlayAnchor;
   status?: ViewStatus;
   showSources?: boolean;
+  /** Extra line per checklist item id, e.g. "I plan to ask this" */
+  notes?: Record<string, string>;
 }): ReactElement {
   const shown = status === "ready" && results.length === 0 ? "empty" : status;
   return (
@@ -34,6 +37,7 @@ export function ChecklistView({
             <li key={item.id} className="echo-card echo-checklist__item">
               <span>
                 {item.text}
+                {notes[item.id] && <span className="echo-checklist__note">{notes[item.id]}</span>}
                 {showSources && item.sourceUrl.startsWith("http") && (
                   <>
                     {" "}

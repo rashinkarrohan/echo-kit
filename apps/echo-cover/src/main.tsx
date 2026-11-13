@@ -1,10 +1,13 @@
-import React from "react";
+import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-
-function App(): React.ReactElement {
-  return <div>Echo Cover — coming in Step 22</div>;
-}
+import "@echo/ui/styles.css";
+import "./cover.css";
+import { App } from "./App";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("No root element");
-createRoot(root).render(<App />);
+createRoot(root).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+);
