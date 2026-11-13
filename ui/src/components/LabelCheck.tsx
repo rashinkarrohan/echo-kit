@@ -35,7 +35,7 @@ export function LabelForm({
     [photo],
   );
 
-  const ready = Object.values(fields).every((v) => v.trim().length > 0);
+  const ready = [fields.medicine, fields.dose, fields.frequency].every((v) => v.trim().length > 0);
   return (
     <form
       className="echo-card echo-label-form"

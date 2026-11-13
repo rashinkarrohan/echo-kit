@@ -103,7 +103,7 @@ test("the label photo is shown but never stored", async ({ page }) => {
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
       const req = indexedDB.open("echo-care");
       req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
+      req.onerror = () => reject(new Error(req.error?.message ?? "Could not open the database"));
     });
     const names = Array.from(db.objectStoreNames);
     const values: unknown[] = [];
