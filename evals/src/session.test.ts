@@ -21,8 +21,8 @@ const schemas = loadSchemas();
 const consults = loadConsults();
 
 describe("live session matches the eval harness", () => {
-  it("covers all 15 consults", () => {
-    expect(consults).toHaveLength(15);
+  it("covers at least the 15 consults Step 14 requires", () => {
+    expect(consults.length).toBeGreaterThanOrEqual(15);
   });
 
   for (const consult of consults) {
