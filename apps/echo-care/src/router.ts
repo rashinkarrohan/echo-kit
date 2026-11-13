@@ -4,8 +4,23 @@
 
 import { useEffect, useState } from "react";
 
-export type Route = "/consent" | "/doctor-card" | "/record" | "/read-back" | "/receipt";
-const ROUTES: Route[] = ["/consent", "/doctor-card", "/record", "/read-back", "/receipt"];
+export type Route =
+  | "/consent"
+  | "/doctor-card"
+  | "/pharmacy"
+  | "/record"
+  | "/read-back"
+  | "/receipt"
+  | "/label";
+const ROUTES: Route[] = [
+  "/consent",
+  "/doctor-card",
+  "/pharmacy",
+  "/record",
+  "/read-back",
+  "/receipt",
+  "/label",
+];
 
 export function currentRoute(hash: string): Route {
   const path = hash.replace(/^#/, "") as Route;

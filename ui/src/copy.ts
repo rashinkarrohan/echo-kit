@@ -55,6 +55,14 @@ export const FINAL = {
   questionsPlanned: "Questions I planned",
   questionsBeforeYouBuy: "Questions to ask before you buy",
   source: "Source",
+  labelTakePhoto: "Take a photo of the label",
+  labelTypeIt: "Type it in",
+  labelMedicine: "Medicine",
+  labelDose: "Dose",
+  labelHowOften: "How often",
+  labelMatches: "Matches what was said",
+  labelFlag: (said: string, printed: string) =>
+    `Said: ${said}. Printed: ${printed}. Check with your pharmacist or doctor.`,
 } as const;
 
 export const ADDED = {
@@ -76,6 +84,11 @@ export const ADDED = {
   soundsLike: "sounds like",
   flagged: "flagged",
   loading: "Loading.",
+  photoNotKept: "The photo stays on this screen and is not kept.",
+  photoAlt: "Your photo of the label",
+  labelCompare: "Compare with what was said",
+  labelDifferences: "Differences between what was said and the label",
+  labelWhereSaid: "Where it was said",
 } as const;
 
 /** Display names for schema fact keys and fields (ADDED; compare-row names from UI-SPEC). */

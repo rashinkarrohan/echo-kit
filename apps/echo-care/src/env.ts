@@ -4,7 +4,9 @@ import { loadSchema, validateSchema } from "@echo/engine";
 import type { ConversationSchema } from "@echo/engine";
 import type { ScriptedConsult } from "@echo/ui";
 import doctorVisitYaml from "../schemas/doctor-visit.yaml?raw";
+import pharmacyCounterYaml from "../schemas/pharmacy-counter.yaml?raw";
 import care01 from "../../../evals/consults/care-01.json";
+import care02 from "../../../evals/consults/care-02.json";
 
 function schemaFrom(yaml: string): ConversationSchema {
   const loaded = loadSchema(yaml);
@@ -14,13 +16,23 @@ function schemaFrom(yaml: string): ConversationSchema {
   return loaded.value;
 }
 
-export const DOCTOR_VISIT = schemaFrom(doctorVisitYaml);
+export type Stage = "doctor" | "pharmacy";
 
-/** Scripted consults (actors only) that can run without a microphone: ?sample=<id> */
-export const SAMPLES: Record<string, ScriptedConsult> = { "care-01": care01 };
+export const SCHEMAS: Record<Stage, ConversationSchema> = {
+  doctor: schemaFrom(doctorVisitYaml),
+  pharmacy: schemaFrom(pharmacyCounterYaml),
+};
+
+/**
+ * Scripted outings (actors only) that run without a microphone: ?sample=<id>.
+ * "care-01" is the doctor visit care-01 followed by the pharmacy visit care-02.
+ */
+export const SAMPLES: Record<string, Record<Stage, ScriptedConsult>> = {
+  "care-01": { doctor: care01, pharmacy: care02 },
+};
 
 export interface Launch {
-  sample?: ScriptedConsult;
+  sample?: Record<Stage, ScriptedConsult>;
   speed: number;
 }
 

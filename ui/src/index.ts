@@ -57,3 +57,4 @@ export type {
   RecordingSource,
   RecordingStatus,
 } from "./platform/recording";
+export { LabelForm, LabelFlagList } from "./components/LabelCheck";

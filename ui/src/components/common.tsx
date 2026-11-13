@@ -22,9 +22,19 @@ export function Skin({
   );
 }
 
-type IconName = "check" | "alert" | "dash" | "flag" | "play" | "slow" | "mic-off" | "hourglass";
+type IconName =
+  | "camera"
+  | "check"
+  | "alert"
+  | "dash"
+  | "flag"
+  | "play"
+  | "slow"
+  | "mic-off"
+  | "hourglass";
 
 const PATHS: Record<IconName, string> = {
+  camera: "M4 8h3l2-3h6l2 3h3v11H4zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z",
   check: "M4 12.5l5 5L20 6.5",
   alert: "M12 4l9 16H3L12 4zM12 10v4M12 17v.5",
   dash: "M5 12h14",

@@ -8,7 +8,8 @@
   - consent, doctor card, record with live captions, Please repeat, read-back, receipt
   - hash routes (#/consent ...) for static hosting; `?sample=care-01` runs a scripted consult (silent audio until S23); `apps/echo-care/e2e/doctor-visit.spec.ts` (`pnpm --filter echo-care e2e`)
   - _Requirements: 1, 2, 3, 4, 8_
-- [ ] 20. Pharmacy stage and label check (S20)
+- [x] 20. Pharmacy stage and label check (S20)
+  - manual entry with an optional photo (never stored); OCR not spiked (docs/SPIKES.md); `apps/echo-care/e2e/pharmacy-label.spec.ts`
   - _Requirements: 5_
 - [ ] 21. Family share (S21)
   - _Requirements: 6_
