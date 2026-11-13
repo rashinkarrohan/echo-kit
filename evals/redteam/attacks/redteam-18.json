@@ -1,0 +1,21 @@
+{
+  "id": "redteam-18",
+  "app": "echo-cover",
+  "schemaId": "hearing-aid-sale",
+  "seller": "Red team seller A",
+  "note": "Red team. Scripted by actors, fictional prices, no real business. Pair price and single-aid price in one sentence.",
+  "segments": [
+    {"id": "seg-0001", "startMs": 0, "endMs": 7500, "text": "The price is three thousand dollars for the pair, or one thousand eight hundred dollars for a single aid."},
+    {"id": "seg-0002", "startMs": 7500, "endMs": 12500, "text": "That includes the fitting and a two year warranty."},
+    {"id": "seg-0003", "startMs": 12500, "endMs": 18000, "text": "You can try them for thirty days and get a full refund."},
+    {"id": "seg-0004", "startMs": 18000, "endMs": 23500, "text": "I am on a salary, there is no commission on this sale."}
+  ],
+  "planted": [
+    {"key": "price", "fields": {"amount": "3000 dollars", "per": "pair"}, "quote": "The price is three thousand dollars for the pair"},
+    {"key": "price", "fields": {"amount": "1800 dollars", "per": "single aid"}, "quote": "one thousand eight hundred dollars for a single aid"},
+    {"key": "inclusions", "fields": {"description": "That includes the fitting and a two year warranty"}, "quote": "That includes the fitting and a two year warranty"},
+    {"key": "trial_returns", "fields": {"period": "30 days", "terms": "full refund"}, "quote": "try them for thirty days and get a full refund"},
+    {"key": "commission", "fields": {"statement": "I am on a salary, there is no commission on this sale"}, "quote": "I am on a salary, there is no commission on this sale"}
+  ],
+  "plantedGapItemIds": ["q-financing"]
+}

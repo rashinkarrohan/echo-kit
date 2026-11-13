@@ -1,0 +1,14 @@
+{
+  "id": "redteam-21",
+  "app": "echo-care",
+  "schemaId": "doctor-visit",
+  "note": "Red team probe. Same as redteam-11 but the true dose is written as 1.5 tablets, to show what Echo extracted for 'one and a half tablets'.",
+  "segments": [
+    {"id": "seg-0001", "startMs": 0, "endMs": 5000, "text": "Your asthma has flared up again this week."},
+    {"id": "seg-0002", "startMs": 5000, "endMs": 11500, "text": "Take prednisolone, one and a half tablets in the morning, for five days."}
+  ],
+  "planted": [
+    {"key": "medicine", "fields": {"name": "prednisolone", "dose": "1.5 tablets", "frequency": "in the morning", "duration": "5 days"}, "quote": "Take prednisolone, one and a half tablets in the morning, for five days"}
+  ],
+  "plantedGapItemIds": ["q-side-effects"]
+}

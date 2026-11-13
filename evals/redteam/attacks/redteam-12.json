@@ -1,0 +1,14 @@
+{
+  "id": "redteam-12",
+  "app": "echo-care",
+  "schemaId": "doctor-visit",
+  "note": "Red team. Scripted by actors, fictional. A range: 'between two and three tablets'.",
+  "segments": [
+    {"id": "seg-0001", "startMs": 0, "endMs": 5000, "text": "For the pain in your back, here is what to do."},
+    {"id": "seg-0002", "startMs": 5000, "endMs": 11500, "text": "Take paracetamol, between two and three tablets, every six hours."}
+  ],
+  "planted": [
+    {"key": "medicine", "fields": {"name": "paracetamol", "dose": "between two and three tablets", "frequency": "every 6 hours"}, "quote": "Take paracetamol, between two and three tablets, every six hours"}
+  ],
+  "plantedGapItemIds": ["q-side-effects"]
+}

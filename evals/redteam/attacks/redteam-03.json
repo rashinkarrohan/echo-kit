@@ -1,0 +1,14 @@
+{
+  "id": "redteam-03",
+  "app": "echo-care",
+  "schemaId": "doctor-visit",
+  "note": "Red team. Scripted by actors, fictional. Correction with a bare first number: 'fifty, sorry, fifteen milligrams'.",
+  "segments": [
+    {"id": "seg-0001", "startMs": 0, "endMs": 5000, "text": "Your blood pressure needs a little more help."},
+    {"id": "seg-0002", "startMs": 5000, "endMs": 11500, "text": "Start lisinopril, fifty, sorry, fifteen milligrams once a day."}
+  ],
+  "planted": [
+    {"key": "medicine", "fields": {"name": "lisinopril", "dose": "15 milligrams", "frequency": "once a day"}, "quote": "Start lisinopril, fifty, sorry, fifteen milligrams once a day"}
+  ],
+  "plantedGapItemIds": ["q-side-effects"]
+}

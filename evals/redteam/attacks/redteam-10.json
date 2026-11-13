@@ -1,0 +1,14 @@
+{
+  "id": "redteam-10",
+  "app": "echo-care",
+  "schemaId": "doctor-visit",
+  "note": "Red team. Scripted by actors, fictional. An old dose earlier in the same segment, before the drug name.",
+  "segments": [
+    {"id": "seg-0001", "startMs": 0, "endMs": 5000, "text": "Your sugar levels have come down nicely."},
+    {"id": "seg-0002", "startMs": 5000, "endMs": 12500, "text": "You used to take one thousand milligrams, but now take metformin five hundred milligrams twice a day."}
+  ],
+  "planted": [
+    {"key": "medicine", "fields": {"name": "metformin", "dose": "500 milligrams", "frequency": "twice a day"}, "quote": "now take metformin five hundred milligrams twice a day"}
+  ],
+  "plantedGapItemIds": ["q-side-effects"]
+}

@@ -1,0 +1,20 @@
+{
+  "id": "redteam-20",
+  "app": "echo-cover",
+  "schemaId": "hearing-aid-sale",
+  "seller": "Red team seller C",
+  "note": "Red team. Scripted by actors, fictional prices, no real business. 'No commission' said in the sentence after the cue word.",
+  "segments": [
+    {"id": "seg-0001", "startMs": 0, "endMs": 6000, "text": "The price is four thousand two hundred dollars for the pair."},
+    {"id": "seg-0002", "startMs": 6000, "endMs": 11000, "text": "That includes the fitting and two follow up visits."},
+    {"id": "seg-0003", "startMs": 11000, "endMs": 16500, "text": "You can try them for thirty days and get a full refund."},
+    {"id": "seg-0004", "startMs": 16500, "endMs": 23000, "text": "People often ask if we get a commission. We do not, we are paid a flat salary."}
+  ],
+  "planted": [
+    {"key": "price", "fields": {"amount": "4200 dollars", "per": "pair"}, "quote": "The price is four thousand two hundred dollars for the pair"},
+    {"key": "inclusions", "fields": {"description": "That includes the fitting and two follow up visits"}, "quote": "That includes the fitting and two follow up visits"},
+    {"key": "trial_returns", "fields": {"period": "30 days", "terms": "full refund"}, "quote": "try them for thirty days and get a full refund"},
+    {"key": "commission", "fields": {"statement": "We do not get a commission, we are paid a flat salary"}, "quote": "People often ask if we get a commission. We do not, we are paid a flat salary"}
+  ],
+  "plantedGapItemIds": ["q-financing"]
+}

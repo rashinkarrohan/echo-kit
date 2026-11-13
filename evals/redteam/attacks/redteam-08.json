@@ -1,0 +1,14 @@
+{
+  "id": "redteam-08",
+  "app": "echo-care",
+  "schemaId": "doctor-visit",
+  "note": "Red team. Scripted by actors, fictional. 'Stop taking X and start Y 20 mg' in one sentence.",
+  "segments": [
+    {"id": "seg-0001", "startMs": 0, "endMs": 5000, "text": "Your cholesterol is still a bit high."},
+    {"id": "seg-0002", "startMs": 5000, "endMs": 11500, "text": "Stop taking simvastatin and start atorvastatin twenty milligrams at night."}
+  ],
+  "planted": [
+    {"key": "medicine", "fields": {"name": "atorvastatin", "dose": "20 milligrams", "frequency": "at night"}, "quote": "start atorvastatin twenty milligrams at night"}
+  ],
+  "plantedGapItemIds": ["q-side-effects"]
+}

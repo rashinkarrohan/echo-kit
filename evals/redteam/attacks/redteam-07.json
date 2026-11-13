@@ -1,0 +1,14 @@
+{
+  "id": "redteam-07",
+  "app": "echo-care",
+  "schemaId": "doctor-visit",
+  "note": "Red team. Scripted by actors, fictional. A stopped medicine named before the word 'stop': 'The simvastatin forty milligrams, we are stopping that today'.",
+  "segments": [
+    {"id": "seg-0001", "startMs": 0, "endMs": 6000, "text": "The simvastatin forty milligrams, we are stopping that today."},
+    {"id": "seg-0002", "startMs": 6000, "endMs": 12000, "text": "Instead, start atorvastatin twenty milligrams at night for your cholesterol."}
+  ],
+  "planted": [
+    {"key": "medicine", "fields": {"name": "atorvastatin", "dose": "20 milligrams", "frequency": "at night"}, "quote": "start atorvastatin twenty milligrams at night"}
+  ],
+  "plantedGapItemIds": ["q-side-effects"]
+}

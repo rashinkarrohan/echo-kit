@@ -42,6 +42,15 @@ const TIME_OF_DAY_FREQUENCY = /^(morning|night)$/;
 const MASS_UNIT = /\d\s*(mg|mcg|g|ml|milligrams?|grams?|micrograms?|units?)$/;
 const COUNT_UNIT = /\d\s*(tablets?|capsules?|drops?|puffs?)$/;
 const NEGATION_BEFORE = /\b(not|dont|never|avoid|stop)\b/;
+/** A "do not take" or "stop" instruction in the drug's clause, before the drug. */
+const NEGATION_CLAUSE = /\b(not|dont|never|avoid|stop|stopping)\b/;
+/** "simvastatin 40 mg, we are stopping that": the drug is being stopped. */
+const STOPPING_AFTER =
+  /^(?:\S+ ){0,6}?(we are|were|i am|im|i'm)? ?(stopping|stop|coming off) (that|it|this|them)\b/;
+/** Marker for a field heard with two different values; removed before output. */
+const CONFLICT = "\u0000conflict";
+/** Words that end a clause when they follow a comma (spoken lists of instructions). */
+const CLAUSE_WORDS = /^(and|but|then|or|so|now|plus|also)$/;
 
 function asStringArray(v: unknown): string[] {
   return Array.isArray(v) ? v.map(String) : typeof v === "string" ? [v] : [];
@@ -131,6 +140,22 @@ export class RulesExtractor implements Extractor {
           if (kind === "money" && isMonthly(norm, at, token.value)) return;
           if (near.length > 0 && !near.some((alt) => matchesCue(alt, segment, enabled))) return;
 
+          if (kind === "drug") {
+            const raw = this.medicineFact(
+              def,
+              segments,
+              si,
+              positions,
+              ai,
+              token,
+              ai > 0 ? words(normaliseText(anchors[ai - 1].value)).length : 0,
+              windowWords,
+              detectors,
+            );
+            if (raw) out.push(raw);
+            return;
+          }
+
           const prevAnchor = ai > 0 ? positions[ai - 1] + 1 : 0;
           const nextAnchor =
             ai + 1 < positions.length && positions[ai + 1] >= 0 ? positions[ai + 1] : norm.length;
@@ -178,6 +203,132 @@ export class RulesExtractor implements Extractor {
 
   private tokens(segment: Segment, detectors: EntityDetector[]): FlaggedToken[] {
     return detectors.flatMap((d) => d.detect(segment, DRUG_DICTIONARY));
+  }
+
+  /**
+   * A medicine fact built from positions, so one medicine never takes another's values
+   * (red-team attacks, S27):
+   * - The window starts at the start of the clause that names the drug, and never before
+   *   the previous drug or after it (values between two drugs belong to the clause they
+   *   are in); it ends at the next drug or after `windowWords`.
+   * - A drug inside a "do not take" / "stop" clause, or followed by "we are stopping
+   *   that", is not a medicine to take.
+   * - If two different doses or two different frequencies are heard for one drug
+   *   (a correction, "not ten, just five"), that field is left empty: never guessed.
+   * - Missing fields may come from the next segment if it names no other drug.
+   */
+  private medicineFact(
+    def: FactDef,
+    segments: Segment[],
+    si: number,
+    positions: number[],
+    ai: number,
+    token: FlaggedToken,
+    prevLength: number,
+    windowWords: number,
+    detectors: EntityDetector[],
+  ): RawFact | null {
+    const segment = segments[si];
+    const norm = words(normaliseText(segment.text));
+    const at = positions[ai];
+    const prevDrugEnd = ai > 0 && positions[ai - 1] >= 0 ? positions[ai - 1] + prevLength : 0;
+    const nextDrug =
+      ai + 1 < positions.length && positions[ai + 1] >= 0 ? positions[ai + 1] : norm.length;
+
+    const clause = clauseStartBefore(segment.text, norm, at);
+    // Negation is looked for from the start of this drug's clause, but not before the
+    // previous drug ("stop taking simvastatin and start atorvastatin").
+    if (NEGATION_CLAUSE.test(norm.slice(Math.max(clause, prevDrugEnd), at).join(" "))) return null;
+    const ownLength = words(normaliseText(token.value)).length;
+    if (STOPPING_AFTER.test(norm.slice(at + ownLength, nextDrug).join(" "))) return null;
+
+    // Values said before the drug count only if no earlier drug shares its clause; when
+    // one does, words between them belong to that earlier drug.
+    const sharesClause = ai > 0 && positions[ai - 1] >= clause;
+    const start = sharesClause ? at : clause;
+    const end = Math.min(nextDrug, at + windowWords);
+    const name = firstField(def, "drug");
+    const win: Window = { segmentIdx: [si], fields: { [name]: token.value } };
+    this.fillMedicine(def, win, segment, norm.slice(start, end).join(" "), detectors);
+
+    const next = segments[si + 1];
+    const budget = windowWords - (end - at);
+    const missing = def.fields.some(
+      (f) => win.fields[f] === undefined && !DESCRIPTION_FIELDS.has(f),
+    );
+    if (
+      next &&
+      budget > 0 &&
+      missing &&
+      !this.tokens(next, detectors).some((t) => t.kind === "drug")
+    ) {
+      const before = Object.keys(win.fields).length;
+      const nextText = words(normaliseText(next.text)).slice(0, budget).join(" ");
+      this.fillMedicine(def, win, next, nextText, detectors);
+      if (Object.keys(win.fields).length > before) win.segmentIdx.push(si + 1);
+    }
+    return toRaw(def, win, segments);
+  }
+
+  /** Fill dose and frequency only when exactly one distinct value was heard. */
+  private fillMedicine(
+    def: FactDef,
+    win: Window,
+    segment: Segment,
+    text: string,
+    detectors: EntityDetector[],
+  ): void {
+    const window = piece(segment, text);
+    const tokens = this.tokens(window, detectors);
+    const distinct = (values: string[]): string | undefined => {
+      const seen = [...new Set(values.map((v) => normaliseText(v)))];
+      return seen.length === 1 ? values[0] : undefined;
+    };
+    const doses = tokens.filter((t) => t.kind === "number").map((t) => t.value);
+    const mass = doses.filter((v) => MASS_UNIT.test(v));
+    const count = doses.filter((v) => COUNT_UNIT.test(v));
+    const freqs = tokens.filter((t) => t.kind === "frequency");
+    const counted = freqs.filter((t) => COUNT_FREQUENCY.test(t.canonical ?? ""));
+    const timed = freqs.filter((t) => TIME_OF_DAY_FREQUENCY.test(t.canonical ?? ""));
+    // "twice a day" and "twice daily" are the same frequency; compare canonical forms.
+    const oneFreq = (list: FlaggedToken[]): string | undefined =>
+      new Set(list.map((t) => t.canonical)).size === 1 ? list[0].value : undefined;
+
+    for (const field of def.fields) {
+      if (win.fields[field] !== undefined || DESCRIPTION_FIELDS.has(field)) continue;
+      let value: string | undefined;
+      if (field === "dose" || field === "strength") {
+        value = mass.length > 0 ? distinct(mass) : count.length > 0 ? distinct(count) : undefined;
+      } else if (field === "frequency") {
+        value =
+          counted.length > 0 ? oneFreq(counted) : timed.length > 0 ? oneFreq(timed) : undefined;
+      } else if (field === "how_to_take") {
+        const first = freqs[0]?.value;
+        value = first
+          ? sentencesOf(segment.text).find((s) => normaliseText(s).includes(first))
+          : undefined;
+      } else if (field === "duration") {
+        value = text.match(/\bfor (\d+(?:\.\d+)? (?:days?|weeks?|months?|years?))\b/)?.[1];
+      }
+      if (value !== undefined && value.length > 0) win.fields[field] = value;
+    }
+    // Once a field has been seen with two values, never fill it from a later segment either.
+    for (const field of ["dose", "strength"]) {
+      if (
+        def.fields.includes(field) &&
+        win.fields[field] === undefined &&
+        (mass.length > 1 || count.length > 1)
+      ) {
+        win.fields[field] = CONFLICT;
+      }
+    }
+    if (
+      def.fields.includes("frequency") &&
+      win.fields["frequency"] === undefined &&
+      (counted.length > 1 || timed.length > 1)
+    ) {
+      win.fields["frequency"] = CONFLICT;
+    }
   }
 
   /** Try to fill missing fields from the next segment, within the remaining word budget. */
@@ -283,6 +434,60 @@ export class RulesExtractor implements Extractor {
   }
 }
 
+/**
+ * Word index (in the normalised words) where the clause holding word `at` starts.
+ * A clause starts after a sentence end, after "," or ";" followed by a joining word
+ * ("and", "but", "then", ...), or after "but"/"now" anywhere. Counts words of the
+ * original text, so it needs the normalised and original word counts to line up;
+ * when they do not, it falls back to the start of the segment.
+ */
+function clauseStartBefore(original: string, norm: string[], at: number): number {
+  const starts = clauseStarts(original, norm);
+  let start = 0;
+  for (const s of starts) if (s <= at) start = s;
+  // "but"/"now" inside a clause also starts a new instruction ("1000 mg, but now take ...").
+  for (let i = at - 1; i >= start; i--) if (/^(but|now)$/.test(norm[i])) return i + 1;
+  return start;
+}
+
+/**
+ * Normalised-word indices where clauses start. Clauses end at ". ! ? ;" or at a comma
+ * followed by a joining word ("and", "but", "then", ...). Each clause is normalised on
+ * its own, so number words ("five hundred") cannot shift positions; if the pieces do not
+ * line up with the whole segment, only the segment start is returned.
+ */
+function clauseStarts(original: string, norm: string[]): number[] {
+  const pieces: string[] = [];
+  let current = "";
+  const tokens = original.split(/(\s+)/);
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i];
+    current += t;
+    if (/\s+/.test(t) || t.length === 0) continue;
+    const nextWord = tokens.slice(i + 1).find((x) => x.trim().length > 0) ?? "";
+    const endsSentence = /[.!?;]["')\]]*$/.test(t);
+    const commaJoin = /,$/.test(t) && CLAUSE_WORDS.test(normaliseText(nextWord));
+    if (endsSentence || commaJoin) {
+      pieces.push(current);
+      current = "";
+    }
+  }
+  if (current.trim().length > 0) pieces.push(current);
+
+  const starts: number[] = [];
+  let n = 0;
+  const joined: string[] = [];
+  for (const p of pieces) {
+    const w = words(normaliseText(p));
+    if (w.length === 0) continue;
+    starts.push(n);
+    n += w.length;
+    joined.push(...w);
+  }
+  if (joined.length !== norm.length || joined.some((w, i) => w !== norm[i])) return [0];
+  return starts.length > 0 ? starts : [0];
+}
+
 /** The field an anchor token fills: drug -> name, money -> amount, else the first field. */
 function firstField(def: FactDef, kind: string): string {
   if (kind === "drug" && def.fields.includes("name")) return "name";
@@ -302,7 +507,7 @@ function isMonthly(normWords: string[], at: number, value: string): boolean {
 function toRaw(def: FactDef, win: Window, segments: Segment[]): RawFact | null {
   const fields: Record<string, string> = {};
   for (const f of def.fields) {
-    if (win.fields[f] !== undefined) fields[f] = win.fields[f];
+    if (win.fields[f] !== undefined && win.fields[f] !== CONFLICT) fields[f] = win.fields[f];
   }
   if (Object.keys(fields).length === 0) return null;
   const span = win.segmentIdx.map((i) => segments[i]);

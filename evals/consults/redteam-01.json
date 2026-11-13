@@ -1,0 +1,19 @@
+{
+  "id": "redteam-01",
+  "app": "echo-care",
+  "schemaId": "doctor-visit",
+  "note": "Red team. Scripted by actors, fictional. Two medicines in one sentence: the second must not take the first one's dose or frequency.",
+  "segments": [
+    {"id": "seg-0001", "startMs": 0, "endMs": 6000, "text": "Your blood sugar is a little high, so we need to add something today."},
+    {"id": "seg-0002", "startMs": 6000, "endMs": 13500, "text": "Keep the aspirin at seventy-five milligrams once a day, and add metformin five hundred milligrams twice a day."},
+    {"id": "seg-0003", "startMs": 13500, "endMs": 18000, "text": "Please come back and see me in three months."},
+    {"id": "seg-0004", "startMs": 18000, "endMs": 23000, "text": "If you feel very dizzy, call the clinic straight away."}
+  ],
+  "planted": [
+    {"key": "medicine", "fields": {"name": "aspirin", "dose": "75 milligrams", "frequency": "once a day"}, "quote": "Keep the aspirin at seventy-five milligrams once a day"},
+    {"key": "medicine", "fields": {"name": "metformin", "dose": "500 milligrams", "frequency": "twice a day"}, "quote": "add metformin five hundred milligrams twice a day"},
+    {"key": "follow_up", "fields": {"when": "in 3 months"}, "quote": "come back and see me in three months"},
+    {"key": "warning_sign", "fields": {"description": "If you feel very dizzy, call the clinic straight away"}, "quote": "If you feel very dizzy, call the clinic straight away"}
+  ],
+  "plantedGapItemIds": ["q-side-effects"]
+}

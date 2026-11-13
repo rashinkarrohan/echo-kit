@@ -322,6 +322,95 @@ describe("RulesExtractor", () => {
     });
   });
 
+  describe("Red-team attacks (S27): never give one medicine another's values", () => {
+    const doctor: ConversationSchema = {
+      ...careSchema,
+      facts: [
+        {
+          key: "medicine",
+          fields: ["name", "dose", "frequency", "duration"],
+          cues: { anchor: "@drug", windowWords: 25 },
+        },
+      ],
+    };
+    const meds = (...texts: string[]) =>
+      extractor
+        .extract(
+          texts.map((t, i) => makeSegment(i, i * 6000, (i + 1) * 6000, t)),
+          doctor,
+        )
+        .filter((f) => f.key === "medicine")
+        .map((f) => f.fields);
+
+    it("01: two drugs in one sentence keep their own dose and frequency", () => {
+      expect(
+        meds(
+          "Keep the aspirin at seventy-five milligrams once a day, and add metformin five hundred milligrams twice a day.",
+        ),
+      ).toEqual([
+        { name: "aspirin", dose: "75 milligrams", frequency: "once a day" },
+        { name: "metformin", dose: "500 milligrams", frequency: "twice a day" },
+      ]);
+    });
+
+    it("06: a dose said before the second drug is not given to it", () => {
+      expect(
+        meds("Carry on with your metformin five hundred milligrams and your aspirin."),
+      ).toEqual([{ name: "metformin", dose: "500 milligrams" }, { name: "aspirin" }]);
+    });
+
+    it("10: an old dose said before the drug does not win over the dose after it", () => {
+      expect(
+        meds(
+          "You used to take one thousand milligrams, but now take metformin five hundred milligrams twice a day.",
+        ),
+      ).toEqual([{ name: "metformin", dose: "500 milligrams", frequency: "twice a day" }]);
+    });
+
+    it("14: frequency is the one said nearest after the drug, by position", () => {
+      expect(meds("Metformin five hundred milligrams, twice a day now.")).toEqual([
+        { name: "metformin", dose: "500 milligrams", frequency: "twice a day" },
+      ]);
+    });
+
+    it("02 and 09: a corrected or contradicted dose is left empty, never guessed", () => {
+      expect(
+        meds(
+          "We are starting amlodipine.",
+          "Take ten milligrams, sorry, I mean five milligrams, once a day.",
+        ),
+      ).toEqual([{ name: "amlodipine", frequency: "once a day" }]);
+      expect(
+        meds(
+          "We are starting amlodipine.",
+          "Not ten milligrams like your old tablets, just five milligrams once a day.",
+        ),
+      ).toEqual([{ name: "amlodipine", frequency: "once a day" }]);
+    });
+
+    it("conflicting frequencies for one drug are left empty", () => {
+      expect(
+        meds("Metformin five hundred milligrams twice a day, because once a day was not enough."),
+      ).toEqual([{ name: "metformin", dose: "500 milligrams" }]);
+    });
+
+    it("04: a negation further back still stops the drug becoming a medicine to take", () => {
+      expect(meds("Please don't take any more of the ibuprofen four hundred milligrams.")).toEqual(
+        [],
+      );
+    });
+
+    it("07: a drug that is being stopped is not a medicine to take", () => {
+      expect(meds("The simvastatin forty milligrams, we are stopping that today.")).toEqual([]);
+    });
+
+    it("08: the drug started after a stopped one is still kept", () => {
+      expect(
+        meds("Stop taking simvastatin and start atorvastatin twenty milligrams at night."),
+      ).toEqual([{ name: "atorvastatin", dose: "20 milligrams", frequency: "at night" }]);
+    });
+  });
+
   describe("Cover fields (seed consult lines)", () => {
     const sale: ConversationSchema = {
       ...coverSchema,

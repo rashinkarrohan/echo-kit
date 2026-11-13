@@ -1,0 +1,14 @@
+{
+  "id": "redteam-14",
+  "app": "echo-care",
+  "schemaId": "doctor-visit",
+  "note": "Red team. Scripted by actors, fictional. One drug, two frequencies: the new one first, the old one mentioned after.",
+  "segments": [
+    {"id": "seg-0001", "startMs": 0, "endMs": 5000, "text": "Your sugar is still higher than we would like."},
+    {"id": "seg-0002", "startMs": 5000, "endMs": 12000, "text": "Metformin five hundred milligrams, twice a day now, because once a day was not enough."}
+  ],
+  "planted": [
+    {"key": "medicine", "fields": {"name": "metformin", "dose": "500 milligrams", "frequency": "twice a day"}, "quote": "Metformin five hundred milligrams, twice a day now"}
+  ],
+  "plantedGapItemIds": ["q-side-effects"]
+}

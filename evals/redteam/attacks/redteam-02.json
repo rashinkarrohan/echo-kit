@@ -1,0 +1,14 @@
+{
+  "id": "redteam-02",
+  "app": "echo-care",
+  "schemaId": "doctor-visit",
+  "note": "Red team. Scripted by actors, fictional. Retracted dose in the next segment: 'ten milligrams, sorry, I mean five milligrams'.",
+  "segments": [
+    {"id": "seg-0001", "startMs": 0, "endMs": 5500, "text": "Your blood pressure is still high, so I am starting amlodipine."},
+    {"id": "seg-0002", "startMs": 5500, "endMs": 12000, "text": "Take ten milligrams, sorry, I mean five milligrams, once a day in the morning."}
+  ],
+  "planted": [
+    {"key": "medicine", "fields": {"name": "amlodipine", "dose": "5 milligrams", "frequency": "once a day"}, "quote": "starting amlodipine. Take ten milligrams, sorry, I mean five milligrams, once a day"}
+  ],
+  "plantedGapItemIds": ["q-side-effects"]
+}

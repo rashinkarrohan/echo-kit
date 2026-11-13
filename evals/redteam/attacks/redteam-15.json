@@ -1,0 +1,14 @@
+{
+  "id": "redteam-15",
+  "app": "echo-care",
+  "schemaId": "doctor-visit",
+  "note": "Red team. Scripted by actors, fictional. 'If you have any questions about parking, call the clinic' is not a warning sign.",
+  "segments": [
+    {"id": "seg-0001", "startMs": 0, "endMs": 6500, "text": "Take amlodipine five milligrams once a day for your blood pressure."},
+    {"id": "seg-0002", "startMs": 6500, "endMs": 12500, "text": "If you have any questions about parking, call the clinic reception."}
+  ],
+  "planted": [
+    {"key": "medicine", "fields": {"name": "amlodipine", "dose": "5 milligrams", "frequency": "once a day"}, "quote": "Take amlodipine five milligrams once a day"}
+  ],
+  "plantedGapItemIds": ["q-side-effects"]
+}

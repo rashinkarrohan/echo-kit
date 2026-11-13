@@ -1,0 +1,14 @@
+{
+  "id": "redteam-11",
+  "app": "echo-care",
+  "schemaId": "doctor-visit",
+  "note": "Red team. Scripted by actors, fictional. 'one and a half tablets' (number words with 'and a half').",
+  "segments": [
+    {"id": "seg-0001", "startMs": 0, "endMs": 5000, "text": "Your asthma has flared up again this week."},
+    {"id": "seg-0002", "startMs": 5000, "endMs": 11500, "text": "Take prednisolone, one and a half tablets in the morning, for five days."}
+  ],
+  "planted": [
+    {"key": "medicine", "fields": {"name": "prednisolone", "dose": "one and a half tablets", "frequency": "in the morning", "duration": "5 days"}, "quote": "Take prednisolone, one and a half tablets in the morning, for five days"}
+  ],
+  "plantedGapItemIds": ["q-side-effects"]
+}

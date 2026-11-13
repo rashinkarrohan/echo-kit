@@ -1,0 +1,14 @@
+{
+  "id": "redteam-17",
+  "app": "echo-care",
+  "schemaId": "doctor-visit",
+  "note": "Red team. Scripted by actors, fictional. A number split across a segment boundary: 'metformin five' | 'hundred milligrams'.",
+  "segments": [
+    {"id": "seg-0001", "startMs": 0, "endMs": 4500, "text": "For your sugar we will start metformin five"},
+    {"id": "seg-0002", "startMs": 4500, "endMs": 9500, "text": "hundred milligrams twice a day with food."}
+  ],
+  "planted": [
+    {"key": "medicine", "fields": {"name": "metformin", "dose": "500 milligrams", "frequency": "twice a day"}, "quote": "metformin five hundred milligrams twice a day"}
+  ],
+  "plantedGapItemIds": ["q-side-effects"]
+}

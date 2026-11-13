@@ -1,0 +1,15 @@
+{
+  "id": "redteam-06",
+  "app": "echo-care",
+  "schemaId": "doctor-visit",
+  "note": "Red team. Scripted by actors, fictional. Two drugs, one dose, dose after the first drug: 'your metformin five hundred milligrams and your aspirin'.",
+  "segments": [
+    {"id": "seg-0001", "startMs": 0, "endMs": 5000, "text": "Your sugar results look much better this time."},
+    {"id": "seg-0002", "startMs": 5000, "endMs": 11000, "text": "Carry on with your metformin five hundred milligrams and your aspirin."}
+  ],
+  "planted": [
+    {"key": "medicine", "fields": {"name": "metformin", "dose": "500 milligrams"}, "quote": "your metformin five hundred milligrams"},
+    {"key": "medicine", "fields": {"name": "aspirin"}, "quote": "and your aspirin"}
+  ],
+  "plantedGapItemIds": ["q-side-effects"]
+}

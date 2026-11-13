@@ -1,0 +1,21 @@
+{
+  "id": "redteam-19",
+  "app": "echo-cover",
+  "schemaId": "hearing-aid-sale",
+  "seller": "Red team seller B",
+  "note": "Red team. Scripted by actors, fictional prices, no real business. Per-aid price whose missing 'per' is taken from the next segment.",
+  "segments": [
+    {"id": "seg-0001", "startMs": 0, "endMs": 7000, "text": "The price is two thousand dollars per aid, so four thousand dollars for the pair."},
+    {"id": "seg-0002", "startMs": 7000, "endMs": 12000, "text": "Both ears need a fitting, which is included."},
+    {"id": "seg-0003", "startMs": 12000, "endMs": 17500, "text": "You can try them for thirty days and get a full refund."},
+    {"id": "seg-0004", "startMs": 17500, "endMs": 23000, "text": "I am on a salary, there is no commission on this sale."}
+  ],
+  "planted": [
+    {"key": "price", "fields": {"amount": "2000 dollars", "per": "per aid"}, "quote": "two thousand dollars per aid"},
+    {"key": "price", "fields": {"amount": "4000 dollars", "per": "pair"}, "quote": "four thousand dollars for the pair"},
+    {"key": "inclusions", "fields": {"description": "Both ears need a fitting, which is included"}, "quote": "Both ears need a fitting, which is included"},
+    {"key": "trial_returns", "fields": {"period": "30 days", "terms": "full refund"}, "quote": "try them for thirty days and get a full refund"},
+    {"key": "commission", "fields": {"statement": "I am on a salary, there is no commission on this sale"}, "quote": "I am on a salary, there is no commission on this sale"}
+  ],
+  "plantedGapItemIds": ["q-financing"]
+}
