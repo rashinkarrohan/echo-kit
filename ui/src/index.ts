@@ -46,3 +46,14 @@ export { startCapture, browserDeps, TARGET_SAMPLE_RATE } from "./platform/captur
 export type { CaptureDeps, CaptureError, CaptureHandle, CaptureOptions } from "./platform/capture";
 export { createWhisperAdapter, workerTransport } from "./platform/whisper";
 export type { WorkerLike } from "./platform/whisper";
+export { createPlayer, joinChunks } from "./platform/player";
+export type { Player } from "./platform/player";
+export { playScript, scriptedAudio, scriptedLines } from "./platform/scripted";
+export type { ScriptedConsult, ScriptPlayback } from "./platform/scripted";
+export { RecordingController } from "./platform/recording";
+export type {
+  RecordingOptions,
+  RecordingSnapshot,
+  RecordingSource,
+  RecordingStatus,
+} from "./platform/recording";

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { decodeWav } from "./wav";
+import { decodeWav, encodeWav } from "./wav";
 
 function wav(
   samples: number[],
@@ -98,6 +98,15 @@ describe("decodeWav", () => {
     str(60, "data");
     v.setUint32(64, 2, true);
     expect(decodeWav(buf).ok).toBe(false);
+  });
+
+  it("encodeWav round-trips through decodeWav (16-bit precision) and clips to [-1, 1]", () => {
+    const input = new Float32Array([0, 0.25, -0.5, 0.999, -1, 1.7, -3]);
+    const r = decodeWav(encodeWav(input, 16000));
+    expect(r.ok && r.value.sampleRate).toBe(16000);
+    const out = r.ok ? [...r.value.samples] : [];
+    const expected = [0, 0.25, -0.5, 0.999, -1, 1, -1];
+    out.forEach((v, i) => expect(Math.abs(v - expected[i])).toBeLessThan(1 / 16000));
   });
 
   it("rejects stereo, non-WAV and missing data", () => {

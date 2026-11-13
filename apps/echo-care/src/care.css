@@ -1,0 +1,43 @@
+/* Echo Care page layout: one calm column (tokens and components come from @echo/ui). */
+html,
+body {
+  margin: 0;
+  background: #F5F8F7;
+}
+.care-page {
+  min-height: 100vh;
+}
+.care-page main {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-4) var(--space-7);
+}
+.care-bar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  margin-top: var(--space-4);
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+}
+.care-bar .echo-button:first-child {
+  flex: 1 1 100%;
+  font-size: var(--text-h2);
+}
+.care-badge,
+.care-recording,
+.care-playing {
+  color: var(--inkSoft);
+  font-size: var(--text-small);
+  min-height: 1.5em;
+}
+.care-prompt {
+  margin-top: var(--space-4);
+  border-color: var(--check);
+}
+.care-next {
+  padding-left: var(--space-5);
+}

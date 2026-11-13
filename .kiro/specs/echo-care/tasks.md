@@ -4,8 +4,9 @@
   - components with loading, empty, error and permission-denied variants; axe test page
   - `ui/e2e/gallery/` + `ui/e2e/tests/gallery.spec.ts` (axe zero serious/critical, reduced motion, 200% zoom, focus ring, skin distinctness); read-aloud (design steering) not built yet
   - _Requirements: 2, 4, 8_
-- [ ] 19. Doctor stage (S19)
+- [x] 19. Doctor stage (S19)
   - consent, doctor card, record with live captions, Please repeat, read-back, receipt
+  - hash routes (#/consent ...) for static hosting; `?sample=care-01` runs a scripted consult (silent audio until S23); `apps/echo-care/e2e/doctor-visit.spec.ts` (`pnpm --filter echo-care e2e`)
   - _Requirements: 1, 2, 3, 4, 8_
 - [ ] 20. Pharmacy stage and label check (S20)
   - _Requirements: 5_
