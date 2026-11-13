@@ -8,7 +8,7 @@ import type { SpikeResult } from "../spike/types";
 
 test("transcribes the bundled 10-second actor clip on the device", async ({ page }) => {
   test.setTimeout(420_000);
-  await page.goto("/");
+  await page.goto("/spike/");
   await page.waitForFunction(() => "__spike" in window, undefined, { timeout: 400_000 });
   const result = await page.evaluate(() => (window as unknown as { __spike: SpikeResult }).__spike);
 

@@ -1,7 +1,8 @@
 # Tasks: Echo Care (see docs/BUILD-GUIDE.md)
 
-- [ ] 18. UI kit and design tokens (S18)
+- [x] 18. UI kit and design tokens (S18)
   - components with loading, empty, error and permission-denied variants; axe test page
+  - `ui/e2e/gallery/` + `ui/e2e/tests/gallery.spec.ts` (axe zero serious/critical, reduced motion, 200% zoom, focus ring, skin distinctness); read-aloud (design steering) not built yet
   - _Requirements: 2, 4, 8_
 - [ ] 19. Doctor stage (S19)
   - consent, doctor card, record with live captions, Please repeat, read-back, receipt

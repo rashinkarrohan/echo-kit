@@ -3,9 +3,16 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./styles.css": "./src/styles.css"
+  },
   "scripts": {
     "test": "vitest run --passWithNoTests",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "gallery": "vite --config e2e/vite.config.ts"
   },
   "dependencies": {
     "@echo/engine": "workspace:*",
@@ -15,7 +22,10 @@
     "react-dom": "18.3.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
     "@playwright/test": "1.65.0",
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/react": "16.3.3",
     "@types/node": "22.20.5",
     "@types/react": "18.3.12",
     "@types/react-dom": "18.3.1",

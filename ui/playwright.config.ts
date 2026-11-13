@@ -7,7 +7,7 @@ export default defineConfig({
   use: { baseURL: "http://localhost:5180", ...devices["Desktop Chrome"] },
   webServer: {
     command: "vite --config e2e/vite.config.ts",
-    url: "http://localhost:5180",
+    url: "http://localhost:5180/gallery/",
     reuseExistingServer: true,
     timeout: 60_000,
   },

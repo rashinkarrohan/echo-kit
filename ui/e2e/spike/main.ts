@@ -32,7 +32,7 @@ async function run(): Promise<SpikeResult> {
     normalisedText: "",
   };
 
-  const response = await fetch("./sample-10s.wav");
+  const response = await fetch("/sample-10s.wav");
   const decoded = decodeWav(await response.arrayBuffer());
   if (!decoded.ok) return { ...result, error: decoded.error };
   const samples = resample(decoded.value.samples, decoded.value.sampleRate, 16000);

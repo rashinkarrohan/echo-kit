@@ -50,6 +50,6 @@ WebGPU was not measured: headless Chromium reported no GPU adapter, so the worke
 4. On a laptop, transcription runs well under real time (about 0.1x). Whether the phone keeps up is the open question.
 
 **Still to do before this spike is closed.**
-1. Run the spike page on the reference phone and fill in the table: `pnpm --filter @echo/ui spike:asr` (serves on the Wi-Fi network), open the printed Network URL on the phone, wait for "Done", and copy the JSON. Phones block workers and cross-origin isolation on plain `http://` from another device, so the phone run may need an HTTPS tunnel or a deployed preview; to be confirmed when tried.
+1. Run the spike page on the reference phone and fill in the table: `pnpm --filter @echo/ui spike:asr` (serves on the Wi-Fi network), open the printed Network URL plus `/spike/` on the phone, wait for "Done", and copy the JSON. Phones block workers and cross-origin isolation on plain `http://` from another device, so the phone run may need an HTTPS tunnel or a deployed preview; to be confirmed when tried.
 2. Decide tiny.en vs base.en from the phone numbers.
 3. Record the written release for the test clip in `docs/RELEASES.md`.

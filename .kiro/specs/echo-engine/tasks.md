@@ -1,6 +1,6 @@
 # Tasks: Echo Engine (see docs/BUILD-GUIDE.md for the full step text)
 
-- [ ] 0. Repo and tooling (S0)
+- [x] 0. Repo and tooling (S0)
   - pnpm workspace, strict TypeScript, Vitest, fast-check, lint, CI that fails if `.kiro` is ignored
   - _Requirements: 12_
 - [x] 1. Types and schema loader (S1)

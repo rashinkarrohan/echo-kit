@@ -1,9 +1,10 @@
 import { defineConfig } from "vite";
 import { fileURLToPath } from "node:url";
 
-// Serves the S16 spike page. `--host` makes it reachable from a phone on the same Wi-Fi.
+// Serves the e2e pages: /spike/ (S16 speech latency) and /gallery/ (S18 components).
+// `--host` makes them reachable from a phone on the same Wi-Fi.
 export default defineConfig({
-  root: fileURLToPath(new URL("./spike", import.meta.url)),
+  root: fileURLToPath(new URL(".", import.meta.url)),
   publicDir: fileURLToPath(new URL("./fixtures", import.meta.url)),
   server: {
     port: 5180,
