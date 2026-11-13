@@ -1,0 +1,19 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "echo-kit",
+  "version": "1.0.0",
+  "description": "Add a new conversation type to Echo Kit: a schema with detectors and a sourced checklist, scripted eval cases, and a skin, keeping the no-anchor-no-claim guarantee and the eval harness green.",
+  "author": { "name": "Rohan Rashinkar" },
+  "keywords": [
+    "echo kit",
+    "echo-kit",
+    "conversation type",
+    "conversation schema",
+    "new schema",
+    "checklist",
+    "eval case",
+    "scripted consult",
+    "skin"
+  ],
+  "license": "SEE LICENSE IN ../../LICENSE"
+}

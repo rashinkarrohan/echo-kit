@@ -1,0 +1,43 @@
+id: physio-visit
+skin: care
+detectors: [number, frequency, date, duration]
+disclaimer: "Echo records and summarises what was said. It is not medical advice and not an interpreter."
+facts:
+  - key: exercise
+    fields: [description, frequency, duration]
+    cues:
+      any: ["exercises?", "stretch(es)?", "repetitions", "reps", "squats?", "lift your", "raise your"]
+      windowWords: 25
+  - key: follow_up
+    fields: [when]
+    cues:
+      any: ["come back", "follow[- ]up", "next appointment", "see you", "see me"]
+      windowWords: 15
+  - key: warning_sign
+    fields: [description]
+    cues:
+      any: ["if (it|you|the pain) (gets|get|feel|is|becomes)", "stop and call", "call the (clinic|surgery|practice)", "straight away"]
+      windowWords: 25
+checklist:
+  - id: q-exercises
+    text: "Which exercises should I do, and how often?"
+    sourceUrl: user-planned
+    cues:
+      all: [["exercises?|stretch|squats?|repetitions|reps"], ["@frequency|@number"]]
+  - id: q-pain
+    text: "How much pain is normal while doing them?"
+    sourceUrl: user-planned
+    cues:
+      any: ["(some|a bit of|mild) (pain|discomfort|ache)", "should not hurt", "sore"]
+  - id: q-stop
+    text: "When should I stop and call you?"
+    sourceUrl: user-planned
+    cues:
+      any: ["if (it|you|the pain) (gets|get|feel|is|becomes)", "stop and call", "call the (clinic|surgery|practice)"]
+  - id: q-next
+    text: "When is my next appointment?"
+    sourceUrl: user-planned
+    cues:
+      all: [["come back|follow[- ]up|next appointment|see you|see me"], ["@date"]]
+nextSteps:
+  - label: "Ask your physiotherapist to confirm anything marked Check this"

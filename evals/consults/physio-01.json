@@ -1,0 +1,19 @@
+{
+  "id": "physio-01",
+  "app": "echo-care",
+  "schemaId": "physio-visit",
+  "note": "Scripted by actors. No real person or data. Written by following the echo-kit power (Step 26). Numbers as words; a filler word; side-effect style pain question never covered.",
+  "segments": [
+    {"id": "seg-0001", "startMs": 0, "endMs": 6000, "text": "Your knee is moving better than last time, Mr Shah."},
+    {"id": "seg-0002", "startMs": 6000, "endMs": 13000, "text": "Do the sit to stand exercise, ten repetitions, twice a day."},
+    {"id": "seg-0003", "startMs": 13000, "endMs": 19000, "text": "Um, keep doing them for six weeks and use the chair for balance."},
+    {"id": "seg-0004", "startMs": 19000, "endMs": 26000, "text": "If the pain gets worse at night or the knee swells, stop and call the clinic."},
+    {"id": "seg-0005", "startMs": 26000, "endMs": 31500, "text": "Come back and see me in two weeks."}
+  ],
+  "planted": [
+    {"key": "exercise", "fields": {"description": "Do the sit to stand exercise, ten repetitions, twice a day", "frequency": "twice a day", "duration": "6 weeks"}, "quote": "Do the sit to stand exercise, ten repetitions, twice a day. Um, keep doing them for six weeks"},
+    {"key": "warning_sign", "fields": {"description": "If the pain gets worse at night or the knee swells, stop and call the clinic"}, "quote": "If the pain gets worse at night or the knee swells, stop and call the clinic"},
+    {"key": "follow_up", "fields": {"when": "in 2 weeks"}, "quote": "Come back and see me in two weeks"}
+  ],
+  "plantedGapItemIds": ["q-pain"]
+}

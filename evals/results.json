@@ -1,17 +1,17 @@
 {
-  "date": "2026-11-13T11:06:43.182Z",
-  "runs": 29,
+  "date": "2026-11-13T11:12:44.207Z",
+  "runs": 30,
   "extractor": "rules",
   "passed": true,
   "totals": {
-    "consults": 15,
-    "plantedFacts": 49,
-    "kept": 49,
+    "consults": 17,
+    "plantedFacts": 54,
+    "kept": 54,
     "dropped": 0,
     "invented": 0,
     "unanchored": 0,
     "rejectedByValidator": 0,
-    "fieldRecall": 0.9880952380952381,
+    "fieldRecall": 0.9891304347826086,
     "flaggedTokenRecall": 1,
     "checklistAccuracy": 1,
     "labelChecks": 7,
@@ -795,6 +795,94 @@
             "id": "q-commission",
             "expected": "Answered",
             "actual": "Answered"
+          }
+        ]
+      }
+    },
+    {
+      "id": "physio-01",
+      "schemaId": "physio-visit",
+      "failures": [],
+      "planted": 3,
+      "kept": 3,
+      "dropped": 0,
+      "invented": 0,
+      "unanchored": 0,
+      "rejectedByValidator": 0,
+      "fieldsPlanted": 5,
+      "fieldsKept": 5,
+      "tokensExpected": 3,
+      "tokensFound": 3,
+      "checklistTotal": 4,
+      "checklistCorrect": 4,
+      "details": {
+        "droppedFacts": [],
+        "inventedFacts": [],
+        "missedTokens": [],
+        "checklist": [
+          {
+            "id": "q-exercises",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-pain",
+            "expected": "Not discussed",
+            "actual": "Not discussed"
+          },
+          {
+            "id": "q-stop",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-next",
+            "expected": "Answered",
+            "actual": "Answered"
+          }
+        ]
+      }
+    },
+    {
+      "id": "physio-02",
+      "schemaId": "physio-visit",
+      "failures": [],
+      "planted": 2,
+      "kept": 2,
+      "dropped": 0,
+      "invented": 0,
+      "unanchored": 0,
+      "rejectedByValidator": 0,
+      "fieldsPlanted": 3,
+      "fieldsKept": 3,
+      "tokensExpected": 0,
+      "tokensFound": 0,
+      "checklistTotal": 4,
+      "checklistCorrect": 4,
+      "details": {
+        "droppedFacts": [],
+        "inventedFacts": [],
+        "missedTokens": [],
+        "checklist": [
+          {
+            "id": "q-exercises",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-pain",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-stop",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-next",
+            "expected": "Not discussed",
+            "actual": "Not discussed"
           }
         ]
       }

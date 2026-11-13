@@ -1,0 +1,21 @@
+# Template for a new Echo Kit conversation type. Replace every <...>.
+# Checklist sources: "user-planned" (the user's own question) or a URL the user supplied,
+# with verified: false until a person has opened it and recorded it in docs/CLAIMS.md.
+id: <kebab-case-id>
+skin: care # care (cards) or cover (ledger)
+detectors: [number, date] # only: number, drug, frequency, date, money, percent, duration, commission
+disclaimer: "Echo records and summarises what was said. It is not medical advice and not an interpreter."
+facts:
+  - key: <fact_key>
+    fields: [<field>, <field>] # reuse known field names, e.g. when, description, amount
+    cues:
+      any: ["<regex>", "<regex>"] # or: anchor: "@<detector>"
+      windowWords: 20
+checklist:
+  - id: q-<short-name>
+    text: "<The question, in the user's words>"
+    sourceUrl: user-planned
+    cues:
+      any: ["<regex>"] # or all: [["<group 1>"], ["@<detector>"]]
+nextSteps:
+  - label: "<A neutral next step, e.g. Ask them to confirm anything marked Check this>"
