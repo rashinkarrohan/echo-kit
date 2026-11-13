@@ -105,6 +105,73 @@ describe("Segmenter", () => {
     expect(segments.every((s) => s.endMs - s.startMs >= 3000)).toBe(true);
   });
 
+  it("leading digital silence (exact zeros) does not hide later pauses in room noise", () => {
+    // Real recordings often start with zeros (encoder priming). Room hiss after that is
+    // about RMS 0.004, which is above the absolute minimum threshold.
+    const seg = new Segmenter({ sampleRate: SR });
+    const parts: Float32Array[] = [
+      ...Array.from({ length: 25 }, () => new Float32Array(FRAME)), // 0.5 s of zeros
+      ...frames("silence", 1000, 0.014, 7),
+      ...frames("speech", 4000, 0.014, 8),
+      ...frames("silence", 1000, 0.014, 9),
+      ...frames("speech", 3000, 0.014, 10),
+    ];
+    const out: AudioSegment[] = [];
+    let t = 0;
+    for (const f of parts) {
+      out.push(...seg.push(f, t));
+      t += (f.length / SR) * 1000;
+    }
+    // speech ends at 5.5 s; the cut must land in the following pause, not at 8 s
+    expect(out[0].endMs).toBeGreaterThanOrEqual(5500);
+    expect(out[0].endMs).toBeLessThanOrEqual(6500);
+  });
+
+  it("quiet phone recording: finds pauses that sit just above the absolute minimum", () => {
+    // Shape of the real S16 clip: zeros, a very faint fade-in, quiet speech (RMS about
+    // 0.03) and pauses whose hiss (RMS about 0.0035) is barely above 0.003.
+    const seg = new Segmenter({ sampleRate: SR });
+    const quiet = (f: Float32Array) => f.map((v) => v * 0.2);
+    const parts: Float32Array[] = [
+      ...Array.from({ length: 25 }, () => new Float32Array(FRAME)),
+      ...frames("silence", 200, 0.002, 3),
+      ...frames("silence", 800, 0.012, 4),
+      ...frames("speech", 4000, 0.06, 5).map(quiet),
+      ...frames("silence", 1000, 0.012, 6),
+      ...frames("speech", 3000, 0.06, 7).map(quiet),
+    ];
+    const out: AudioSegment[] = [];
+    let t = 0;
+    for (const f of parts) {
+      out.push(...seg.push(f, t));
+      t += (f.length / SR) * 1000;
+    }
+    // speech ends at 5.5 s; the cut must land in the following pause, not at 8 s
+    expect(out[0].endMs).toBeGreaterThanOrEqual(5500);
+    expect(out[0].endMs).toBeLessThanOrEqual(6500);
+  });
+
+  it("quiet speech only 2.5x louder than the room is still marked as speech", () => {
+    const seg = new Segmenter({ sampleRate: SR });
+    const scale = (k: number) => (f: Float32Array) => f.map((v) => v * k);
+    const parts: Float32Array[] = [
+      ...frames("silence", 2000, 0.012, 11), // room RMS about 0.0035
+      ...frames("speech", 4000, 0, 12).map(scale(0.04)), // speech RMS about 0.009
+      ...frames("silence", 3000, 0.012, 13),
+    ];
+    const out: AudioSegment[] = [];
+    let t = 0;
+    for (const f of parts) {
+      out.push(...seg.push(f, t));
+      t += (f.length / SR) * 1000;
+    }
+    const last = seg.flush();
+    if (last) out.push(last);
+    const covering = out.filter((s) => s.startMs < 6000 && s.endMs > 2000);
+    expect(covering.length).toBeGreaterThan(0);
+    expect(covering.every((s) => s.hasSpeech)).toBe(true);
+  });
+
   it("marks segments with no speech so silence is never sent for transcription", () => {
     const { segments } = run([
       ["silence", 9000],

@@ -6,9 +6,11 @@
   "scripts": {
     "start": "vite-node src/run.ts",
     "test": "vitest run --passWithNoTests",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "spike:asr": "vite-node src/spike-asr.ts"
   },
   "devDependencies": {
+    "@huggingface/transformers": "4.3.2",
     "@types/node": "22.20.5",
     "vite-node": "2.1.8",
     "vitest": "2.1.8"

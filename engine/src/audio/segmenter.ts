@@ -37,9 +37,13 @@ export interface SegmenterOptions {
 /** RMS below this is always silence, however quiet the room is. */
 const ABSOLUTE_MIN_THRESHOLD = 0.003;
 /** Speech must be this many times louder than the noise floor. */
-const THRESHOLD_FACTOR = 3;
+const THRESHOLD_FACTOR = 2;
 /** Starting noise-floor guess before any audio is heard. */
 const INITIAL_NOISE_FLOOR = 0.01;
+/** RMS below this is digital silence, not room noise; it never lowers the noise floor. */
+const DIGITAL_SILENCE = 0.0003;
+/** Per-window step towards a quieter level (about 0.2 s to settle). */
+const FLOOR_DOWN_RATE = 0.1;
 /** Unbroken "speech" this long means background noise is above the threshold. */
 const NOISY_ROOM_MS = 10000;
 /** At least this much speech (ms) for a segment to count as containing speech. */
@@ -113,8 +117,12 @@ export class Segmenter {
     const threshold = Math.max(this.noiseFloor * THRESHOLD_FACTOR, ABSOLUTE_MIN_THRESHOLD);
     const speech = rms > threshold;
 
-    if (rms < this.noiseFloor) {
-      this.noiseFloor = rms; // follow quieter rooms at once
+    if (rms < DIGITAL_SILENCE) {
+      // exact zeros (encoder priming, muted input) say nothing about the room's noise
+    } else if (rms < this.noiseFloor) {
+      // follow quieter rooms quickly, but not instantly, so a brief fade-in at the start
+      // of a recording does not drag the floor below the room's real noise
+      this.noiseFloor += (rms - this.noiseFloor) * FLOOR_DOWN_RATE;
     } else if (!speech && this.silenceRun >= this.silenceSamples) {
       // learn the room only during real pauses, not the quiet dips inside speech
       this.noiseFloor += (rms - this.noiseFloor) * 0.05;
