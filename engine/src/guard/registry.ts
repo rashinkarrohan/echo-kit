@@ -12,7 +12,7 @@ import {
   durationDetector,
   commissionDetector,
 } from "./cover-detectors";
-import drugsData from "../../data/drugs.sample.json";
+import drugsData from "../../data/drugs.json";
 
 export const DETECTORS: Readonly<Record<string, EntityDetector>> = {
   number: numberDetector,
@@ -25,7 +25,7 @@ export const DETECTORS: Readonly<Record<string, EntityDetector>> = {
   commission: commissionDetector,
 };
 
-/** Sample drug dictionary (marked "sample": true; the real list is a spike). */
+/** Generic medicine names from the FDA NDC Directory (public domain); see scripts/build-drug-list.mjs. */
 export const DRUG_DICTIONARY: { drugs: string[] } = { drugs: drugsData.drugs };
 
 export function getDetector(id: string): EntityDetector | undefined {

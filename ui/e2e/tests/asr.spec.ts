@@ -26,6 +26,7 @@ test("transcribes the bundled 10-second actor clip on the device", async ({ page
   for (const phrase of ["500 milligrams", "twice daily", "come back", "3 months"]) {
     expect(heard, `expected to hear "${phrase}"`).toContain(` ${phrase} `);
   }
-  // The drug name is not asserted: on this clip whisper-tiny.en mishears "metformin".
-  // That is a recorded accuracy finding (docs/SPIKES.md), and why drug names get "Check this".
+  // With base.en and the medicine-name prompt (the defaults), the drug name in the actor
+  // clip is heard correctly. Without the prompt it was "meriforming" (docs/SPIKES.md).
+  expect(heard).toContain(" metformin ");
 });

@@ -5,37 +5,7 @@
 
 import type { Segment, FlaggedToken, EntityDetector, DrugDictionary } from "../types";
 import { normaliseText } from "../text/normalise";
-
-/**
- * Calculate edit distance (Levenshtein distance) between two strings.
- */
-function editDistance(a: string, b: string): number {
-  const matrix: number[][] = [];
-
-  for (let i = 0; i <= b.length; i++) {
-    matrix[i] = [i];
-  }
-
-  for (let j = 0; j <= a.length; j++) {
-    matrix[0][j] = j;
-  }
-
-  for (let i = 1; i <= b.length; i++) {
-    for (let j = 1; j <= a.length; j++) {
-      if (b.charAt(i - 1) === a.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1];
-      } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1, // substitution
-          matrix[i][j - 1] + 1, // insertion
-          matrix[i - 1][j] + 1, // deletion
-        );
-      }
-    }
-  }
-
-  return matrix[b.length][a.length];
-}
+import { matchDrugs, soundAlikes } from "./drug-match";
 
 /**
  * Check if any word in the segment has low confidence (< 0.6).
@@ -204,82 +174,29 @@ export const dateDetector: EntityDetector = {
 };
 
 /**
- * Largest edit distance accepted for a near match. Short names allow 1; names of 8 or
- * more letters allow about 30% of their length, but only if the first letter matches
- * (speech engines usually keep the first sound). Tested against common English words.
- */
-function allowedDistance(heard: string, drug: string): number {
-  const longest = Math.max(heard.length, drug.length);
-  if (longest < 8 || heard[0] !== drug[0]) return 1;
-  return Math.floor(longest * 0.3);
-}
-
-/** Closest dictionary drug within the allowed distance, or undefined. */
-function closestDrug(
-  heard: string,
-  drugs: readonly string[],
-): { drug: string; distance: number } | undefined {
-  if (!/^[a-z]{4,}$/.test(heard)) return undefined;
-  let best: { drug: string; distance: number } | undefined;
-  for (const drug of drugs) {
-    const distance = editDistance(heard, drug);
-    if (distance === 0 || distance > allowedDistance(heard, drug)) continue;
-    if (!best || distance < best.distance) best = { drug, distance };
-  }
-  return best;
-}
-
-/**
- * Drug detector with edit distance suggestions.
- * Never auto-corrects the heard text.
+ * Drug detector: exact generic names, and misheard names as "sounds like" suggestions
+ * (guard/drug-match.ts). Never auto-corrects the heard text. Exact names that sound like
+ * another medicine carry `soundsAlike`, so the verifier stamps them Check this.
  */
 export const drugDetector: EntityDetector = {
   id: "drug",
   detect: (segment: Segment, dictionary?: DrugDictionary): FlaggedToken[] => {
-    if (!dictionary || !dictionary.drugs) {
-      return [];
-    }
-
-    const normalized = normaliseText(segment.text);
-    const words = normalized.split(/\s+/);
-    const tokens: FlaggedToken[] = [];
-    const drugList: readonly string[] = dictionary.drugs;
-
-    for (let i = 0; i < words.length; i++) {
-      const word = words[i];
-      // Check for exact match
-      if (drugList.includes(word)) {
-        tokens.push({
-          kind: "drug",
-          value: word,
-          lowConfidence: hasLowConfidence(segment, word),
-        });
-        continue;
-      }
-
-      // Near match on the word, or on the word joined with the next one
-      // (speech engines split names: "merform in" for "metformin").
-      const single = closestDrug(word, drugList);
-      const next = words[i + 1];
-      const joined =
-        next !== undefined && /^[a-z]{2,}$/.test(next) && !drugList.includes(next)
-          ? closestDrug(word + next, drugList)
-          : undefined;
-      const useJoined =
-        joined !== undefined && (single === undefined || joined.distance < single.distance);
-      const match = useJoined ? joined : single;
-      if (!match) continue;
-
-      const value = useJoined ? `${word} ${next}` : word; // the heard text, never auto-corrected
-      tokens.push({
+    if (!dictionary || !dictionary.drugs) return [];
+    const words = normaliseText(segment.text)
+      .split(/\s+/)
+      .filter((w) => w.length > 0);
+    return matchDrugs(words, dictionary.drugs).map((m) => {
+      const token: FlaggedToken = {
         kind: "drug",
-        value,
-        suggestion: match.drug,
-        lowConfidence: hasLowConfidence(segment, value),
-      });
-      if (useJoined) i += 1;
-    }
-
-    return tokens;
+        value: m.heard,
+        lowConfidence: hasLowConfidence(segment, m.heard),
+      };
+      if (m.suggestion !== undefined) token.suggestion = m.suggestion;
+      if (m.exact) {
+        const alikes = soundAlikes(m.heard, dictionary.drugs);
+        if (alikes.length > 0) token.soundsAlike = alikes;
+      }
+      return token;
+    });
   },
 };

@@ -5,9 +5,19 @@
  * Tries WebGPU first and falls back to WebAssembly. Audio arrives as 16 kHz mono
  * samples and never leaves the device; the only network use is the one-time model
  * download from Hugging Face, which the browser caches.
+ *
+ * Medicine names: when the load request carries `medicines`, they are given to Whisper
+ * as a text prompt ("previous text"), which makes it more likely to spell them right.
+ * The prompt is removed from the output; only what was heard is returned.
  */
 
-import { pipeline } from "@huggingface/transformers";
+import {
+  AutoProcessor,
+  AutoTokenizer,
+  WhisperForConditionalGeneration,
+} from "@huggingface/transformers";
+import type { Tensor } from "@huggingface/transformers";
+import { buildMedicinePrompt } from "@echo/engine";
 import type { AsrDevice, WorkerReply, WorkerRequest } from "@echo/engine";
 
 /** The parts of the worker global scope used here (avoids mixing DOM and WebWorker libs). */
@@ -16,6 +26,8 @@ interface WorkerScope {
   onmessage: ((event: { data: WorkerRequest }) => void) | null;
   navigator?: { gpu?: { requestAdapter(): Promise<unknown> } };
 }
+
+const scope = globalThis as unknown as WorkerScope;
 
 /**
  * `navigator.gpu` can exist with no usable adapter (headless browsers, many phones).
@@ -30,9 +42,7 @@ async function hasWebGpuAdapter(): Promise<boolean> {
   }
 }
 
-type Transcriber = (audio: Float32Array) => Promise<unknown>;
-
-const scope = globalThis as unknown as WorkerScope;
+type Transcriber = (audio: Float32Array) => Promise<string>;
 let transcriber: Transcriber | undefined;
 
 /** Precision per device. To be confirmed by the latency spike (docs/SPIKES.md). */
@@ -41,30 +51,52 @@ const DTYPES = {
   wasm: "q8",
 } as const;
 
-function textOf(output: unknown): string {
-  const first: unknown = Array.isArray(output) ? output[0] : output;
-  if (typeof first === "object" && first !== null && "text" in first) {
-    const text = (first as { text: unknown }).text;
-    return typeof text === "string" ? text : "";
-  }
-  return "";
-}
-
 function message(e: unknown): string {
   if (e instanceof Error) return e.message;
   return typeof e === "string" ? e : "Speech engine error";
 }
 
-async function load(model: string, devices: AsrDevice[]): Promise<AsrDevice> {
+async function loadOn(model: string, device: AsrDevice, medicines: string[]): Promise<Transcriber> {
+  const processor = await AutoProcessor.from_pretrained(model);
+  const tokenizer = await AutoTokenizer.from_pretrained(model);
+  const whisper = await WhisperForConditionalGeneration.from_pretrained(model, {
+    device,
+    dtype: DTYPES[device],
+  });
+
+  const token = (t: string): number => tokenizer.convert_tokens_to_ids(t);
+  const prompt = buildMedicinePrompt(
+    medicines,
+    (s) => tokenizer.encode(s, { add_special_tokens: false }).length,
+  );
+  const start = [token("<|startoftranscript|>"), token("<|notimestamps|>")];
+  const init =
+    prompt.length > 0
+      ? [
+          token("<|startofprev|>"),
+          ...tokenizer.encode(prompt, { add_special_tokens: false }),
+          ...start,
+        ]
+      : start;
+
+  return async (audio) => {
+    const { input_features } = (await processor(audio)) as { input_features: Tensor };
+    const out = (await whisper.generate({
+      inputs: input_features,
+      decoder_input_ids: init,
+      max_new_tokens: 120,
+    })) as Tensor;
+    const ids = (out.tolist() as Array<Array<number | bigint>>)[0].map(Number).slice(init.length);
+    return tokenizer.decode(ids, { skip_special_tokens: true });
+  };
+}
+
+async function load(model: string, devices: AsrDevice[], medicines: string[]): Promise<AsrDevice> {
   let lastError: unknown;
   for (const device of devices) {
     if (device === "webgpu" && !(await hasWebGpuAdapter())) continue;
     try {
-      const asr = await pipeline("automatic-speech-recognition", model, {
-        device,
-        dtype: DTYPES[device],
-      });
-      transcriber = (audio) => asr(audio);
+      transcriber = await loadOn(model, device, medicines);
       return device;
     } catch (e) {
       lastError = e;
@@ -81,7 +113,7 @@ scope.onmessage = (event) => {
   void (async () => {
     try {
       if (req.type === "load") {
-        const device = await load(req.model, req.devices);
+        const device = await load(req.model, req.devices, req.medicines ?? []);
         scope.postMessage({ type: "loaded", id: req.id, device });
         return;
       }
@@ -90,11 +122,11 @@ scope.onmessage = (event) => {
         return;
       }
       const t0 = performance.now();
-      const output = await transcriber(req.samples);
+      const text = await transcriber(req.samples);
       scope.postMessage({
         type: "result",
         id: req.id,
-        text: textOf(output),
+        text,
         ms: Math.round(performance.now() - t0),
       });
     } catch (e) {

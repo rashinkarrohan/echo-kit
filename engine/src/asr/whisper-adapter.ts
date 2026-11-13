@@ -15,7 +15,14 @@ import type { AsrAdapter, AsrTranscript, Result } from "../types";
 export type AsrDevice = "webgpu" | "wasm";
 
 export type WorkerRequest =
-  | { type: "load"; id: number; model: string; devices: AsrDevice[] }
+  | {
+      type: "load";
+      id: number;
+      model: string;
+      devices: AsrDevice[];
+      /** Medicine names for the Whisper prompt, most important first (see asr/prompt.ts) */
+      medicines?: string[];
+    }
   | { type: "transcribe"; id: number; samples: Float32Array };
 
 export type WorkerReply =
@@ -33,9 +40,16 @@ export interface WhisperOptions {
   /** Hugging Face model id; see docs/SPIKES.md for the choice */
   model?: string;
   devices?: AsrDevice[];
+  /**
+   * Medicine names to prompt Whisper with (most important first). Measured on 48 spoken
+   * test sentences (docs/SPIKES.md): with base.en, names recovered went from 32 to 38.
+   * Empty list turns the prompt off.
+   */
+  medicines?: string[];
 }
 
-export const DEFAULT_WHISPER_MODEL = "Xenova/whisper-tiny.en";
+/** base.en: better medicine names than tiny.en in the S16 bench, about 2x slower (docs/SPIKES.md). */
+export const DEFAULT_WHISPER_MODEL = "Xenova/whisper-base.en";
 
 /** Remove Whisper's non-speech markers such as "[BLANK_AUDIO]" or "(music)" and tidy spaces. */
 export function cleanWhisperText(text: string): string {
@@ -54,6 +68,7 @@ export class WhisperAdapter implements AsrAdapter {
 
   private readonly model: string;
   private readonly devices: AsrDevice[];
+  private readonly medicines: string[] | undefined;
   private nextId = 1;
   private loading: Promise<Result<void>> | undefined;
   private readonly waiting = new Map<number, (reply: WorkerReply) => void>();
@@ -64,6 +79,7 @@ export class WhisperAdapter implements AsrAdapter {
   ) {
     this.model = options.model ?? DEFAULT_WHISPER_MODEL;
     this.devices = options.devices ?? ["webgpu", "wasm"];
+    this.medicines = options.medicines;
     this.id = `whisper:${this.model}`;
     transport.onReply((reply) => {
       const resolve = this.waiting.get(reply.id);
@@ -90,6 +106,7 @@ export class WhisperAdapter implements AsrAdapter {
         id,
         model: this.model,
         devices: this.devices,
+        ...(this.medicines ? { medicines: this.medicines } : {}),
       })).then((reply): Result<void> => {
         if (reply.type === "loaded") {
           this.device = reply.device;

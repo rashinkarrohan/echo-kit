@@ -39,6 +39,8 @@ export interface FlaggedToken {
   canonical?: string;
   lowConfidence: boolean;
   suggestion?: string;
+  /** Exact medicine names that other medicines sound like (prednisone, prednisolone) */
+  soundsAlike?: string[];
 }
 
 /** Anchor: quote location in transcript */

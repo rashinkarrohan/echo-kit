@@ -87,7 +87,12 @@ export function verifyFacts(facts: Fact[], segments: Segment[]): VerifiedFact[] 
         endMs: 0,
         text: fact.fields["name"],
       };
-      if (drugDetector.detect(probe, DRUG_DICTIONARY).some((t) => t.suggestion !== undefined)) {
+      const heard = drugDetector.detect(probe, DRUG_DICTIONARY);
+      // Not an exact name, or an exact name that sounds like another medicine.
+      if (
+        heard.length === 0 ||
+        heard.some((t) => t.suggestion !== undefined || (t.soundsAlike?.length ?? 0) > 0)
+      ) {
         stamp = "check_this";
       }
     }

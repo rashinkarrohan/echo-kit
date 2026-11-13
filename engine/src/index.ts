@@ -97,3 +97,7 @@ export { decodeWav, encodeWav } from "./audio/wav";
 export type { DecodedWav } from "./audio/wav";
 export { repeatPrompts } from "./guard/prompts";
 export type { RepeatPrompt, RepeatPromptKind, FlaggedSegment } from "./guard/prompts";
+export { buildMedicinePrompt } from "./asr/prompt";
+export type { PromptOptions } from "./asr/prompt";
+export { matchDrugs, soundKey, soundAlikes } from "./guard/drug-match";
+export type { DrugMatch } from "./guard/drug-match";

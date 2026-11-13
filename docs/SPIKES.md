@@ -5,7 +5,7 @@
 | S16 Speech | Model, download size, latency per 5 s segment on the reference phone, WebGPU vs WebAssembly | **Laptop measured, phone not yet.** On an Apple M4 MacBook Air, `whisper-tiny.en` in headless Chromium (WebAssembly, cross-origin isolated) took about 320 to 590 ms per 5 s of audio; model load about 25 s from a warm cache. Download about 41 MB (WebAssembly). Heard numbers, frequency and follow-up correctly; **misheard the drug name** ("metformin" as "meriforming"). | Provisional: `Xenova/whisper-tiny.en` on WebAssembly. `whisper-base.en` was no better on the drug name in this clip and is about 2x slower. **Open until the reference phone is measured.** | Nov 13, 2026 (laptop) |
 | S16 Confidence | Does the engine expose per-word confidence? Word timestamps? | Per-word confidence: **not exposed** by the transformers.js speech pipeline (text plus optional timestamps only). Word timestamps: documented (`return_timestamps: 'word'`), not tested. | Treat confidence as unavailable: `words` stays undefined and is never guessed. Anchors stay segment-level (3 to 8 s); word timestamps are not relied on. | Nov 12, 2026 |
 | S20 Label reading | On-device OCR vs manual entry | **Not spiked.** tesseract.js was not tried: it needs a further language-data download, and its accuracy on small, curved pharmacy labels is unknown. | v1 uses manual entry: the user can take a photo to look at while typing the three fields (medicine, dose, how often) and confirms them; the photo is shown from memory only and never stored (tested). OCR can be added later behind the same form. | Nov 13, 2026 |
-| Drug list | Public source, licence, format | | | |
+| Drug list | Public source, licence, format | FDA NDC Directory (public domain, CC0). 1,755 generic names; misheard names matched only to the 850 most-listed. | Use it (see S16 accuracy notes below). Brand names and India-specific names not included; ask before adding. | Nov 13, 2026 |
 | Cloud model | Needed at all? Provider, region, cost per consult, daily cap | | | |
 
 ## S16 notes
@@ -53,3 +53,24 @@ WebGPU was not measured: headless Chromium reported no GPU adapter, so the worke
 1. Run the spike page on the reference phone and fill in the table: `pnpm --filter @echo/ui spike:asr` (serves on the Wi-Fi network), open the printed Network URL plus `/spike/` on the phone, wait for "Done", and copy the JSON. Phones block workers and cross-origin isolation on plain `http://` from another device, so the phone run may need an HTTPS tunnel or a deployed preview; to be confirmed when tried.
 2. Decide tiny.en vs base.en from the phone numbers.
 3. Record the written release for the test clip in `docs/RELEASES.md`.
+
+## S16 medicine-name accuracy, Nov 13, 2026
+Live test by the owner showed a spoken medicine name captured as "Glory Fiend", "Glorofing", "Global", and "a medicine" wrongly flagged as amlodipine. Work done:
+1. **Whisper prompt.** The worker gives Whisper the most common medicine names as a text prompt (about 40 names, 200 tokens, from `drugs.json` ranking) and strips it from the output. `?prompt=0` turns it off.
+2. **Default model base.en** instead of tiny.en (`?model=tiny|base|small` to choose).
+3. **Full drug list** (FDA, above) instead of 30 sample names.
+4. **Sound-alike matching** (`engine/src/guard/drug-match.ts`): sound-key plus spelling distance, names split over 2 or 3 words joined, an English guard so ordinary words are not taken for medicines, function words never joined ("a medicine" fixed). Exact names that sound like another medicine (prednisone, prednisolone) are stamped Check this.
+
+**Bench** (`evals/src/asr-bench.ts`): 24 sentences, each a medicine with a dose, read by two macOS system voices (Daniel en-GB, Aman en-IN), 48 clips, Node CPU, q8. Synthetic voices are cleaner than real speech, so real-world results will be lower. "Found" = the engine shows the right name, exactly or as "sounds like".
+
+| Model | Prompt | Name exactly right | Name found (incl. sounds like) | Dose number right |
+|---|---|---|---|---|
+| tiny.en | no | 3/48 | 23/48 | 44/48 |
+| tiny.en | yes | 23/48 | 38/48 | 46/48 |
+| base.en | no | 18/48 | 32/48 | 45/48 |
+| base.en | yes | 30/48 | 38/48 | 47/48 |
+| small.en | yes | 34/48 | 41/48 | (not re-measured) |
+
+**Risk found:** the prompt can turn a real name into a different prompted name (prednisolone heard as "prednisone", 2 clips with tiny.en). That is why exact names with sound-alikes are now Check this.
+**Owner's clip in the browser** (base.en + prompt, headless Chromium, WebAssembly): "Take metformin 500 milligrams. Twice daily after food, come back and see me in three months." Model load about 42 s (first run), about 0.7 to 1.2 s per 5 s of audio on the M4 laptop: about 2x tiny.en. Phone speed is still unmeasured.
+**Not fixed:** names Whisper turns into ordinary English words ("water in" for warfarin, "search align" for sertraline) are not recovered; the English guard deliberately blocks those. small.en is more accurate but about 250 MB and about 3x slower than base.en.

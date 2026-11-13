@@ -44,6 +44,9 @@ export function FlaggedText({
             {t.suggestion !== undefined && (
               <span className="echo-sounds-like">{` (${ADDED.soundsLike} ${t.suggestion}?)`}</span>
             )}
+            {t.suggestion === undefined && t.soundsAlike && t.soundsAlike.length > 0 && (
+              <span className="echo-sounds-like">{` (${ADDED.couldAlsoBe} ${t.soundsAlike.slice(0, 2).join(" or ")}?)`}</span>
+            )}
           </span>
         );
       })}

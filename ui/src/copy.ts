@@ -86,6 +86,7 @@ export const ADDED = {
   readBackMarkedNotRight: "Marked not right",
   audioNotKept: "Audio not kept",
   soundsLike: "sounds like",
+  couldAlsoBe: "could also be",
   flagged: "flagged",
   loading: "Loading.",
   trustTitle: "How Echo did in tests",
