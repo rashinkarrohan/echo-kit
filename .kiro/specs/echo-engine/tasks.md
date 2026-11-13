@@ -49,8 +49,10 @@
 - [ ] 16. Speech adapter and latency spike (S16)
   - write docs/SPIKES.md
   - [x] AsrAdapter is per segment; MockAdapter; WhisperAdapter (engine, message transport); worker and `createWhisperAdapter` in `ui/src/platform/`; confidence recorded as unavailable
-  - [ ] Playwright test transcribing a bundled 10 s clip (needs a consenting-actor recording)
-  - [ ] latency per 5 s segment on the reference phone (WebGPU and WebAssembly); choose tiny.en or base.en
+  - [x] Playwright test transcribing the bundled actor clip (`pnpm e2e`), laptop latency recorded in docs/SPIKES.md
+  - [ ] latency per 5 s segment on the reference phone; choose tiny.en or base.en
+  - [ ] written release for the test clip (docs/RELEASES.md)
+  - [ ] drug names misheard by Whisper are missed entirely (found by this spike); decide the fix
   - _Requirements: 3_
 - [x] 17. Live session pipeline (S17)
   - built with MockAdapter while Step 16's real-model checks are open; `evals/src/session.test.ts` runs all 15 consults through a session and matches the harness
