@@ -300,6 +300,7 @@
 }
 .echo-receipt__field dt { color: var(--inkSoft); min-width: 7em; }
 .echo-receipt__field dd { margin: 0; font-size: var(--text-caption); font-weight: 700; }
+.echo-receipt__field dd .echo-stamp { font-size: var(--text-base); }
 .echo-quote {
   margin: var(--space-2) 0;
   padding-left: var(--space-3);
@@ -347,6 +348,9 @@
 }
 .echo-ledger thead th { border-bottom: 2px solid var(--ink); }
 .echo-ledger__value { display: block; font-weight: 700; margin-bottom: var(--space-2); }
+/* Inside the ledger (which scrolls in its own frame) stamps never wrap */
+.echo-ledger td { min-width: 11em; }
+.echo-ledger .echo-stamp { white-space: nowrap; }
 .echo-differs {
   display: inline-block;
   margin-top: var(--space-1);
@@ -402,11 +406,22 @@
   border-bottom: 1px solid var(--line);
   cursor: pointer;
 }
+/* On/off switch: the knob's side and the fill both show the state (not colour alone) */
 .echo-switch input {
-  width: 28px;
-  height: 28px;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 64px;
+  height: 36px;
   flex: none;
-  accent-color: var(--accent);
+  margin: 0;
+  border: 2px solid var(--inkSoft);
+  border-radius: 999px;
+  background: radial-gradient(circle at 16px 50%, var(--inkSoft) 10px, transparent 11px), var(--surface);
+  cursor: pointer;
+}
+.echo-switch input:checked {
+  border-color: var(--accent);
+  background: radial-gradient(circle at calc(100% - 16px) 50%, var(--onAccent) 10px, transparent 11px), var(--accent);
 }
 .echo-consent__wording { font-size: var(--text-base); }
 .echo-disclaimer {

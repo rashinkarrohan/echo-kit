@@ -103,6 +103,41 @@ test("keyboard focus is visible (3 px ring) and tap targets are at least 56 px",
   expect(ring.height).toBeGreaterThanOrEqual(56);
 });
 
+test("comparison stamps stay on one line (tablet width, where they used to wrap)", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 820, height: 900 });
+  await page.goto("/gallery/");
+  await settle(page);
+  const heights = await page
+    .locator('[data-skin-gallery="cover"] [data-status="ready"] .echo-ledger .echo-stamp')
+    .evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height));
+  expect(heights.length).toBeGreaterThan(0);
+  for (const h of heights) expect(h).toBeLessThan(56);
+});
+
+test("consent choices look like on/off switches, not checkboxes", async ({ page }) => {
+  await page.goto("/gallery/");
+  await settle(page);
+  const sw = page.getByRole("switch", { name: "Record this conversation" }).first();
+  const box = await sw.boundingBox();
+  expect(box && box.width).toBeGreaterThanOrEqual(box ? box.height * 1.5 : 0);
+  const before = await sw.evaluate((el) => getComputedStyle(el).backgroundColor);
+  await sw.click();
+  const after = await sw.evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(after).not.toBe(before);
+});
+
+test("a Not said stamp inside a receipt row uses body text size", async ({ page }) => {
+  await page.goto("/gallery/");
+  await settle(page);
+  const size = await page
+    .locator(".echo-receipt__field dd .echo-stamp")
+    .first()
+    .evaluate((el) => getComputedStyle(el).fontSize);
+  expect(size).toBe("20px");
+});
+
 test("Care and Cover look different (distinctness rule)", async ({ page }) => {
   await page.goto("/gallery/");
   await settle(page);
