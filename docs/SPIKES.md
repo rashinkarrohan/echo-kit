@@ -42,7 +42,9 @@ WebGPU was not measured: headless Chromium reported no GPU adapter, so the worke
 - base.en (Node, whole clip): "take my reforming 500 milligrams twice daily after food come back and see me in three months"
 
 **Findings.**
-1. Numbers, frequency, food timing and the follow-up came through. The drug name did not, in either model. A misheard drug name is not in the sample dictionary and is not within edit distance 1, so the drug detector does not flag it at all, and no medicine fact is extracted from this clip. Nothing wrong is claimed, but the medicine is missed. This needs work before the demo: a wider near-match for drug names, or a "Please repeat the medicine name" prompt when a dose is heard with no drug name. Not decided here.
+1. Numbers, frequency, food timing and the follow-up came through. The drug name did not, in either model. With the edit-distance-1 near match, the misheard name was not flagged at all, so no medicine fact came out of this clip. **Fixed Nov 13 (both options):**
+   - Names of 8 or more letters now near-match at up to about 30% edit distance when the first letter matches, and a name split in two ("merform in") is tried joined. The heard word is kept, the fact is stamped Check this, and common English words are tested not to match. The clip now gives "meriforming, 500 milligrams, twice daily", stamped Check this, with suggestion "metformin".
+   - The session raises a "Please repeat" `prompt` event when a word only sounds like a drug, or when a dose with a unit is heard with no drug name in that segment or the one before.
 2. Cross-origin isolation (COOP/COEP headers) roughly halves WebAssembly time. The apps' hosting must send these headers (Step 30).
 3. The first real recording exposed two Segmenter problems: it cut mid-sentence at 8 s, because exact-zero samples at the start of the file dragged the noise floor to 0, and quiet speech was classed as silence. Both are fixed with tests. The clip now cuts at the speaker's pause after "milligrams".
 4. On a laptop, transcription runs well under real time (about 0.1x). Whether the phone keeps up is the open question.

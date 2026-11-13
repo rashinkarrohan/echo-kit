@@ -142,6 +142,48 @@ describe("ConversationSession events", () => {
     ]);
   });
 
+  it("raises a Please-repeat prompt when a dose is heard without a medicine name", async () => {
+    const asr = new MockAdapter([
+      "Your sugar is a bit high.",
+      "Take five hundred milligrams twice daily.",
+    ]);
+    const { s } = session({ asr });
+    const prompts = record(s, "prompt");
+    s.start();
+    await s.addAudio(audio(0));
+    await s.addAudio(audio(1));
+    expect(prompts).toEqual([{ kind: "missing-medicine-name", segmentId: "seg-0002" }]);
+  });
+
+  it("raises a prompt for a medicine name that only sounds like a known one", async () => {
+    const { s } = session({ asr: new MockAdapter(["Take meriforming 500 milligrams."]) });
+    const prompts = record(s, "prompt");
+    s.start();
+    await s.addAudio(audio(0));
+    expect(prompts).toEqual([
+      {
+        kind: "unclear-medicine-name",
+        segmentId: "seg-0001",
+        heard: "meriforming",
+        suggestion: "metformin",
+      },
+    ]);
+  });
+
+  it("raises no medicine prompts for a schema without the drug detector", async () => {
+    const cover: ConversationSchema = {
+      ...schema,
+      id: "sale",
+      skin: "cover",
+      detectors: ["money", "number"],
+    };
+    const { s } = session({ schema: cover, asr: new MockAdapter(["It is 500 mg of something."]) });
+    const prompts = record(s, "prompt");
+    s.start();
+    await s.addAudio(audio(0));
+    expect(prompts).toEqual([]);
+  });
+
   it("keeps segment order even when the speech engine answers out of order", async () => {
     const slowFirst: AsrAdapter = {
       id: "slow-first",

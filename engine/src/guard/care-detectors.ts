@@ -204,6 +204,32 @@ export const dateDetector: EntityDetector = {
 };
 
 /**
+ * Largest edit distance accepted for a near match. Short names allow 1; names of 8 or
+ * more letters allow about 30% of their length, but only if the first letter matches
+ * (speech engines usually keep the first sound). Tested against common English words.
+ */
+function allowedDistance(heard: string, drug: string): number {
+  const longest = Math.max(heard.length, drug.length);
+  if (longest < 8 || heard[0] !== drug[0]) return 1;
+  return Math.floor(longest * 0.3);
+}
+
+/** Closest dictionary drug within the allowed distance, or undefined. */
+function closestDrug(
+  heard: string,
+  drugs: readonly string[],
+): { drug: string; distance: number } | undefined {
+  if (!/^[a-z]{4,}$/.test(heard)) return undefined;
+  let best: { drug: string; distance: number } | undefined;
+  for (const drug of drugs) {
+    const distance = editDistance(heard, drug);
+    if (distance === 0 || distance > allowedDistance(heard, drug)) continue;
+    if (!best || distance < best.distance) best = { drug, distance };
+  }
+  return best;
+}
+
+/**
  * Drug detector with edit distance suggestions.
  * Never auto-corrects the heard text.
  */
@@ -219,7 +245,8 @@ export const drugDetector: EntityDetector = {
     const tokens: FlaggedToken[] = [];
     const drugList: readonly string[] = dictionary.drugs;
 
-    for (const word of words) {
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i];
       // Check for exact match
       if (drugList.includes(word)) {
         tokens.push({
@@ -230,18 +257,27 @@ export const drugDetector: EntityDetector = {
         continue;
       }
 
-      // Check for near match (edit distance 1)
-      for (const drug of drugList) {
-        if (editDistance(word, drug) === 1) {
-          tokens.push({
-            kind: "drug",
-            value: word, // Keep the heard text, never auto-correct
-            suggestion: drug,
-            lowConfidence: hasLowConfidence(segment, word),
-          });
-          break; // Only suggest one match per word
-        }
-      }
+      // Near match on the word, or on the word joined with the next one
+      // (speech engines split names: "merform in" for "metformin").
+      const single = closestDrug(word, drugList);
+      const next = words[i + 1];
+      const joined =
+        next !== undefined && /^[a-z]{2,}$/.test(next) && !drugList.includes(next)
+          ? closestDrug(word + next, drugList)
+          : undefined;
+      const useJoined =
+        joined !== undefined && (single === undefined || joined.distance < single.distance);
+      const match = useJoined ? joined : single;
+      if (!match) continue;
+
+      const value = useJoined ? `${word} ${next}` : word; // the heard text, never auto-corrected
+      tokens.push({
+        kind: "drug",
+        value,
+        suggestion: match.drug,
+        lowConfidence: hasLowConfidence(segment, value),
+      });
+      if (useJoined) i += 1;
     }
 
     return tokens;

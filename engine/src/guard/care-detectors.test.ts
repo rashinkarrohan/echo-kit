@@ -257,3 +257,60 @@ describe("numberDetector spoken units", () => {
     expect(tokens.map((t) => t.value)).toEqual(["100 micrograms", "5 millilitres"]);
   });
 });
+
+describe("drugDetector near matches from real speech-engine output (S16)", () => {
+  const detect = (text: string) =>
+    drugDetector.detect(makeSegment(0, 0, 4000, text), drugDictionary);
+
+  it.each([
+    ["Take meriforming 500 milligrams.", "meriforming"], // whisper-tiny.en, browser
+    ["Take merforming 500 milligrams", "merforming"], // whisper-tiny.en, Node
+    ["take merform in 500 milligrams", "merform in"], // whisper-base.en, split word: both words kept as heard
+  ])("flags %s with a metformin suggestion, keeping the heard word", (text, heard) => {
+    const drug = detect(text).find((t) => t.kind === "drug");
+    expect(drug).toEqual(expect.objectContaining({ value: heard, suggestion: "metformin" }));
+  });
+
+  it("does not flag common English words as drugs", () => {
+    const words = [
+      "reforming",
+      "performing",
+      "information",
+      "morning",
+      "medicine",
+      "minutes",
+      "months",
+      "tablets",
+      "before",
+      "breakfast",
+      "tomorrow",
+      "pressure",
+      "problem",
+      "stomach",
+      "doctor",
+      "evening",
+      "monitor",
+      "mention",
+      "important",
+      "remember",
+      "warning",
+      "certain",
+      "attention",
+      "president",
+      "lorry",
+      "always",
+      "simple",
+      "pain",
+      "infection",
+      "pharmacy",
+      "aspire",
+    ];
+    for (const w of words) {
+      expect(detect(`please ${w} today`), w).toEqual([]);
+    }
+  });
+
+  it("an exact drug name still has no suggestion", () => {
+    expect(detect("metformin")[0].suggestion).toBeUndefined();
+  });
+});

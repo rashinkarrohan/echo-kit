@@ -52,7 +52,7 @@
   - [x] Playwright test transcribing the bundled actor clip (`pnpm e2e`), laptop latency recorded in docs/SPIKES.md
   - [ ] latency per 5 s segment on the reference phone; choose tiny.en or base.en
   - [ ] written release for the test clip (docs/RELEASES.md)
-  - [ ] drug names misheard by Whisper are missed entirely (found by this spike); decide the fix
+  - [x] drug names misheard by Whisper were missed entirely (found by this spike): looser near-match for long names (Check this, heard text kept) and "Please repeat" prompts (session `prompt` event)
   - _Requirements: 3_
 - [x] 17. Live session pipeline (S17)
   - built with MockAdapter while Step 16's real-model checks are open; `evals/src/session.test.ts` runs all 15 consults through a session and matches the harness

@@ -30,6 +30,8 @@ import type { ConsentLedger } from "../consent/ledger";
 import type { EchoStore } from "../store/store";
 import { runPipeline, flagSegment } from "../pipeline";
 import { buildReadBack } from "../readback/readback";
+import { repeatPrompts } from "../guard/prompts";
+import type { FlaggedSegment, RepeatPrompt } from "../guard/prompts";
 
 const ASR_SAMPLE_RATE = 16000;
 
@@ -45,6 +47,8 @@ export type SessionErrorCode =
 export interface SessionEvents {
   caption: { segment: Segment; hasSpeech: boolean };
   flags: { segmentId: string; tokens: FlaggedToken[] };
+  /** "Please repeat" suggestion for a medicine name (Echo Care schemas only) */
+  prompt: RepeatPrompt;
   receipt: Receipt;
   error: { code: SessionErrorCode; message: string; segmentId?: string };
 }
@@ -80,7 +84,14 @@ export class ConversationSession {
   private lastEndMs = Number.NEGATIVE_INFINITY;
   private createdAt = 0;
   private result: Result<Receipt> | undefined;
-  private readonly listeners: Listeners = { caption: [], flags: [], receipt: [], error: [] };
+  private readonly listeners: Listeners = {
+    caption: [],
+    flags: [],
+    prompt: [],
+    receipt: [],
+    error: [],
+  };
+  private previousFlagged: FlaggedSegment | undefined;
   private readonly now: () => number;
 
   constructor(private readonly options: SessionOptions) {
@@ -188,10 +199,14 @@ export class ConversationSession {
 
     this.emit("caption", { segment: { ...segment }, hasSpeech: audio.hasSpeech });
     if (text.length > 0) {
-      this.emit("flags", {
-        segmentId: segment.id,
-        tokens: flagSegment(segment, this.options.schema),
-      });
+      const tokens = flagSegment(segment, this.options.schema);
+      this.emit("flags", { segmentId: segment.id, tokens });
+      const current: FlaggedSegment = { segment, tokens };
+      if (this.options.schema.detectors.includes("drug")) {
+        for (const prompt of repeatPrompts(current, this.previousFlagged))
+          this.emit("prompt", prompt);
+      }
+      this.previousFlagged = current;
     }
     return { ok: true, value: { ...segment } };
   }
