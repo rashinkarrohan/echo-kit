@@ -69,3 +69,6 @@ export {
   useRecording,
 } from "./app-kit";
 export type { HashLocation, DeviceServices } from "./app-kit";
+export { TrustPanel } from "./components/TrustPanel";
+export type { EvalSummary } from "./components/TrustPanel";
+export { sampleServices, SAMPLE_WORDING_VERSION } from "./app-kit";

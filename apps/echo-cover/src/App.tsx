@@ -10,8 +10,10 @@ import {
   FINAL,
   ReceiptList,
   RecordingController,
+  ADDED,
   Skin,
   StatusMessage,
+  TrustPanel,
   clock,
   createPlayer,
   goTo,
@@ -21,10 +23,10 @@ import {
 } from "@echo/ui";
 import type { ConsentChoices, ViewStatus } from "@echo/ui";
 import { COVER } from "./copy";
-import { COMPARE_FIELDS, SALE, readLaunch } from "./env";
+import { COMPARE_FIELDS, EVAL_SUMMARY, SALE, readLaunch } from "./env";
 import { draftConfirmMessage } from "./draft";
 
-type Route = "/consent" | "/questions" | "/record" | "/review" | "/compare" | "/confirm";
+type Route = "/consent" | "/questions" | "/record" | "/review" | "/compare" | "/confirm" | "/trust";
 const ROUTES: readonly Route[] = [
   "/consent",
   "/questions",
@@ -32,6 +34,7 @@ const ROUTES: readonly Route[] = [
   "/review",
   "/compare",
   "/confirm",
+  "/trust",
 ];
 
 const fieldOrder = Object.fromEntries(SALE.facts.map((f) => [f.key, f.fields]));
@@ -47,14 +50,16 @@ interface Sale {
 export function App(): ReactElement {
   const { route, param } = useHashRoute(ROUTES, "/consent");
   const launch = useMemo(() => readLaunch(window.location.search), []);
-  const services = useDeviceServices("echo-cover");
+  const services = useDeviceServices("echo-cover", launch.demo);
   const [choices, setChoices] = useState<ConsentChoices>({
     record: false,
     transcribe: false,
     share: false,
   });
   const [planned, setPlanned] = useState<string[]>([]);
-  const [seller, setSeller] = useState("");
+  const sampleSeller = (n: number): string =>
+    launch.demo ? (launch.samples?.[n % launch.samples.length]?.seller ?? "") : "";
+  const [seller, setSeller] = useState(() => sampleSeller(0));
   const [sellerError, setSellerError] = useState(false);
   const [controller, setController] = useState<RecordingController>();
   const [sales, setSales] = useState<Sale[]>([]);
@@ -120,7 +125,7 @@ export function App(): ReactElement {
     };
     setSales((s) => [...s, sale]);
     setController(undefined);
-    setSeller("");
+    setSeller(sampleSeller(sales.length + 1));
     goTo("/review", String(sales.length + 1));
   };
 
@@ -174,14 +179,36 @@ export function App(): ReactElement {
   let screen: ReactElement;
   switch (route) {
     case "/consent":
-      screen = (
-        <ConsentSheet
-          choices={choices}
-          onChange={setChoices}
-          onAgree={agree}
-          disclaimer={FINAL.disclaimerCover}
-          status={services.persistent ? "ready" : "error"}
-        />
+      screen = launch.demo ? (
+        <section className="echo-card">
+          <h1>{COVER.appName}</h1>
+          <p>{COVER.sampleIntro}</p>
+          <div className="echo-actions">
+            <button type="button" className="echo-button" onClick={() => goTo("/questions")}>
+              {FINAL.playSampleConsult}
+            </button>
+          </div>
+          <p className="echo-disclaimer">{FINAL.disclaimerCover}</p>
+        </section>
+      ) : (
+        <>
+          <ConsentSheet
+            choices={choices}
+            onChange={setChoices}
+            onAgree={agree}
+            disclaimer={FINAL.disclaimerCover}
+            status={services.persistent ? "ready" : "error"}
+          />
+          <section className="echo-card cover-sample">
+            <p>{COVER.sampleIntro}</p>
+            <a
+              className="echo-button echo-button--secondary"
+              href="?sample=sales&demo=1#/questions"
+            >
+              {FINAL.playSampleConsult}
+            </a>
+          </section>
+        </>
       );
       break;
 
@@ -428,6 +455,10 @@ export function App(): ReactElement {
       );
       break;
     }
+
+    case "/trust":
+      screen = <TrustPanel summary={EVAL_SUMMARY} />;
+      break;
   }
 
   return (
@@ -436,6 +467,9 @@ export function App(): ReactElement {
         <p className="cover-header__name">{COVER.appName}</p>
       </header>
       <main>{screen}</main>
+      <footer className="cover-footer">
+        <a href="#/trust">{ADDED.trustLink}</a>
+      </footer>
     </Skin>
   );
 }

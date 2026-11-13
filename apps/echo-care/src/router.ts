@@ -10,7 +10,8 @@ export type Route =
   | "/read-back"
   | "/receipt"
   | "/label"
-  | "/share";
+  | "/share"
+  | "/trust";
 
 const ROUTES: readonly Route[] = [
   "/consent",
@@ -21,6 +22,7 @@ const ROUTES: readonly Route[] = [
   "/receipt",
   "/label",
   "/share",
+  "/trust",
 ];
 
 export function go(route: Route): void {

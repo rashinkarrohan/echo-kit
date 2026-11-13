@@ -14,5 +14,7 @@
 - [x] 21. Family share (S21)
   - large-print HTML built on the device, no audio, everything escaped; Web Share with download fallback; `apps/echo-care/e2e/share.spec.ts`
   - _Requirements: 6_
-- [ ] 23. Sample consult and trust page (S23, Care part)
+- [x] 23. Sample consult and trust page (S23, Care part)
+  - sample mode (`?sample=...&demo=1`, "Play sample consult" link): in memory, no microphone, no model, works offline (tested); `/trust` reads evals/results.json at build time
+  - [ ] sample audio is silent: needs consults recorded by consenting actors with signed releases
   - _Requirements: 7_

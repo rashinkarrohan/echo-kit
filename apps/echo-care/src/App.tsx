@@ -14,8 +14,10 @@ import {
   RecordingController,
   SPEAKER_CARDS,
   Skin,
+  ADDED,
   SpeakerCard,
   StatusMessage,
+  TrustPanel,
   clock,
   createPlayer,
   useDeviceServices,
@@ -23,7 +25,7 @@ import {
 } from "@echo/ui";
 import type { ConsentChoices, ViewStatus } from "@echo/ui";
 import { CARE } from "./copy";
-import { SCHEMAS, readLaunch } from "./env";
+import { EVAL_SUMMARY, SCHEMAS, readLaunch } from "./env";
 import type { Stage } from "./env";
 import { go, useRoute } from "./router";
 import { SharePanel } from "./SharePanel";
@@ -41,7 +43,7 @@ const fieldsFor = (stage: Stage) =>
 export function App(): ReactElement {
   const route = useRoute();
   const launch = useMemo(() => readLaunch(window.location.search), []);
-  const services = useDeviceServices("echo-care");
+  const services = useDeviceServices("echo-care", launch.demo);
   const [choices, setChoices] = useState<ConsentChoices>({
     record: false,
     transcribe: false,
@@ -171,14 +173,36 @@ export function App(): ReactElement {
   let screen: ReactElement;
   switch (route) {
     case "/consent":
-      screen = (
-        <ConsentSheet
-          choices={choices}
-          onChange={setChoices}
-          onAgree={agree}
-          disclaimer={FINAL.disclaimerCare}
-          status={services.persistent ? "ready" : "error"}
-        />
+      screen = launch.demo ? (
+        <section className="echo-card">
+          <h1>{CARE.appName}</h1>
+          <p>{CARE.sampleIntro}</p>
+          <div className="echo-actions">
+            <button type="button" className="echo-button" onClick={() => go("/doctor-card")}>
+              {FINAL.playSampleConsult}
+            </button>
+          </div>
+          <p className="echo-disclaimer">{FINAL.disclaimerCare}</p>
+        </section>
+      ) : (
+        <>
+          <ConsentSheet
+            choices={choices}
+            onChange={setChoices}
+            onAgree={agree}
+            disclaimer={FINAL.disclaimerCare}
+            status={services.persistent ? "ready" : "error"}
+          />
+          <section className="echo-card care-sample">
+            <p>{CARE.sampleIntro}</p>
+            <a
+              className="echo-button echo-button--secondary"
+              href="?sample=care-01&demo=1#/doctor-card"
+            >
+              {FINAL.playSampleConsult}
+            </a>
+          </section>
+        </>
       );
       break;
 
@@ -409,11 +433,18 @@ export function App(): ReactElement {
         </>
       );
       break;
+
+    case "/trust":
+      screen = <TrustPanel summary={EVAL_SUMMARY} />;
+      break;
   }
 
   return (
     <Skin skin="care" className="care-page">
       <main>{screen}</main>
+      <footer className="care-footer">
+        <a href="#/trust">{ADDED.trustLink}</a>
+      </footer>
     </Skin>
   );
 }

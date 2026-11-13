@@ -34,6 +34,8 @@ export const SAMPLES: Record<string, Record<Stage, ScriptedConsult>> = {
 export interface Launch {
   sample?: Record<Stage, ScriptedConsult>;
   speed: number;
+  /** Sample consult mode: in-memory, no consent screen, no microphone */
+  demo: boolean;
 }
 
 export function readLaunch(search: string): Launch {
@@ -41,5 +43,15 @@ export function readLaunch(search: string): Launch {
   const id = params.get("sample");
   const speed = Number(params.get("speed") ?? "1");
   const sample = id ? SAMPLES[id] : undefined;
-  return { ...(sample ? { sample } : {}), speed: Number.isFinite(speed) && speed > 0 ? speed : 1 };
+  return {
+    ...(sample ? { sample } : {}),
+    speed: Number.isFinite(speed) && speed > 0 ? speed : 1,
+    demo: sample !== undefined && params.get("demo") === "1",
+  };
 }
+
+import results from "../../../evals/results.json";
+import type { EvalSummary } from "@echo/ui";
+
+/** Latest eval results, bundled at build time (written by `pnpm evals`). */
+export const EVAL_SUMMARY: EvalSummary = results;

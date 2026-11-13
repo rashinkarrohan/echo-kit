@@ -29,4 +29,6 @@ export const COVER = {
   backToCompare: "Back to the comparison",
   questionsHint: "Tick the ones you plan to ask.",
   planned: "I plan to ask this",
+  sampleIntro:
+    "Try Echo Cover with sample sales conversations read by actors, with fictional prices. No microphone, and nothing is kept.",
 } as const;

@@ -52,3 +52,12 @@ body {
   margin: 0;
   padding-left: var(--space-5);
 }
+.cover-footer {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 0 var(--space-4) var(--space-6);
+  font-size: var(--text-small);
+}
+.cover-sample a.echo-button {
+  text-decoration: none;
+}

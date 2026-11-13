@@ -8,6 +8,8 @@ import type { AudioSegment } from "@echo/engine";
 
 export interface ScriptedConsult {
   id: string;
+  /** Echo Cover: the seller in a scripted sale */
+  seller?: string;
   segments: Array<{ id: string; startMs: number; endMs: number; text: string }>;
 }
 

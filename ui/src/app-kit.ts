@@ -60,11 +60,13 @@ export async function openDeviceServices(dbName: string): Promise<DeviceServices
   return { store, ledger, persistent: opened.ok };
 }
 
-export function useDeviceServices(dbName: string): DeviceServices | undefined {
-  const [services, setServices] = useState<DeviceServices>();
+export function useDeviceServices(dbName: string, sample = false): DeviceServices | undefined {
+  const [services, setServices] = useState<DeviceServices | undefined>(() =>
+    sample ? sampleServices() : undefined,
+  );
   useEffect(() => {
-    void openDeviceServices(dbName).then(setServices);
-  }, [dbName]);
+    if (!sample) void openDeviceServices(dbName).then(setServices);
+  }, [dbName, sample]);
   return services;
 }
 
@@ -75,4 +77,19 @@ export function useRecording(
     useCallback((cb: () => void) => controller?.subscribe(cb) ?? (() => {}), [controller]),
     () => controller?.state,
   );
+}
+
+/**
+ * Services for the sample consult: in memory only, nothing kept after the page closes.
+ * No microphone is used and the consult is scripted (actors), so the session's consent
+ * gate is satisfied with a record that says exactly that.
+ */
+export const SAMPLE_WORDING_VERSION = "sample-scripted-actors-no-microphone";
+
+export function sampleServices(): DeviceServices {
+  const store = new MemoryStore();
+  const ledger = new ConsentLedger({ store });
+  ledger.grant("record", SAMPLE_WORDING_VERSION);
+  ledger.grant("transcribe", SAMPLE_WORDING_VERSION);
+  return { store, ledger, persistent: false };
 }

@@ -30,6 +30,9 @@ export const CARE = {
   shareCancelled: "Not shared.",
   doctorTitle: "Doctor visit",
   pharmacyTitle: "Pharmacy",
+  sampleIntro:
+    "Try Echo Care with a sample visit read by actors. No microphone, and nothing is kept.",
+  sampleEnd: "End the sample",
   deleteVisit: "Delete this visit",
   deleted: "This visit was deleted from this phone.",
   startAgain: "Start a new visit",

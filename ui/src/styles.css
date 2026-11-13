@@ -492,3 +492,8 @@
   color: var(--inkSoft);
   font-weight: 700;
 }
+.echo-trust__note {
+  font-size: var(--text-small);
+  font-weight: 500;
+  color: var(--inkSoft);
+}
