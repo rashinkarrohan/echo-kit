@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Validate schemas on save",
+      "trigger": "PostFileSave",
+      "description": "When a conversation schema YAML is saved, load and validate every schema (source URLs, known detector ids).",
+      "matcher": "apps/[^/]+/schemas/[^/]+\\.ya?ml$",
+      "action": {
+        "type": "command",
+        "command": "pnpm -s check:schemas",
+        "timeout": 120
+      }
+    }
+  ]
+}

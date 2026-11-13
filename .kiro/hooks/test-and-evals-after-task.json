@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Run tests and evals after a spec task",
+      "trigger": "PostTaskExec",
+      "description": "When a spec task is marked complete, run every unit test and the eval harness (fails if any fact is invented or unanchored).",
+      "action": {
+        "type": "command",
+        "command": "pnpm test && pnpm evals",
+        "timeout": 600
+      }
+    }
+  ]
+}

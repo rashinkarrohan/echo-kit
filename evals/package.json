@@ -7,7 +7,8 @@
     "start": "vite-node src/run.ts",
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc --noEmit",
-    "spike:asr": "vite-node src/spike-asr.ts"
+    "spike:asr": "vite-node src/spike-asr.ts",
+    "validate:schemas": "vite-node src/validate-schemas.ts"
   },
   "devDependencies": {
     "@huggingface/transformers": "4.3.2",

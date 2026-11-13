@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Check copy for advice wording",
+      "trigger": "PostFileSave",
+      "description": "When an app copy file is saved, flag advice-like, dose or seller-ranking wording against the safety steering.",
+      "matcher": "(apps/[^/]+|ui)/src/copy\\.ts$",
+      "action": {
+        "type": "command",
+        "command": "pnpm -s check:copy",
+        "timeout": 60
+      }
+    }
+  ]
+}

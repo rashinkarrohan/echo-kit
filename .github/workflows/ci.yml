@@ -43,6 +43,8 @@ jobs:
       - name: Check .kiro is NOT in .gitignore
         run: node scripts/check-gitignore.mjs
 
+      - name: Check copy for advice wording
+        run: pnpm check:copy
       - name: Lint
         run: pnpm lint
 

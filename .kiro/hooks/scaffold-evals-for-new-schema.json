@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Scaffold eval cases for a new schema",
+      "trigger": "PostFileCreate",
+      "description": "When a new schema file is created, write a draft eval consult for it in evals/drafts/ (the hook's JSON on stdin names the file).",
+      "matcher": "apps/[^/]+/schemas/[^/]+\\.ya?ml$",
+      "action": {
+        "type": "command",
+        "command": "node scripts/scaffold-evals.mjs",
+        "timeout": 60
+      }
+    }
+  ]
+}
