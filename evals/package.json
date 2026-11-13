@@ -18,5 +18,9 @@
   },
   "dependencies": {
     "@echo/engine": "workspace:*"
+  },
+  "exports": {
+    "./suite": "./src/suite.ts",
+    "./harness": "./src/harness.ts"
   }
 }

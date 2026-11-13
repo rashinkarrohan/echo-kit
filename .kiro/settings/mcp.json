@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "echo-kit-evals": {
+      "command": "pnpm",
+      "args": ["--silent", "--filter", "@echo/mcp-eval", "start"],
+      "disabled": false,
+      "autoApprove": ["run_evals", "list_failures", "show_case"]
+    }
+  }
+}

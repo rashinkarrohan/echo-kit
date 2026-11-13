@@ -6,89 +6,37 @@
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { checkComparison, defaultExtractor, runConsult } from "./harness";
 import type { ConsultResult } from "./harness";
-import { evalsDir, loadConsults, loadSchemas } from "./files";
+import { evalsDir } from "./files";
+import { runSuite } from "./suite";
 
 const broken = process.argv.includes("--break") || process.env["EVALS_BREAK"] === "1";
-
-const pct = (n: number, d: number) => (d === 0 ? 1 : n / d);
-const fmt = (x: number) => `${(x * 100).toFixed(1)}%`;
+const fmt = (x: number): string => `${(x * 100).toFixed(1)}%`;
 
 function main(): number {
-  const schemas = loadSchemas();
-  const consults = loadConsults();
-  const extractor = defaultExtractor(broken);
-  const results = new Map<string, ConsultResult>();
-  const failures: string[] = [];
-
-  for (const consult of consults) {
-    const schema = schemas.get(consult.schemaId);
-    if (!schema) {
-      failures.push(`${consult.id}: unknown schema ${consult.schemaId}`);
-      continue;
-    }
-    const result = runConsult(consult, schema, extractor);
-    results.set(consult.id, result);
-    failures.push(...result.failures.map((f) => `${consult.id}: ${f}`));
-  }
-
-  let comparisonChecks = 0;
-  for (const consult of consults) {
-    if (!consult.comparisonWith) continue;
-    const self = results.get(consult.id);
-    const other = results.get(consult.comparisonWith);
-    const schema = schemas.get(consult.schemaId);
-    if (!self || !other || !schema) {
-      failures.push(`${consult.id}: comparison partner ${consult.comparisonWith} missing`);
-      continue;
-    }
-    comparisonChecks += 1;
-    failures.push(
-      ...checkComparison(consult, self, other, schema).map(
-        (f) => `${consult.id} vs ${other.id}: ${f}`,
-      ),
-    );
-  }
-
-  const all = [...results.values()];
-  const sum = (k: keyof ConsultResult) => all.reduce((acc, r) => acc + (r[k] as number), 0);
-  const totals = {
-    consults: all.length,
-    plantedFacts: sum("planted"),
-    kept: sum("kept"),
-    dropped: sum("dropped"),
-    invented: sum("invented"),
-    unanchored: sum("unanchored"),
-    rejectedByValidator: sum("rejectedByValidator"),
-    fieldRecall: pct(sum("fieldsKept"), sum("fieldsPlanted")),
-    flaggedTokenRecall: pct(sum("tokensFound"), sum("tokensExpected")),
-    checklistAccuracy: pct(sum("checklistCorrect"), sum("checklistTotal")),
-    labelChecks: all.filter((r) => r.details.label).length,
-    comparisonChecks,
-  };
-  const passed = failures.length === 0;
+  const { passed, totals, failures, results: all } = runSuite(broken);
 
   console.log(`Echo Kit evals${broken ? " (--break: broken extractor)" : ""}`);
   console.log("consult        kept  dropped  invented  unanchored  fields  tokens  checklist");
   for (const r of all) {
     console.log(
-      `${r.id.padEnd(14)} ${String(r.kept).padStart(4)}  ${String(r.dropped).padStart(7)}  ${String(r.invented).padStart(8)}  ${String(
-        r.unanchored,
-      ).padStart(
-        10,
-      )}  ${`${r.fieldsKept}/${r.fieldsPlanted}`.padStart(6)}  ${`${r.tokensFound}/${r.tokensExpected}`.padStart(
-        6,
-      )}  ${`${r.checklistCorrect}/${r.checklistTotal}`.padStart(9)}`,
+      [
+        r.id.padEnd(14),
+        String(r.kept).padStart(4),
+        String(r.dropped).padStart(8),
+        String(r.invented).padStart(9),
+        String(r.unanchored).padStart(11),
+        `${r.fieldsKept}/${r.fieldsPlanted}`.padStart(7),
+        `${r.tokensFound}/${r.tokensExpected}`.padStart(7),
+        `${r.checklistCorrect}/${r.checklistTotal}`.padStart(10),
+      ].join(""),
     );
   }
   console.log(
     `\nTotals: ${totals.consults} consults, kept ${totals.kept}/${totals.plantedFacts}, dropped ${totals.dropped}, invented ${totals.invented}, unanchored ${totals.unanchored}`,
   );
   console.log(
-    `Field recall ${fmt(totals.fieldRecall)}, flagged-token recall ${fmt(totals.flaggedTokenRecall)}, checklist accuracy ${fmt(
-      totals.checklistAccuracy,
-    )}, label checks ${totals.labelChecks}, comparison checks ${totals.comparisonChecks}`,
+    `Field recall ${fmt(totals.fieldRecall)}, flagged-token recall ${fmt(totals.flaggedTokenRecall)}, checklist accuracy ${fmt(totals.checklistAccuracy)}, label checks ${totals.labelChecks}, comparison checks ${totals.comparisonChecks}`,
   );
 
   if (!broken) {

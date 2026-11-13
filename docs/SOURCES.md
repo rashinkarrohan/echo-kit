@@ -29,6 +29,7 @@ Record the licence and the date opened for every item. Anything not written duri
 - Hindi/Hinglish model Shruti (stretch only): https://huggingface.co/udgamlabs/Shruti , Apache-2.0 per its card
 
 ## Development and test tools (not shipped to users; licences checked on npm Nov 13, 2026)
+- `@modelcontextprotocol/server` and `@modelcontextprotocol/client` 2.4.0 (eval MCP server and its test): Apache-2.0. `zod` 4.6.7: MIT.
 - `@playwright/test` 1.65.0 and its Chromium download: Apache-2.0.
 - `@axe-core/playwright` 4.14.0 and `axe-core` 4.14.0 (accessibility checks): MPL-2.0. Used unmodified as test dependencies.
 - `@testing-library/react` 16.3.3 and `@testing-library/dom` 10.4.2: MIT.

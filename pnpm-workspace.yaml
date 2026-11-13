@@ -3,6 +3,7 @@ packages:
   - "ui"
   - "apps/*"
   - "evals"
+  - "mcp-eval"
 allowBuilds:
   esbuild: true
   onnxruntime-node: false

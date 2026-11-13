@@ -9,7 +9,7 @@ The rules require answers to eight prompts. Fill one dated note, one commit link
 | Agent hooks | Each hook, its trigger, the workflow it automated, time saved | Nov 13, 2026 | `.kiro/hooks/` (4 files), `scripts/check-copy.mjs`, `scripts/scaffold-evals.mjs`, `evals/src/validate-schemas.ts` | Four hooks: schema YAML saved, then validate all schemas; spec task completed, then `pnpm test && pnpm evals`; copy file saved, then flag advice or ranking wording; new schema created, then draft an eval case. Commands checked by hand (see S24 note below); the IDE triggers themselves have not been seen firing yet. |
 | Spec-driven development | How the specs were structured; compare one module built spec-first and one vibe-coded | | | |
 | Steering docs | The single rule that changed Kiro's output most | | | |
-| MCP | The custom eval server; what it enabled | | | |
+| MCP | The custom eval server; what it enabled | Nov 13, 2026 | `mcp-eval/src/server.ts`, `.kiro/settings/mcp.json` | Kiro runs the eval harness and reads a failing case in chat: with the broken extractor, `show_case care-05` showed "Okafor", "meals" and "surgery" accepted as medicine names with real quotes, which is exactly what the "invented" metric exists to catch. |
 | Property-based testing | Requirements with properties; at least one bug PBT caught that unit tests missed | | | |
 | Kiro powers | Powers used; the echo-kit power published; third-party tooling gained | | | |
 
@@ -26,3 +26,6 @@ Created with Kiro's hook tool (`createHook`); Kiro loads them at the next sessio
 - `pnpm -s check:copy` (copy saved): passed on the three copy files; a scratch file with "You should take two tablets" and "the best deal" was flagged with exit code 1.
 - `node scripts/scaffold-evals.mjs` (new schema): given hook-style JSON naming a temporary schema, it wrote `evals/drafts/test-scaffold-01.json` with TODO markers (the draft and schema were then removed).
 **Still to record:** each hook firing on its real IDE trigger in a new session (save a schema, save a copy file, create a schema, complete a spec task), with the result.
+
+### S25 eval MCP server, Nov 13, 2026
+`mcp-eval/` is a stdio MCP server (`@modelcontextprotocol/server` 2.4.0) with three tools: `run_evals`, `list_failures`, `show_case(id)`, each with an optional `broken` flag that swaps in the deliberately broken extractor. Registered in `.kiro/settings/mcp.json` as `echo-kit-evals`. Verified in Kiro the same day: `run_evals` passed (49/49 kept, 0 invented, 0 unanchored); `run_evals {broken: true}` failed (72 invented); `show_case {id: "care-05", broken: true}` listed the five invented facts with their quotes. `mcp-eval/src/server.test.ts` checks the same over stdio with the MCP client.
