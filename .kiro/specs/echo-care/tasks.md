@@ -11,7 +11,8 @@
 - [x] 20. Pharmacy stage and label check (S20)
   - manual entry with an optional photo (never stored); OCR not spiked (docs/SPIKES.md); `apps/echo-care/e2e/pharmacy-label.spec.ts`
   - _Requirements: 5_
-- [ ] 21. Family share (S21)
+- [x] 21. Family share (S21)
+  - large-print HTML built on the device, no audio, everything escaped; Web Share with download fallback; `apps/echo-care/e2e/share.spec.ts`
   - _Requirements: 6_
 - [ ] 23. Sample consult and trust page (S23, Care part)
   - _Requirements: 7_

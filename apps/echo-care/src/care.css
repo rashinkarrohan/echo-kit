@@ -41,3 +41,13 @@ body {
 .care-next {
   padding-left: var(--space-5);
 }
+.care-fieldset {
+  border: 0;
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  min-width: 0;
+}
+.care-fieldset legend {
+  font-weight: 700;
+  margin-bottom: var(--space-2);
+}

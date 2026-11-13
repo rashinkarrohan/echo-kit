@@ -11,7 +11,8 @@ export type Route =
   | "/record"
   | "/read-back"
   | "/receipt"
-  | "/label";
+  | "/label"
+  | "/share";
 const ROUTES: Route[] = [
   "/consent",
   "/doctor-card",
@@ -20,6 +21,7 @@ const ROUTES: Route[] = [
   "/read-back",
   "/receipt",
   "/label",
+  "/share",
 ];
 
 export function currentRoute(hash: string): Route {

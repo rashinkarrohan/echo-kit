@@ -38,6 +38,7 @@ import { CARE } from "./copy";
 import { SCHEMAS, readLaunch } from "./env";
 import type { Stage } from "./env";
 import { go, useRoute } from "./router";
+import { SharePanel } from "./SharePanel";
 
 interface Services {
   store: EchoStore;
@@ -201,6 +202,7 @@ export function App(): ReactElement {
       {playing?.text ?? ""}
     </p>
   );
+  const canShare = ledger.has("share");
   const hasMedicine = visits.some((v) => v.receipt.facts.some((f) => f.key === "medicine"));
 
   let screen: ReactElement;
@@ -367,6 +369,15 @@ export function App(): ReactElement {
             >
               {CARE.checkLabel}
             </button>
+            {canShare && (
+              <button
+                type="button"
+                className="echo-button echo-button--secondary"
+                onClick={() => go("/share")}
+              >
+                {FINAL.share}
+              </button>
+            )}
             <button
               type="button"
               className="echo-button echo-button--secondary"
@@ -379,6 +390,26 @@ export function App(): ReactElement {
       ) : (
         <StatusMessage status="empty" text={{ empty: CARE.noReceipt }} />
       );
+      break;
+
+    case "/share":
+      screen =
+        canShare && visits.length > 0 ? (
+          <>
+            <SharePanel visits={visits} />
+            <div className="echo-actions">
+              <button
+                type="button"
+                className="echo-button echo-button--secondary"
+                onClick={() => go("/receipt")}
+              >
+                {CARE.backToReceipt}
+              </button>
+            </div>
+          </>
+        ) : (
+          <StatusMessage status="empty" text={{ empty: CARE.noReceipt }} />
+        );
       break;
 
     case "/label":

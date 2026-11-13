@@ -58,3 +58,5 @@ export type {
   RecordingStatus,
 } from "./platform/recording";
 export { LabelForm, LabelFlagList } from "./components/LabelCheck";
+export { buildShareFile, shareFileName, shareOrDownload, escapeHtml } from "./share";
+export type { ShareOptions, ShareSections, SharedReceipt } from "./share";
