@@ -4,39 +4,13 @@
  * comparison check fails. `pnpm evals --break` swaps in a broken extractor and must fail.
  */
 
-import { readFileSync, readdirSync, writeFileSync, existsSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-import { loadSchema } from "@echo/engine";
-import type { ConversationSchema } from "@echo/engine";
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { join } from "node:path";
 import { checkComparison, defaultExtractor, runConsult } from "./harness";
-import type { Consult, ConsultResult } from "./harness";
+import type { ConsultResult } from "./harness";
+import { evalsDir, loadConsults, loadSchemas } from "./files";
 
-const here = dirname(fileURLToPath(import.meta.url));
-const evalsDir = resolve(here, "..");
-const root = resolve(evalsDir, "..");
 const broken = process.argv.includes("--break") || process.env["EVALS_BREAK"] === "1";
-
-function loadSchemas(): Map<string, ConversationSchema> {
-  const schemas = new Map<string, ConversationSchema>();
-  for (const app of ["echo-care", "echo-cover"]) {
-    const dir = join(root, "apps", app, "schemas");
-    for (const file of readdirSync(dir).filter((f) => f.endsWith(".yaml"))) {
-      const result = loadSchema(readFileSync(join(dir, file), "utf8"));
-      if (!result.ok) throw new Error(`Schema ${app}/${file}: ${result.error}`);
-      schemas.set(result.value.id, result.value);
-    }
-  }
-  return schemas;
-}
-
-function loadConsults(): Consult[] {
-  const dir = join(evalsDir, "consults");
-  return readdirSync(dir)
-    .filter((f) => f.endsWith(".json"))
-    .sort()
-    .map((f) => JSON.parse(readFileSync(join(dir, f), "utf8")) as Consult);
-}
 
 const pct = (n: number, d: number) => (d === 0 ? 1 : n / d);
 const fmt = (x: number) => `${(x * 100).toFixed(1)}%`;

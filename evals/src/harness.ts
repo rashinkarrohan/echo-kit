@@ -16,15 +16,11 @@ import {
   compareLabel,
   compareQuotes,
   containsPhrase,
-  detectorsFor,
-  DRUG_DICTIONARY,
-  flagTokens,
+  flagSegment,
   normaliseText,
   numbersIn,
   quoteRecordFromFacts,
-  runGapCheck,
-  validateFacts,
-  verifyFacts,
+  runPipeline,
 } from "@echo/engine";
 import type {
   ConversationSchema,
@@ -206,10 +202,7 @@ export function runConsult(
   const failures = checkConsult(consult, schema);
   const segments = toSegments(consult);
 
-  const raw: RawFact[] = extractor.extract(segments, schema);
-  const { accepted, rejected } = validateFacts(raw, segments);
-  const facts = verifyFacts(accepted, segments);
-  const gap = runGapCheck(facts, schema, segments);
+  const { rejected, facts, checklist: gap } = runPipeline(segments, schema, extractor);
 
   const unanchored = facts.filter((f) => !isAnchored(f, segments)).length;
   const inventedFacts = facts.filter((f) => !consult.planted.some((p) => factMatches(f, p)));
@@ -230,9 +223,8 @@ export function runConsult(
   }
 
   // Flagged-token recall: numbers and drug names in planted values must be flagged.
-  const detectors = detectorsFor(schema.detectors);
   const flagged = segments
-    .flatMap((s) => flagTokens(s, detectors, DRUG_DICTIONARY))
+    .flatMap((s) => flagSegment(s, schema))
     .map((t) => normaliseText(t.value));
   const expectedTokens = consult.planted.flatMap((p) =>
     Object.entries(p.fields).flatMap(([field, value]) => {

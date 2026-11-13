@@ -52,5 +52,6 @@
   - [ ] Playwright test transcribing a bundled 10 s clip (needs a consenting-actor recording)
   - [ ] latency per 5 s segment on the reference phone (WebGPU and WebAssembly); choose tiny.en or base.en
   - _Requirements: 3_
-- [ ] 17. Live session pipeline (S17)
+- [x] 17. Live session pipeline (S17)
+  - built with MockAdapter while Step 16's real-model checks are open; `evals/src/session.test.ts` runs all 15 consults through a session and matches the harness
   - _Requirements: 3, 4, 5, 6, 7, 8, 9_

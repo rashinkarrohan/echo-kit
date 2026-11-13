@@ -80,3 +80,16 @@ export type {
   WorkerReply,
   WorkerRequest,
 } from "./asr/whisper-adapter";
+
+// Shared post-recording pipeline
+export { runPipeline, flagSegment } from "./pipeline";
+export type { PipelineOutput } from "./pipeline";
+
+// Live session
+export { ConversationSession } from "./session/session";
+export type {
+  SessionEvents,
+  SessionErrorCode,
+  SessionOptions,
+  SessionState,
+} from "./session/session";
