@@ -17,6 +17,7 @@
  */
 
 import guard from "../../data/english-guard.json";
+import commonEnglish from "../../data/common-english.json";
 import drugsFile from "../../data/drugs.json";
 
 /** Consonant sound skeleton: vowels dropped, sound classes and voicing pairs merged. */
@@ -184,6 +185,69 @@ export interface DrugMatch {
   exact: boolean;
   /** What it sounds like, for near matches */
   suggestion?: string;
+  /** Heard just before a dose but not a medicine name Echo knows ("paramet 500 mg") */
+  unknown?: true;
+}
+
+/**
+ * Ordinary words that can come just before a dose ("sorry, 15 milligrams", "maybe 10 mg",
+ * "after breakfast 2 tablets"). Never taken for an unknown medicine name.
+ */
+const NOT_A_NAME = new Set(
+  `sorry mean meant just only instead about around roughly approximately exactly maybe perhaps
+  like least most more less extra another other usual normal normally same then later still
+  even half quarter whole full maximum minimum total usually generally probably actually
+  breakfast lunch dinner supper bedtime meal meals inhaler inhalers spray sprays cream creams
+  syrup liquid injection injections patch patches drops puffs pump pumps pill pills sachet
+  sachets spoon spoons spoonful teaspoon teaspoons medicine medicines medication medications
+  tablet tablets capsule capsules dose doses dosage strength amount bring brought bought gave
+  took prescribe prescribed prescribing increase increased reduce reduced lower raise change
+  changed make need needs needed want wants have having getting going doing being
+  every until under between before after during within without each both either something
+  nothing everything doctor nurse pharmacist`.split(/\s+/),
+);
+
+/** A dose unit that follows a number, or is joined to it ("500mg"). Grams are left out:
+ *  "500 grams of biscuits" is food talk. */
+const DOSE_UNIT_WORD =
+  /^(mg|mcg|ml|milligrams?|micrograms?|millilitres?|milliliters?|units?|tablets?|capsules?|puffs?|drops?)$/;
+const JOINED_DOSE = /^\d+(?:\.\d+)?(?:mg|mcg|ml)$/;
+
+function isDoseAt(words: readonly string[], i: number): boolean {
+  const w = words[i];
+  if (w === undefined) return false;
+  if (JOINED_DOSE.test(w)) return true;
+  return /^\d+(?:\.\d+)?$/.test(w) && DOSE_UNIT_WORD.test(words[i + 1] ?? "");
+}
+
+/** Everyday English words (data/common-english.json, from SCOWL size 35), built on first use. */
+let everyday: Set<string> | undefined;
+function isEverydayWord(w: string): boolean {
+  everyday ??= new Set(commonEnglish.words.split(" "));
+  return everyday.has(w) || ENGLISH.has(w);
+}
+
+/**
+ * When no medicine name was found, a word just before a dose may be a name Echo does not
+ * know (a misheard name like "paramet", or a brand like "calpol"). It is kept as heard,
+ * with no suggestion, so it can be shown as Check this. Everyday English words never
+ * qualify ("for the pain 500 milligrams").
+ */
+function unknownNamesBeforeDoses(words: readonly string[]): DrugMatch[] {
+  const out: DrugMatch[] = [];
+  for (let i = 0; i < words.length - 1; i++) {
+    const w = words[i];
+    if (
+      /^[a-z]{4,}$/.test(w) &&
+      !FUNCTION_WORDS.has(w) &&
+      !NOT_A_NAME.has(w) &&
+      isDoseAt(words, i + 1) &&
+      !isEverydayWord(w)
+    ) {
+      out.push({ at: i, length: 1, heard: w, exact: false, unknown: true });
+    }
+  }
+  return out;
 }
 
 /**
@@ -263,7 +327,7 @@ export function matchDrugs(words: readonly string[], drugs: readonly string[]): 
     });
     i += best.length - 1;
   }
-  return out;
+  return out.length > 0 ? out : unknownNamesBeforeDoses(words);
 }
 
 /** Other medicines in the list that sound like this one (sound key within 1 edit). */

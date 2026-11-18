@@ -192,6 +192,7 @@ export const drugDetector: EntityDetector = {
         lowConfidence: hasLowConfidence(segment, m.heard),
       };
       if (m.suggestion !== undefined) token.suggestion = m.suggestion;
+      if (m.unknown) token.unknownName = true;
       if (m.exact) {
         const alikes = soundAlikes(m.heard, dictionary.drugs);
         if (alikes.length > 0) token.soundsAlike = alikes;

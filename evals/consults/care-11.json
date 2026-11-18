@@ -1,0 +1,20 @@
+{
+  "id": "care-11",
+  "app": "echo-care",
+  "schemaId": "doctor-visit",
+  "note": "Scripted by actors. No real person or data. The text is written as a speech engine mishears medicine names: 'paramet' (a name Echo does not know, before a dose) and 'meriforming' (sounds like metformin). Both must be kept as heard and stamped Check this.",
+  "segments": [
+    {"id": "seg-0001", "startMs": 0, "endMs": 5500, "text": "Your temperature is up a little, and the knee pain is bad."},
+    {"id": "seg-0002", "startMs": 5500, "endMs": 12000, "text": "Take paramet, five hundred milligrams, three times a day after food."},
+    {"id": "seg-0003", "startMs": 12000, "endMs": 18500, "text": "Keep taking your meriforming, five hundred milligrams, twice daily."},
+    {"id": "seg-0004", "startMs": 18500, "endMs": 25000, "text": "If the fever lasts more than three days, call the clinic."},
+    {"id": "seg-0005", "startMs": 25000, "endMs": 30000, "text": "Come back and see me in one week."}
+  ],
+  "planted": [
+    {"key": "medicine", "fields": {"name": "paramet", "dose": "500 milligrams", "frequency": "3 times a day"}, "quote": "paramet, five hundred milligrams, three times a day"},
+    {"key": "medicine", "fields": {"name": "meriforming", "dose": "500 milligrams", "frequency": "twice daily"}, "quote": "meriforming, five hundred milligrams, twice daily"},
+    {"key": "warning_sign", "fields": {"description": "the fever lasts more than three days, call the clinic"}, "quote": "If the fever lasts more than three days, call the clinic"},
+    {"key": "follow_up", "fields": {"when": "in 1 week"}, "quote": "Come back and see me in one week"}
+  ],
+  "plantedGapItemIds": ["q-side-effects"]
+}

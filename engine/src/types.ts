@@ -41,6 +41,8 @@ export interface FlaggedToken {
   suggestion?: string;
   /** Exact medicine names that other medicines sound like (prednisone, prednisolone) */
   soundsAlike?: string[];
+  /** A word heard just before a dose that is not a medicine name Echo knows */
+  unknownName?: boolean;
 }
 
 /** Anchor: quote location in transcript */

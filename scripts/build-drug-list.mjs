@@ -78,11 +78,29 @@ for (const line of product.split("\n").slice(1)) {
     for (const w of words) counts.set(w, (counts.get(w) ?? 0) + 1);
   }
 }
-// UK/INN names get the count of the 50th most-listed name, so they rank among the common ones.
+// The same medicine under its US name. A UK/INN name ranks with its US name (paracetamol
+// with acetaminophen) when that is higher, so it is as likely to be in the speech prompt.
+// Old spellings (frusemide, amoxycillin, lignocaine) are left out.
+const US_NAME = {
+  paracetamol: "acetaminophen",
+  salbutamol: "albuterol",
+  chlorphenamine: "chlorpheniramine",
+  glibenclamide: "glyburide",
+  beclometasone: "beclomethasone",
+  adrenaline: "epinephrine",
+  noradrenaline: "norepinephrine",
+  cefalexin: "cephalexin",
+  colecalciferol: "cholecalciferol",
+  mesalazine: "mesalamine",
+  pethidine: "meperidine",
+};
+// Every UK/INN name gets at least the count of the 50th most-listed name, so it ranks among the common ones.
 const fiftieth = [...counts.values()].sort((a, b) => b - a)[49] ?? 1;
 for (const name of EXTRA_GENERICS) {
   const w = name.replace(/-/g, "");
-  if (!counts.has(w)) counts.set(w, fiftieth);
+  if (counts.has(w)) continue;
+  const us = US_NAME[w];
+  counts.set(w, Math.max(fiftieth, (us && counts.get(us)) || 0));
 }
 
 const ranked = [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([w]) => w);

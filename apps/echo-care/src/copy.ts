@@ -42,7 +42,10 @@ export const CARE = {
   stopping: "Building the receipt.",
   promptMissingName: "A dose was heard without a medicine name.",
   promptUnclearName: (heard: string, suggestion: string) =>
-    `“${heard}” sounds like ${suggestion}. It may have been misheard.`,
+    `Echo heard “${heard}”. It sounds like ${suggestion}, but it may have been misheard.`,
+  promptUnknownName: (heard: string) =>
+    `Echo heard “${heard}” before a dose. It is not a medicine name Echo knows.`,
+  promptAsk: "Tap Please repeat to ask them to say the name and dose again.",
   playing: (range: string) => `Playing ${range}`,
   playFailed: "This part could not be played.",
   sampleBadge: "Sample consult (actors, no microphone)",

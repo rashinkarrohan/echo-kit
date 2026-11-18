@@ -47,6 +47,11 @@ describe("repeatPrompts", () => {
     ]);
   });
 
+  it("asks to repeat a word heard just before a dose that is not a medicine name Echo knows", () => {
+    expect(repeatPrompts(flagged(0, "Take paramet, 500 mg twice daily."))).toEqual([
+      { kind: "unknown-medicine-name", segmentId: "seg-0001", heard: "paramet" },
+    ]);
+  });
   it("is silent for segments with nothing to check", () => {
     expect(repeatPrompts(flagged(0, "come back in three months"))).toEqual([]);
   });

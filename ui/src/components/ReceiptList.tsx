@@ -13,6 +13,8 @@ export interface ReceiptListProps {
   onPlay?: PlayAnchor;
   status?: ViewStatus;
   title?: string;
+  /** Plain-words reason a line needs checking, shown under its heading */
+  noteFor?: (fact: VerifiedFact) => string | undefined;
 }
 
 /**
@@ -26,6 +28,7 @@ export function ReceiptList({
   onPlay,
   status = "ready",
   title = ADDED.receiptTitle,
+  noteFor,
 }: ReceiptListProps): ReactElement {
   const shown = status === "ready" && facts.length === 0 ? "empty" : status;
   return (
@@ -51,6 +54,7 @@ export function ReceiptList({
         <ol className="echo-receipt__list">
           {facts.map((fact, i) => {
             const fields = fieldsByKey[fact.key] ?? Object.keys(fact.fields);
+            const note = noteFor?.(fact);
             return (
               <li
                 key={`${fact.key}-${i}`}
@@ -61,6 +65,7 @@ export function ReceiptList({
                   <h3 style={{ margin: 0 }}>{factLabel(fact.key)}</h3>
                   <StampBadge stamp={fact.stamp} />
                 </div>
+                {note !== undefined && <p className="echo-receipt__note">{note}</p>}
                 <dl className="echo-receipt__fields">
                   {fields.map((field) => (
                     <div key={field} className="echo-receipt__field">

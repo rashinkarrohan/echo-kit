@@ -15,6 +15,7 @@ import {
   SpeakerCard,
   StampBadge,
   FINAL,
+  medicineNoteText,
 } from "../index";
 
 afterEach(cleanup);
@@ -64,7 +65,50 @@ describe("FlaggedText", () => {
       />,
     );
     expect(container.textContent).toContain("meriforming");
-    expect(container.textContent).toContain("sounds like metformin?");
+    expect(container.querySelector(".echo-name-hint")?.textContent).toBe("Sounds like metformin?");
+  });
+  it("says when a word before a dose is not a medicine name Echo knows, keeping the word", () => {
+    const { container } = render(
+      <FlaggedText
+        text="Take paramet, 500 mg."
+        tokens={[{ kind: "drug", value: "paramet", unknownName: true, lowConfidence: false }]}
+      />,
+    );
+    expect(container.querySelector("mark")?.textContent).toContain("paramet");
+    expect(container.querySelector(".echo-name-hint")?.textContent).toBe(
+      "Not a medicine name Echo knows",
+    );
+  });
+  it("names real medicines an exact name could be mixed up with", () => {
+    const { container } = render(
+      <FlaggedText
+        text="Prednisone 40 mg."
+        tokens={[
+          {
+            kind: "drug",
+            value: "prednisone",
+            soundsAlike: ["prednisolone"],
+            lowConfidence: false,
+          },
+        ]}
+      />,
+    );
+    expect(container.querySelector(".echo-name-hint")?.textContent).toBe(
+      "Could also be prednisolone?",
+    );
+  });
+});
+describe("medicineNoteText", () => {
+  it("explains each kind of medicine-name note in plain words, with no advice", () => {
+    expect(medicineNoteText("meriforming", { kind: "sounds-like", name: "metformin" })).toBe(
+      "Echo heard “meriforming”. It sounds like metformin. Check the name on the label or with your pharmacist.",
+    );
+    expect(medicineNoteText("paramet", { kind: "unknown" })).toBe(
+      "Echo heard “paramet”. This is not a medicine name Echo knows. Check the name on the label or with your pharmacist.",
+    );
+    expect(medicineNoteText("prednisone", { kind: "could-also-be", names: ["prednisolone"] })).toBe(
+      "Prednisone sounds like prednisolone. Check which one is on the label.",
+    );
   });
 });
 
@@ -113,6 +157,18 @@ describe("ReceiptList", () => {
     expect(within(row).getByText(/five hundred milligrams/)).toBeTruthy();
     expect(within(row).getByText("Heard clearly")).toBeTruthy();
     expect(within(row).getByText("For how long").nextElementSibling?.textContent).toBe("Not said");
+    expect(row.querySelector(".echo-receipt__note")).toBeNull();
+  });
+  it("shows why a line needs checking, when the app gives a note", () => {
+    const unsure: VerifiedFact = {
+      ...medicine,
+      fields: { name: "paramet", dose: "500 mg" },
+      anchor: anchor("seg-0001", "Take paramet, 500 mg"),
+      stamp: "check_this",
+    };
+    render(<ReceiptList facts={[unsure]} noteFor={(f) => `note for ${f.fields["name"]}`} />);
+    const note = document.querySelector(".echo-receipt__note");
+    expect(note?.textContent).toBe("note for paramet");
   });
 
   it("has an empty state", () => {

@@ -37,4 +37,12 @@ describe("runPipeline on real speech-engine output (S16 actor clip)", () => {
     });
     expect(medicine?.stamp).toBe("check_this");
   });
+
+  it("keeps an unknown word heard just before a dose as the medicine, stamped Check this", () => {
+    const segments = [makeSegment(0, 0, 5000, "Take paramet, 500 mg twice daily after food.")];
+    const { facts } = runPipeline(segments, doctor);
+    const medicine = facts.find((f) => f.key === "medicine");
+    expect(medicine?.fields).toEqual({ name: "paramet", dose: "500 mg", frequency: "twice daily" });
+    expect(medicine?.stamp).toBe("check_this");
+  });
 });

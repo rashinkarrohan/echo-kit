@@ -5,6 +5,7 @@
  */
 
 import { CONSENT_WORDING } from "@echo/engine";
+import type { MedicineNameNote } from "@echo/engine";
 
 export const FINAL = {
   consentWording: CONSENT_WORDING,
@@ -85,8 +86,10 @@ export const ADDED = {
   readBackMarkedRight: "Marked right",
   readBackMarkedNotRight: "Marked not right",
   audioNotKept: "Audio not kept",
-  soundsLike: "sounds like",
-  couldAlsoBe: "could also be",
+  /** Short hints next to a medicine name in the captions */
+  hintSoundsLike: (name: string) => `Sounds like ${name}?`,
+  hintCouldAlsoBe: (names: readonly string[]) => `Could also be ${names.join(" or ")}?`,
+  hintUnknown: "Not a medicine name Echo knows",
   flagged: "flagged",
   loading: "Loading.",
   trustTitle: "How Echo did in tests",
@@ -169,4 +172,25 @@ export function fieldLabel(key: string, labels: Record<string, string> = FIELD_L
 export function clock(ms: number): string {
   const total = Math.floor(ms / 1000);
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
+}
+
+/** Short hint for a medicine name in the captions (ADDED). */
+export function medicineHintText(note: MedicineNameNote): string {
+  if (note.kind === "sounds-like") return ADDED.hintSoundsLike(note.name);
+  if (note.kind === "could-also-be") return ADDED.hintCouldAlsoBe(note.names.slice(0, 2));
+  return ADDED.hintUnknown;
+}
+
+/**
+ * Why a medicine on the receipt needs checking, in plain words (ADDED). Says what was
+ * heard and what it sounds like; never says which medicine it is.
+ */
+export function medicineNoteText(heard: string, note: MedicineNameNote): string {
+  const check = "Check the name on the label or with your pharmacist.";
+  if (note.kind === "sounds-like")
+    return `Echo heard “${heard}”. It sounds like ${note.name}. ${check}`;
+  if (note.kind === "unknown")
+    return `Echo heard “${heard}”. This is not a medicine name Echo knows. ${check}`;
+  const name = heard.charAt(0).toUpperCase() + heard.slice(1);
+  return `${name} sounds like ${note.names.slice(0, 2).join(" or ")}. Check which one is on the label.`;
 }

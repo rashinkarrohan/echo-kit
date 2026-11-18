@@ -7,6 +7,7 @@ import doctorVisitYaml from "../schemas/doctor-visit.yaml?raw";
 import pharmacyCounterYaml from "../schemas/pharmacy-counter.yaml?raw";
 import care01 from "../../../evals/consults/care-01.json";
 import care02 from "../../../evals/consults/care-02.json";
+import care11 from "../../../evals/consults/care-11.json";
 
 function schemaFrom(yaml: string): ConversationSchema {
   const loaded = loadSchema(yaml);
@@ -26,9 +27,11 @@ export const SCHEMAS: Record<Stage, ConversationSchema> = {
 /**
  * Scripted outings (actors only) that run without a microphone: ?sample=<id>.
  * "care-01" is the doctor visit care-01 followed by the pharmacy visit care-02.
+ * "misheard" is care-11, where the speech engine misheard two medicine names.
  */
 export const SAMPLES: Record<string, Record<Stage, ScriptedConsult>> = {
   "care-01": { doctor: care01, pharmacy: care02 },
+  misheard: { doctor: care11, pharmacy: care02 },
 };
 
 export interface Launch {

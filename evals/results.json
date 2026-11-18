@@ -1,17 +1,17 @@
 {
-  "date": "2026-11-13T17:17:19.452Z",
-  "runs": 34,
+  "date": "2026-11-18T18:09:25.870Z",
+  "runs": 35,
   "extractor": "rules",
   "passed": true,
   "totals": {
-    "consults": 18,
-    "plantedFacts": 58,
-    "kept": 58,
+    "consults": 19,
+    "plantedFacts": 62,
+    "kept": 62,
     "dropped": 0,
     "invented": 0,
     "unanchored": 0,
     "rejectedByValidator": 0,
-    "fieldRecall": 0.99,
+    "fieldRecall": 0.9907407407407407,
     "flaggedTokenRecall": 1,
     "checklistAccuracy": 1,
     "labelChecks": 7,
@@ -543,6 +543,55 @@
           },
           {
             "id": "q-storage",
+            "expected": "Answered",
+            "actual": "Answered"
+          }
+        ]
+      }
+    },
+    {
+      "id": "care-11",
+      "schemaId": "doctor-visit",
+      "failures": [],
+      "planted": 4,
+      "kept": 4,
+      "dropped": 0,
+      "invented": 0,
+      "unanchored": 0,
+      "rejectedByValidator": 0,
+      "fieldsPlanted": 8,
+      "fieldsKept": 8,
+      "tokensExpected": 7,
+      "tokensFound": 7,
+      "checklistTotal": 5,
+      "checklistCorrect": 5,
+      "details": {
+        "droppedFacts": [],
+        "inventedFacts": [],
+        "missedTokens": [],
+        "checklist": [
+          {
+            "id": "q-medicine-purpose",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-how-to-take",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-side-effects",
+            "expected": "Not discussed",
+            "actual": "Not discussed"
+          },
+          {
+            "id": "q-warning-signs",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-follow-up",
             "expected": "Answered",
             "actual": "Answered"
           }

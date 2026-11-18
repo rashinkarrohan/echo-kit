@@ -34,9 +34,23 @@ body {
   font-size: var(--text-small);
   min-height: 1.5em;
 }
+/* Live "check this medicine name" card on the recording screen */
 .care-prompt {
   margin-top: var(--space-4);
-  border-color: var(--check);
+  border: 3px solid var(--check);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+.care-prompt__text {
+  margin: 0;
+  font-size: var(--text-caption);
+  font-weight: 700;
+  line-height: 1.35;
+}
+.care-prompt__ask {
+  margin: 0;
 }
 .care-next {
   padding-left: var(--space-5);

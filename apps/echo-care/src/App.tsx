@@ -1,7 +1,14 @@
 import { useMemo, useRef, useState } from "react";
 import type { ReactElement } from "react";
-import { CONSENT_WORDING_VERSION, applyMark, compareLabel } from "@echo/engine";
-import type { Anchor, LabelFields, LabelFlag, ReadBackMark, Receipt } from "@echo/engine";
+import { CONSENT_WORDING_VERSION, applyMark, compareLabel, medicineNameNote } from "@echo/engine";
+import type {
+  Anchor,
+  LabelFields,
+  LabelFlag,
+  ReadBackMark,
+  Receipt,
+  VerifiedFact,
+} from "@echo/engine";
 import {
   CaptionView,
   ChecklistView,
@@ -16,9 +23,11 @@ import {
   Skin,
   ADDED,
   SpeakerCard,
+  StampBadge,
   StatusMessage,
   TrustPanel,
   clock,
+  medicineNoteText,
   createPlayer,
   useDeviceServices,
   useRecording,
@@ -39,6 +48,15 @@ interface Visit {
 
 const fieldsFor = (stage: Stage) =>
   Object.fromEntries(SCHEMAS[stage].facts.map((f) => [f.key, f.fields]));
+
+/** Why a medicine line needs checking, in plain words; nothing for other lines. */
+function medicineNote(fact: VerifiedFact): string | undefined {
+  const name = fact.fields["name"];
+  if (fact.key !== "medicine" || fact.stamp !== "check_this" || name === undefined)
+    return undefined;
+  const note = medicineNameNote(name);
+  return note ? medicineNoteText(name, note) : undefined;
+}
 
 export function App(): ReactElement {
   const route = useRoute();
@@ -252,12 +270,16 @@ export function App(): ReactElement {
             <CaptionView lines={rec?.lines ?? []} status={viewStatus} />
           )}
           {prompt && (
-            <div className="echo-status care-prompt" role="status">
-              <p style={{ margin: 0 }}>
+            <div className="echo-card care-prompt" role="status">
+              <StampBadge stamp="check_this" />
+              <p className="care-prompt__text">
                 {prompt.kind === "missing-medicine-name"
                   ? CARE.promptMissingName
-                  : CARE.promptUnclearName(prompt.heard ?? "", prompt.suggestion ?? "")}
+                  : prompt.kind === "unknown-medicine-name"
+                    ? CARE.promptUnknownName(prompt.heard ?? "")
+                    : CARE.promptUnclearName(prompt.heard ?? "", prompt.suggestion ?? "")}
               </p>
+              <p className="care-prompt__ask">{CARE.promptAsk}</p>
             </div>
           )}
           <div className="care-bar">
@@ -335,7 +357,12 @@ export function App(): ReactElement {
           </h1>
           {sampleBadge}
           {playingLine}
-          <ReceiptList facts={receipt.facts} fieldsByKey={fieldsFor(current.stage)} onPlay={play} />
+          <ReceiptList
+            facts={receipt.facts}
+            fieldsByKey={fieldsFor(current.stage)}
+            onPlay={play}
+            noteFor={medicineNote}
+          />
           <ChecklistView results={receipt.checklist} onPlay={play} />
           {receipt.nextSteps.length > 0 && (
             <ul className="care-next">

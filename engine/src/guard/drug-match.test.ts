@@ -63,6 +63,40 @@ describe("matchDrugs does not flag ordinary speech", () => {
   });
 });
 
+describe("an unknown word just before a dose", () => {
+  it.each([
+    ["take paramet 500 mg", "paramet"],
+    ["take baramet 500 milligrams twice a day", "baramet"],
+    ["calpol 5 ml three times a day", "calpol"],
+    ["rousatan 50mg once a day", "rousatan"],
+    ["lantus 10 units at night", "lantus"],
+  ])("%s -> %s is kept as a medicine name Echo does not know", (text, heard) => {
+    expect(found(text)).toEqual([
+      expect.objectContaining({ heard, exact: false, unknown: true, length: 1 }),
+    ]);
+    expect(found(text)[0].suggestion).toBeUndefined();
+  });
+  it.each([
+    "start lisinopril 50 sorry 15 milligrams once a day",
+    "take 10 milligrams sorry i mean 5 milligrams once a day",
+    "not 10 milligrams like your old tablets just 5 milligrams once a day",
+    "use paracetamol instead 2 tablets every 6 hours",
+    "my grandson brought 500 grams of biscuits",
+    "take 500 milligrams twice daily",
+    "use the inhaler 2 puffs when you need it",
+    "about 5 ml at night",
+    "maybe 10 mg at bedtime 10 mg",
+    "after breakfast 2 tablets and after dinner 2 tablets",
+    "the maximum 8 tablets in a day",
+    "you have 15 minutes",
+    "for the pain 500 milligrams three times a day",
+    "for your knee 2 tablets at night",
+    "for the fever 10 ml every 6 hours",
+    "with water 2 tablets",
+  ])("does not flag ordinary words: %s", (text) => {
+    expect(found(text).filter((m) => m.unknown)).toEqual([]);
+  });
+});
 describe("soundAlikes (look-alike, sound-alike medicines)", () => {
   it("prednisone and prednisolone are sound-alikes of each other", () => {
     expect(soundAlikes("prednisone", list)).toContain("prednisolone");

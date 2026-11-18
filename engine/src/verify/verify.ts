@@ -11,8 +11,7 @@
 
 import type { Fact, Segment, VerifiedFact } from "../types";
 import { normaliseText } from "../text/normalise";
-import { drugDetector } from "../guard/care-detectors";
-import { DRUG_DICTIONARY } from "../guard/registry";
+import { medicineNameNote } from "../guard/name-note";
 import { containsPhrase } from "../validate/validate-fact";
 
 export type { VerifiedFact } from "../types";
@@ -79,22 +78,13 @@ export function verifyFacts(facts: Fact[], segments: Segment[]): VerifiedFact[] 
     }
 
     // Check 2: a drug name that is only a near match to the dictionary is unsure
-    if (stamp === "heard_clearly" && fact.fields["name"] !== undefined) {
-      const probe: Segment = {
-        id: "probe",
-        index: 0,
-        startMs: 0,
-        endMs: 0,
-        text: fact.fields["name"],
-      };
-      const heard = drugDetector.detect(probe, DRUG_DICTIONARY);
-      // Not an exact name, or an exact name that sounds like another medicine.
-      if (
-        heard.length === 0 ||
-        heard.some((t) => t.suggestion !== undefined || (t.soundsAlike?.length ?? 0) > 0)
-      ) {
-        stamp = "check_this";
-      }
+    // Not an exact name, an unknown name, or an exact name that sounds like another medicine.
+    if (
+      stamp === "heard_clearly" &&
+      fact.fields["name"] !== undefined &&
+      medicineNameNote(fact.fields["name"]) !== undefined
+    ) {
+      stamp = "check_this";
     }
 
     // Check 3: No low confidence tokens in the quote

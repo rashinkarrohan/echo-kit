@@ -101,3 +101,5 @@ export { buildMedicinePrompt } from "./asr/prompt";
 export type { PromptOptions } from "./asr/prompt";
 export { matchDrugs, soundKey, soundAlikes } from "./guard/drug-match";
 export type { DrugMatch } from "./guard/drug-match";
+export { medicineNameNote } from "./guard/name-note";
+export type { MedicineNameNote } from "./guard/name-note";

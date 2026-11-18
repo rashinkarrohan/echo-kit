@@ -1,8 +1,18 @@
 import type { ReactElement } from "react";
-import type { FlaggedToken } from "@echo/engine";
+import type { FlaggedToken, MedicineNameNote } from "@echo/engine";
 import { highlightParts } from "../highlight";
-import { ADDED } from "../copy";
+import { ADDED, medicineHintText } from "../copy";
 import { Icon } from "./common";
+
+/** Why a flagged medicine name needs checking, from the detector's token. */
+function noteFor(t: FlaggedToken): MedicineNameNote | undefined {
+  if (t.kind !== "drug") return undefined;
+  if (t.suggestion !== undefined) return { kind: "sounds-like", name: t.suggestion };
+  if (t.unknownName === true) return { kind: "unknown" };
+  if (t.soundsAlike !== undefined && t.soundsAlike.length > 0)
+    return { kind: "could-also-be", names: t.soundsAlike };
+  return undefined;
+}
 
 const KIND_LABELS: Record<FlaggedToken["kind"], string> = {
   number: "number",
@@ -17,8 +27,9 @@ const KIND_LABELS: Record<FlaggedToken["kind"], string> = {
 
 /**
  * Caption text with flagged words highlighted (icon + underline + tint, never colour
- * alone). A word that only sounds like a known drug shows "sounds like ...?" and keeps
- * the heard word.
+ * alone). A medicine name that needs checking keeps the heard word and gets a short
+ * hint after it: "Sounds like metformin?", "Could also be ...?" or "Not a medicine
+ * name Echo knows".
  */
 export function FlaggedText({
   text,
@@ -32,6 +43,8 @@ export function FlaggedText({
       {highlightParts(text, tokens).map((part, i) => {
         if (!part.token) return <span key={i}>{part.text}</span>;
         const t = part.token;
+        const note = noteFor(t);
+        const hint = note ? medicineHintText(note) : undefined;
         return (
           <span key={i}>
             <mark className="echo-flag" data-kind={t.kind}>
@@ -41,11 +54,11 @@ export function FlaggedText({
                 {` (${ADDED.flagged}: ${KIND_LABELS[t.kind]}${t.lowConfidence ? ", unclear" : ""})`}
               </span>
             </mark>
-            {t.suggestion !== undefined && (
-              <span className="echo-sounds-like">{` (${ADDED.soundsLike} ${t.suggestion}?)`}</span>
-            )}
-            {t.suggestion === undefined && t.soundsAlike && t.soundsAlike.length > 0 && (
-              <span className="echo-sounds-like">{` (${ADDED.couldAlsoBe} ${t.soundsAlike.slice(0, 2).join(" or ")}?)`}</span>
+            {hint !== undefined && (
+              <>
+                {" "}
+                <span className="echo-name-hint">{hint}</span>
+              </>
             )}
           </span>
         );
