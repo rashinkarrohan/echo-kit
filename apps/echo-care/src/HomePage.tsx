@@ -21,7 +21,7 @@ const STEPS = [
 ] as const;
 
 /** Echo Care's no-permission-needed product home. */
-export function HomePage(): ReactElement {
+export function HomePage({ savedCount = 0 }: { savedCount?: number }): ReactElement {
   return (
     <main className="care-main care-main--home">
       <header className="care-home__header">
@@ -35,6 +35,18 @@ export function HomePage(): ReactElement {
           {CARE.homeTestResults}
         </a>
       </header>
+
+      {savedCount > 0 && (
+        <section className="care-home__saved" aria-label={CARE.savedVisitSummary(savedCount)}>
+          <div>
+            <strong>{CARE.savedVisitSummary(savedCount)}</strong>
+            <span>{CARE.savedAudioNote}</span>
+          </div>
+          <a className="echo-button echo-button--secondary" href="#/visits">
+            {CARE.viewSavedVisits}
+          </a>
+        </section>
+      )}
 
       <div className="care-home">
         <section className="care-home__hero" aria-labelledby="care-home-title">

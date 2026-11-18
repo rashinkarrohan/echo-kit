@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactElement } from "react";
 import { CONSENT_WORDING_VERSION, applyMark, compareLabel, medicineNameNote } from "@echo/engine";
 import type {
@@ -37,14 +37,36 @@ import { CARE } from "./copy";
 import { EVAL_SUMMARY, SCHEMAS, readLaunch } from "./env";
 import type { Stage } from "./env";
 import { go, useRoute } from "./router";
+import type { Route } from "./router";
 import { SharePanel } from "./SharePanel";
 import { HomePage } from "./HomePage";
+import { SavedVisits } from "./SavedVisits";
+import type { SavedVisit } from "./SavedVisits";
+
+const PAGE_TITLES: Record<Route, string> = {
+  "/home": "Echo Care — a receipt for what was said",
+  "/visits": "Saved visits — Echo Care",
+  "/consent": "Before we start — Echo Care",
+  "/doctor-card": "Show the doctor — Echo Care",
+  "/pharmacy": "Show the pharmacist — Echo Care",
+  "/record": "Recording — Echo Care",
+  "/read-back": "Read back — Echo Care",
+  "/receipt": "Visit receipt — Echo Care",
+  "/label": "Check the label — Echo Care",
+  "/share": "Share a summary — Echo Care",
+  "/trust": "Test results — Echo Care",
+};
 
 /** One finished recording (doctor or pharmacy), with its in-memory audio. */
-interface Visit {
-  stage: Stage;
-  receipt: Receipt;
-  controller: RecordingController;
+interface Visit extends SavedVisit {
+  /** Present only until this page is closed; audio is never restored from storage. */
+  controller?: RecordingController;
+}
+
+function stageFor(receipt: Receipt): Stage | undefined {
+  if (receipt.schemaId === SCHEMAS.doctor.id) return "doctor";
+  if (receipt.schemaId === SCHEMAS.pharmacy.id) return "pharmacy";
+  return undefined;
 }
 
 const fieldsFor = (stage: Stage) =>
@@ -71,6 +93,9 @@ export function App(): ReactElement {
   const [stage, setStage] = useState<Stage>("doctor");
   const [controller, setController] = useState<RecordingController>();
   const [visits, setVisits] = useState<Visit[]>([]);
+  const [visitsStatus, setVisitsStatus] = useState<ViewStatus>("loading");
+  const [selectedVisitId, setSelectedVisitId] = useState<string>();
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [repeatOpen, setRepeatOpen] = useState(false);
   const [speakerFacing, setSpeakerFacing] = useState(false);
   const [playing, setPlaying] = useState<{ anchor: Anchor; text: string }>();
@@ -79,11 +104,53 @@ export function App(): ReactElement {
   const player = useRef(createPlayer());
   const rec = useRecording(controller);
 
+  useEffect(() => {
+    if (!services) return;
+    if (launch.demo) {
+      setVisitsStatus("ready");
+      return;
+    }
+    let active = true;
+    void services.store.listReceipts().then((result) => {
+      if (!active) return;
+      if (!result.ok) {
+        setVisitsStatus("error");
+        return;
+      }
+      const restored: Visit[] = result.value.flatMap((receipt) => {
+        const savedStage = stageFor(receipt);
+        return savedStage ? [{ stage: savedStage, receipt }] : [];
+      });
+      setVisits((existing) => {
+        const byId = new Map(restored.map((visit) => [visit.receipt.conversationId, visit]));
+        for (const visit of existing) byId.set(visit.receipt.conversationId, visit);
+        return [...byId.values()].sort((a, b) => a.receipt.timestamp - b.receipt.timestamp);
+      });
+      setVisitsStatus("ready");
+    });
+    return () => {
+      active = false;
+    };
+  }, [launch.demo, services]);
+
+  const routeReady = route === "/home" || services !== undefined;
+  useEffect(() => {
+    if (!routeReady) return;
+    document.title = PAGE_TITLES[route];
+    const id = window.requestAnimationFrame(() => {
+      const heading = document.querySelector<HTMLElement>("main h1");
+      if (!heading) return;
+      heading.tabIndex = -1;
+      heading.focus();
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [route, routeReady]);
+
   // The product home needs no permission and can render while on-device storage opens.
   if (route === "/home") {
     return (
       <Skin skin="care" className="care-page">
-        <HomePage />
+        <HomePage savedCount={launch.demo ? 0 : visits.length} />
       </Skin>
     );
   }
@@ -96,7 +163,8 @@ export function App(): ReactElement {
     );
   }
   const { store, ledger } = services;
-  const current = visits[visits.length - 1];
+  const latest = visits[visits.length - 1];
+  const current = visits.find((v) => v.receipt.conversationId === selectedVisitId) ?? latest;
   const receipt = current?.receipt;
 
   const agree = (): void => {
@@ -112,6 +180,8 @@ export function App(): ReactElement {
     setStage(next);
     setController(c);
     setDeleted(false);
+    setDeleteConfirm(false);
+    setSelectedVisitId(undefined);
     setLabelFlags(undefined);
     const sample = launch.sample?.[next];
     void c.start({
@@ -131,13 +201,16 @@ export function App(): ReactElement {
     const result = await controller.stop();
     if (result.ok) {
       setVisits((v) => [...v, { stage, receipt: result.value, controller }]);
+      setSelectedVisitId(result.value.conversationId);
       go(result.value.readBack.length > 0 ? "/read-back" : "/receipt");
     }
   };
 
   const updateCurrent = (next: Receipt): void => {
     setVisits((v) =>
-      v.map((visit, i) => (i === v.length - 1 ? { ...visit, receipt: next } : visit)),
+      v.map((visit) =>
+        visit.receipt.conversationId === next.conversationId ? { ...visit, receipt: next } : visit,
+      ),
     );
     void store.saveReceipt(next);
   };
@@ -155,7 +228,7 @@ export function App(): ReactElement {
     ) ?? current;
 
   const play = (anchor: Anchor, rate: number): void => {
-    const chunks = visitOf(anchor)?.controller.audioFor(anchor.segmentIds) ?? [];
+    const chunks = visitOf(anchor)?.controller?.audioFor(anchor.segmentIds) ?? [];
     setPlaying({
       anchor,
       text: CARE.playing(`${clock(anchor.startMs)} to ${clock(anchor.endMs)}`),
@@ -178,12 +251,25 @@ export function App(): ReactElement {
     if (!receipt) return;
     player.current.stop();
     await store.deleteSession(receipt.conversationId);
-    setVisits((v) => v.slice(0, -1));
+    setVisits((v) => v.filter((visit) => visit.receipt.conversationId !== receipt.conversationId));
     setController(undefined);
+    setSelectedVisitId(undefined);
+    setDeleteConfirm(false);
     setDeleted(true);
   };
 
-  const disclaimer = <p className="echo-disclaimer">{SCHEMAS[stage].disclaimer}</p>;
+  const openVisit = (visit: SavedVisit): void => {
+    setSelectedVisitId(visit.receipt.conversationId);
+    setStage(visit.stage);
+    setDeleted(false);
+    setDeleteConfirm(false);
+    setLabelFlags(visit.receipt.labelFlags);
+    go("/receipt");
+  };
+
+  const disclaimer = (
+    <p className="echo-disclaimer">{SCHEMAS[current?.stage ?? stage].disclaimer}</p>
+  );
   const sampleBadge = launch.sample ? <p className="care-badge">{CARE.sampleBadge}</p> : null;
   const playingLine = (
     <p
@@ -200,6 +286,10 @@ export function App(): ReactElement {
 
   let screen: ReactElement;
   switch (route) {
+    case "/visits":
+      screen = <SavedVisits visits={visits} status={visitsStatus} onOpen={openVisit} />;
+      break;
+
     case "/consent":
       screen = launch.demo ? (
         <section className="echo-card">
@@ -224,6 +314,7 @@ export function App(): ReactElement {
             onAgree={agree}
             disclaimer={FINAL.disclaimerCare}
             status={services.persistent ? "ready" : "error"}
+            statusText={{ error: CARE.storageFallback }}
           />
           <section className="echo-card care-sample">
             <h2>{CARE.sampleTitle}</h2>
@@ -376,10 +467,13 @@ export function App(): ReactElement {
           <ReceiptList
             facts={receipt.facts}
             fieldsByKey={fieldsFor(current.stage)}
-            onPlay={play}
+            {...(current.controller ? { onPlay: play } : {})}
             noteFor={medicineNote}
           />
-          <ChecklistView results={receipt.checklist} onPlay={play} />
+          <ChecklistView
+            results={receipt.checklist}
+            {...(current.controller ? { onPlay: play } : {})}
+          />
           {receipt.nextSteps.length > 0 && (
             <ul className="care-next">
               {receipt.nextSteps.map((s) => (
@@ -411,14 +505,57 @@ export function App(): ReactElement {
             <button
               type="button"
               className="echo-button echo-button--secondary"
-              onClick={() => void deleteVisit()}
+              onClick={() => setDeleteConfirm(true)}
             >
               {CARE.deleteVisit}
             </button>
           </div>
+          {deleteConfirm && (
+            <div
+              className="echo-card care-delete"
+              role="group"
+              aria-label={CARE.deleteConfirmTitle}
+            >
+              <h2>{CARE.deleteConfirmTitle}</h2>
+              <p>{CARE.deleteConfirmText}</p>
+              <div className="echo-actions">
+                <button
+                  type="button"
+                  className="echo-button echo-button--secondary"
+                  onClick={() => setDeleteConfirm(false)}
+                >
+                  {CARE.cancel}
+                </button>
+                <button
+                  type="button"
+                  className="echo-button care-delete__confirm"
+                  onClick={() => void deleteVisit()}
+                >
+                  {CARE.deletePermanently}
+                </button>
+              </div>
+            </div>
+          )}
         </>
       ) : (
-        <StatusMessage status="empty" text={{ empty: CARE.noReceipt }} />
+        <>
+          <StatusMessage
+            status={visitsStatus === "loading" ? "loading" : "empty"}
+            text={{ loading: CARE.savedVisitsLoading, empty: CARE.noReceipt }}
+          />
+          {visitsStatus !== "loading" && (
+            <div className="echo-actions">
+              <a className="echo-button" href="#/consent">
+                {CARE.homeStart}
+              </a>
+              {visits.length > 0 && (
+                <a className="echo-button echo-button--secondary" href="#/visits">
+                  {CARE.viewSavedVisits}
+                </a>
+              )}
+            </div>
+          )}
+        </>
       );
       break;
 
@@ -451,7 +588,10 @@ export function App(): ReactElement {
           ) : labelFlags ? (
             <>
               {playingLine}
-              <LabelFlagList flags={labelFlags} onPlay={play} />
+              <LabelFlagList
+                flags={labelFlags}
+                {...(current?.controller ? { onPlay: play } : {})}
+              />
               <div className="echo-actions">
                 <button
                   type="button"
@@ -486,7 +626,13 @@ export function App(): ReactElement {
     <Skin skin="care" className="care-page">
       <main className="care-main">{screen}</main>
       <footer className="care-footer">
-        <a href="#/trust">{ADDED.trustLink}</a>
+        <nav aria-label={CARE.footerNavigation}>
+          <a href="#/home">{CARE.homeLink}</a>
+          {visits.length > 0 && route !== "/visits" && (
+            <a href="#/visits">{CARE.savedVisitsTitle}</a>
+          )}
+          {route !== "/trust" && <a href="#/trust">{ADDED.trustLink}</a>}
+        </nav>
       </footer>
     </Skin>
   );

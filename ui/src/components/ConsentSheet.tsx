@@ -2,7 +2,7 @@ import { useId } from "react";
 import type { ReactElement } from "react";
 import { FINAL } from "../copy";
 import { StatusMessage } from "./common";
-import type { ViewStatus } from "./common";
+import type { StatusText, ViewStatus } from "./common";
 
 export interface ConsentChoices {
   record: boolean;
@@ -21,6 +21,7 @@ export function ConsentSheet({
   onLearnMore,
   disclaimer,
   status = "ready",
+  statusText,
 }: {
   choices: ConsentChoices;
   onChange: (next: ConsentChoices) => void;
@@ -28,6 +29,7 @@ export function ConsentSheet({
   onLearnMore?: () => void;
   disclaimer: string;
   status?: ViewStatus;
+  statusText?: StatusText;
 }): ReactElement {
   const titleId = useId();
   const canAgree = choices.record && choices.transcribe;
@@ -46,7 +48,10 @@ export function ConsentSheet({
     <section className="echo-card echo-consent" aria-labelledby={titleId}>
       <h1 id={titleId}>{FINAL.consentTitle}</h1>
       <p className="echo-consent__wording">{FINAL.consentWording}</p>
-      <StatusMessage status={status === "empty" ? "ready" : status} />
+      <StatusMessage
+        status={status === "empty" ? "ready" : status}
+        {...(statusText ? { text: statusText } : {})}
+      />
       <fieldset style={{ border: 0, margin: 0, padding: 0 }}>
         <legend className="echo-visually-hidden">{FINAL.consentTitle}</legend>
         {toggle("record", FINAL.consentRecord)}

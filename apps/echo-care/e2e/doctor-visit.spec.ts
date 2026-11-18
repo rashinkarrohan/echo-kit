@@ -46,7 +46,10 @@ test("doctor visit: home, consent, doctor card, record, read-back, receipt with 
   await page.getByRole("link", { name: "Start a visit" }).click();
 
   // Consent: nothing on by default; agree needs record + speech-to-text.
-  await expect(page.getByRole("heading", { name: "Before we start" })).toBeVisible();
+  const consentHeading = page.getByRole("heading", { name: "Before we start" });
+  await expect(consentHeading).toBeVisible();
+  await expect(consentHeading).toBeFocused();
+  await expect(page).toHaveTitle("Before we start — Echo Care");
   await expect(page.getByText("Step 1 of 2")).toBeVisible();
   const agree = page.getByRole("button", { name: "I agree and continue" });
   await expect(agree).toBeDisabled();
@@ -58,6 +61,7 @@ test("doctor visit: home, consent, doctor card, record, read-back, receipt with 
 
   // Doctor card.
   await expect(page.getByRole("dialog", { name: /I have hearing loss/ })).toBeVisible();
+  await expect(page).toHaveTitle("Show the doctor — Echo Care");
   await expect(page.getByText("Step 2 of 2 · Show this screen to the doctor")).toBeVisible();
   await axe(page, "doctor card");
   await page.getByRole("button", { name: "They agreed, start" }).click();
@@ -127,8 +131,10 @@ test("doctor visit: home, consent, doctor card, record, read-back, receipt with 
   expect(text).not.toMatch(ADVICE);
   expect(text).toContain("It is not medical advice and not an interpreter.");
 
-  // Delete removes it.
+  // Delete asks before removing the transcript and receipt.
   await page.getByRole("button", { name: "Delete this visit" }).click();
+  await expect(page.getByRole("group", { name: "Delete this visit?" })).toBeVisible();
+  await page.getByRole("button", { name: "Delete permanently" }).click();
   await expect(page.getByText("This visit was deleted from this phone.")).toBeVisible();
 });
 

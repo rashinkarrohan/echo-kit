@@ -337,6 +337,20 @@ describe("ConsentSheet", () => {
     expect(onAgree).toHaveBeenCalled();
   });
 
+  it("shows a specific storage fallback instead of a generic error", () => {
+    render(
+      <ConsentSheet
+        choices={{ record: false, transcribe: false, share: false }}
+        onChange={() => {}}
+        onAgree={() => {}}
+        disclaimer="d"
+        status="error"
+        statusText={{ error: "Saved visits will be unavailable." }}
+      />,
+    );
+    expect(screen.getByRole("alert").textContent).toContain("Saved visits will be unavailable.");
+  });
+
   it("uses the all-party consent wording", () => {
     render(
       <ConsentSheet

@@ -4,6 +4,7 @@ import { goTo, useHashRoute } from "@echo/ui";
 
 export type Route =
   | "/home"
+  | "/visits"
   | "/consent"
   | "/doctor-card"
   | "/pharmacy"
@@ -16,6 +17,7 @@ export type Route =
 
 const ROUTES: readonly Route[] = [
   "/home",
+  "/visits",
   "/consent",
   "/doctor-card",
   "/pharmacy",
