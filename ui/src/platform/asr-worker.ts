@@ -19,6 +19,7 @@ import {
 import type { Tensor } from "@huggingface/transformers";
 import { buildMedicinePrompt } from "@echo/engine";
 import type { AsrDevice, WorkerReply, WorkerRequest } from "@echo/engine";
+import { dtypeFor, isMultilingual, usesMedicinePrompt } from "./whisper-models";
 
 /** The parts of the worker global scope used here (avoids mixing DOM and WebWorker libs). */
 interface WorkerScope {
@@ -45,12 +46,6 @@ async function hasWebGpuAdapter(): Promise<boolean> {
 type Transcriber = (audio: Float32Array) => Promise<string>;
 let transcriber: Transcriber | undefined;
 
-/** Precision per device. To be confirmed by the latency spike (docs/SPIKES.md). */
-const DTYPES = {
-  webgpu: { encoder_model: "fp32", decoder_model_merged: "q4" },
-  wasm: "q8",
-} as const;
-
 function message(e: unknown): string {
   if (e instanceof Error) return e.message;
   return typeof e === "string" ? e : "Speech engine error";
@@ -61,15 +56,18 @@ async function loadOn(model: string, device: AsrDevice, medicines: string[]): Pr
   const tokenizer = await AutoTokenizer.from_pretrained(model);
   const whisper = await WhisperForConditionalGeneration.from_pretrained(model, {
     device,
-    dtype: DTYPES[device],
+    dtype: dtypeFor(model, device),
   });
 
   const token = (t: string): number => tokenizer.convert_tokens_to_ids(t);
-  const prompt = buildMedicinePrompt(
-    medicines,
-    (s) => tokenizer.encode(s, { add_special_tokens: false }).length,
-  );
-  const start = [token("<|startoftranscript|>"), token("<|notimestamps|>")];
+  const prompt = usesMedicinePrompt(model)
+    ? buildMedicinePrompt(
+        medicines,
+        (s) => tokenizer.encode(s, { add_special_tokens: false }).length,
+      )
+    : "";
+  const language = isMultilingual(model) ? [token("<|en|>"), token("<|transcribe|>")] : [];
+  const start = [token("<|startoftranscript|>"), ...language, token("<|notimestamps|>")];
   const init =
     prompt.length > 0
       ? [

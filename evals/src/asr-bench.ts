@@ -53,10 +53,13 @@ async function main(): Promise<void> {
   const processor = await AutoProcessor.from_pretrained(model);
   const tokenizer = await AutoTokenizer.from_pretrained(model);
   const whisper = await WhisperForConditionalGeneration.from_pretrained(model, {
-    dtype: "q8",
+    dtype,
     device: "cpu",
   });
   const tok = (t: string): number => tokenizer.convert_tokens_to_ids(t);
+  // multilingual models (no ".en") get language and task tokens, as in the app's worker
+  const language = /\.en$/i.test(model) ? [] : [tok("<|en|>"), tok("<|transcribe|>")];
+  const start = [tok("<|startoftranscript|>"), ...language, tok("<|notimestamps|>")];
   const prompt = buildMedicinePrompt(
     drugs.drugs,
     (s) => tokenizer.encode(s, { add_special_tokens: false }).length,
@@ -67,14 +70,7 @@ async function main(): Promise<void> {
   const promptIds = tokenizer.encode(prompt, { add_special_tokens: false });
   async function transcribe(audio: Float32Array, withPrompt: boolean): Promise<string> {
     const { input_features } = (await processor(audio)) as { input_features: Tensor };
-    const init = withPrompt
-      ? [
-          tok("<|startofprev|>"),
-          ...promptIds,
-          tok("<|startoftranscript|>"),
-          tok("<|notimestamps|>"),
-        ]
-      : [tok("<|startoftranscript|>"), tok("<|notimestamps|>")];
+    const init = withPrompt ? [tok("<|startofprev|>"), ...promptIds, ...start] : start;
     const out = (await whisper.generate({
       inputs: input_features,
       decoder_input_ids: init,

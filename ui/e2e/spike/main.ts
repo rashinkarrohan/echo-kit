@@ -2,12 +2,12 @@
  * S16 latency spike page. Loads on-device Whisper through the real adapter and worker,
  * splits the bundled actor clip with the engine Segmenter, and times each segment.
  * Open it on the reference phone to measure there; Playwright reads the same result.
- * Query: ?model=Xenova/whisper-base.en&devices=wasm
+ * Query: ?model=turbo (or a full id such as Xenova/whisper-base.en)&devices=wasm
  */
 
-import { DEFAULT_WHISPER_MODEL, Segmenter, decodeWav, normaliseText, resample } from "@echo/engine";
+import { Segmenter, decodeWav, normaliseText, resample } from "@echo/engine";
 import type { AsrDevice } from "@echo/engine";
-import { createWhisperAdapter } from "../../src/platform/whisper";
+import { createWhisperAdapter, modelFromQuery } from "../../src/platform/whisper";
 import type { SpikeResult, SpikeSegment } from "./types";
 
 const out = document.getElementById("out");
@@ -20,7 +20,9 @@ function show(result: SpikeResult, note: string): void {
 
 async function run(): Promise<SpikeResult> {
   const params = new URLSearchParams(location.search);
-  const model = params.get("model") ?? DEFAULT_WHISPER_MODEL;
+  // a short name (?model=turbo) or a full Hugging Face id (?model=Xenova/whisper-base.en)
+  const raw = params.get("model");
+  const model = raw?.includes("/") ? raw : modelFromQuery(location.search);
   const devicesParam = params.get("devices");
   const devices = devicesParam ? (devicesParam.split(",") as AsrDevice[]) : undefined;
   const result: SpikeResult = {

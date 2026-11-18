@@ -30,3 +30,23 @@ test("transcribes the bundled 10-second actor clip on the device", async ({ page
   // clip is heard correctly. Without the prompt it was "meriforming" (docs/SPIKES.md).
   expect(heard).toContain(" metformin ");
 });
+
+// large-v3-turbo is about 760 MB, so it runs only when asked: ASR_TURBO=1 npx playwright test asr
+test("turbo transcribes the actor clip on the device", async ({ page }) => {
+  test.skip(process.env.ASR_TURBO !== "1", "set ASR_TURBO=1 to download and run large-v3-turbo");
+  test.setTimeout(1_500_000);
+  await page.goto("/spike/?model=turbo&devices=wasm");
+  await page.waitForFunction(() => "__spike" in window, undefined, { timeout: 1_450_000 });
+  const result = await page.evaluate(() => (window as unknown as { __spike: SpikeResult }).__spike);
+  console.log(JSON.stringify(result, null, 2));
+
+  expect(result.error).toBeUndefined();
+  expect(result.model).toBe("onnx-community/whisper-large-v3-turbo");
+  expect(result.segments.filter((s) => s.error)).toEqual([]);
+  const heard = ` ${result.normalisedText} `;
+  for (const phrase of ["500 milligrams", "twice daily", "3 months"]) {
+    expect(heard, `expected to hear "${phrase}"`).toContain(` ${phrase} `);
+  }
+  // Known miss: turbo heard this speaker's "metformin" as "merforamines" (docs/SPIKES.md);
+  // base.en with the prompt hears it correctly, which is why base.en stays the default.
+});

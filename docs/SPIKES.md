@@ -83,10 +83,23 @@ Live test by the owner showed a spoken medicine name captured as "Glory Fiend", 
 | whisper-tiny.en | Apache-2.0 | ~41 MB | yes | yes | 23 | 38 | 46 |
 | whisper-base.en (default) | Apache-2.0 | ~77 MB | yes | yes | 30 | 38 | 47 |
 | whisper-small.en | Apache-2.0 | ~250 MB | yes | yes | 34 | 41 | not re-measured |
-| **whisper-large-v3-turbo** (q4) | MIT | ~760 MB (q4), ~560 MB (q4f16, WebGPU) | yes | yes | 39 | **45** | **48** |
+| **whisper-large-v3-turbo** (q8, with `<\|en\|><\|transcribe\|>`) | MIT | ~1 GB (q8) | yes (`?model=turbo`) | no (see below) | 37 | **46** unprompted, 45 prompted | **48** |
 | distil-small.en | MIT | ~170 MB | yes | no (prompt breaks it: 9/48) | 5 | 32 | 48 |
 | moonshine-base | MIT | ~60 MB | yes | not supported | 9 | 28 | 46 |
 | parakeet-tdt-0.6b-v2 (int8, onnx-asr) | CC-BY-4.0 | ~660 MB | no (needs a different runtime) | not supported | 24 | 39 | 48 |
 
 Speed: Parakeet was by far the fastest (48 clips in 9.7 s, about 0.2 s each); large-v3-turbo the slowest on CPU (about 4 s per clip), so it needs WebGPU to keep up. Not tried: Google MedASR (medical model; Health AI Developer Foundations terms, gated download, needs the owner to accept the terms; its own docs say it can struggle with non-standard medication names).
 Misses common to the best models are names turned into ordinary words: "low satan" (losartan), "a dovestatin" (atorvastatin), "water in" (warfarin), "search aligned" (sertraline). No model reached 48/48.
+
+### large-v3-turbo in the app, Nov 12, 2026
+The first turbo bench row was wrong about settings: the bench loaded 8-bit weights (hard-coded) and gave no language tokens, while the app used 4-bit. The bench now uses the requested precision and the same tokens as the app. Owner's real clip (sample-10s.wav), Node CPU:
+
+| turbo settings | Heard |
+|---|---|
+| q4, language tokens, prompt | "Take merifoamin, 500 mg. Twice daily after four." |
+| q4, language tokens, no prompt | "Take merformin 500 milligrams." (shown as "sounds like metformin") |
+| q8, language tokens, prompt | "Medicines, metformin, 500 mg. Lentia, diapositeam, diapositeam, …" (prompt echoed, then a loop) |
+| q8, language tokens, no prompt | "Take metformin 500 milligrams. twice daily after four." |
+| base.en, prompt (default) | "Take metformin 500 milligrams. Twice daily after food" |
+
+So in the app turbo runs at 8-bit with no medicine prompt. In headless Chromium (WebAssembly) the same setting heard "Tech merforamines 500 milligrams": not found, so it shows as an ordinary word. Load about 79 s cached, about 14 s per segment. Browser and Node results differ for the same weights, and a prompted turbo can repeat the prompt as if it were speech, so **base.en stays the default** and turbo is opt-in (`?model=turbo`). 8-bit on WebGPU and turbo on a phone are not measured.
