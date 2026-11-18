@@ -7,7 +7,7 @@ body {
 .care-page {
   min-height: 100vh;
 }
-.care-page main {
+.care-main {
   max-width: 40rem;
   margin: 0 auto;
   padding: var(--space-4) var(--space-4) var(--space-7);
@@ -73,4 +73,276 @@ body {
 }
 .care-sample a.echo-button {
   text-decoration: none;
+}
+
+/* Product home */
+.care-main--home {
+  max-width: 72rem;
+  padding-top: var(--space-5);
+}
+.care-home__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+.care-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--ink);
+  font-size: var(--text-h2);
+  font-weight: 800;
+  text-decoration: none;
+}
+.care-brand__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px 14px 14px 4px;
+  background: var(--accent);
+  color: var(--onAccent);
+}
+.care-brand__mark .echo-icon {
+  width: 28px;
+  height: 28px;
+}
+.care-home__trust-link,
+.care-back {
+  color: var(--accent);
+  font-size: var(--text-small);
+  font-weight: 700;
+  text-underline-offset: 4px;
+}
+.care-home__hero {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-5);
+  border: 1px solid var(--line);
+  border-top: 6px solid var(--accent);
+  border-radius: calc(var(--radius) * 2);
+  background: var(--surface);
+}
+.care-home__eyebrow,
+.care-home__section-kicker,
+.care-home__preview-kicker,
+.care-startup__step {
+  color: var(--accent);
+  font-size: var(--text-small);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.care-home__hero h1 {
+  max-width: 18ch;
+  margin-bottom: var(--space-4);
+}
+.care-home__intro {
+  max-width: 42ch;
+  color: var(--inkSoft);
+}
+.care-home__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+.care-home__actions a {
+  text-decoration: none;
+}
+.care-home__sample-note {
+  margin: var(--space-3) 0 0;
+  color: var(--inkSoft);
+  font-size: var(--text-small);
+}
+.care-home__preview {
+  align-self: start;
+  padding: var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+.care-home__preview h2 {
+  margin-bottom: var(--space-4);
+}
+.care-home__preview-lines {
+  margin: 0;
+}
+.care-home__preview-lines > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--line);
+}
+.care-home__preview-lines dt {
+  font-weight: 700;
+}
+.care-home__preview-lines dd {
+  margin: 0;
+}
+.care-home__preview-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin: var(--space-4) 0 0;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+  color: var(--inkSoft);
+  font-size: var(--text-small);
+}
+.care-home__how {
+  padding: var(--space-7) 0 var(--space-5);
+}
+.care-home__steps {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.care-home__step {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  height: 100%;
+  margin: 0;
+}
+.care-home__step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--onAccent);
+  font-weight: 800;
+}
+.care-home__step h3 {
+  margin-bottom: var(--space-1);
+}
+.care-home__step p {
+  margin: 0;
+  color: var(--inkSoft);
+}
+.care-home__privacy {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border-radius: calc(var(--radius) * 2);
+  background: var(--accent);
+  color: var(--onAccent);
+}
+.care-home__privacy-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex: none;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+}
+.care-home__privacy h2 {
+  margin-bottom: var(--space-2);
+}
+.care-home__privacy p:last-child {
+  margin-bottom: 0;
+}
+.care-home__privacy-lead {
+  font-weight: 800;
+}
+.care-home__closing {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  padding: var(--space-6) 0 var(--space-4);
+}
+.care-home__closing h2 {
+  margin: 0;
+}
+.care-home__closing a {
+  text-decoration: none;
+}
+.care-home__disclaimer {
+  max-width: 58ch;
+}
+
+/* A calm, guided start after the home screen */
+.care-startup__step {
+  margin: var(--space-4) 0 var(--space-2);
+}
+.care-startup .echo-consent {
+  border-top: 5px solid var(--accent);
+  padding: var(--space-5);
+}
+.care-startup .echo-switch {
+  margin-top: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.care-startup .echo-switch:has(input:checked) {
+  border-color: var(--accent);
+}
+.care-startup .echo-actions .echo-button:first-child {
+  flex-grow: 1;
+}
+.care-sample h2 {
+  font-size: var(--text-base);
+}
+.care-page .echo-speaker > * {
+  width: min(100%, 40rem);
+  margin-inline: auto;
+}
+
+@media (min-width: 48rem) {
+  .care-home__hero {
+    grid-template-columns: minmax(0, 1.15fr) minmax(18rem, 0.85fr);
+    align-items: center;
+    padding: var(--space-7);
+  }
+  .care-home__steps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 38rem) {
+  .care-main--home {
+    padding-top: var(--space-3);
+  }
+  .care-home__header {
+    margin-bottom: var(--space-4);
+  }
+  .care-home__hero,
+  .care-home__privacy {
+    padding: var(--space-4);
+    border-radius: var(--radius);
+  }
+  .care-home__actions,
+  .care-home__actions .echo-button,
+  .care-home__closing,
+  .care-home__closing .echo-button {
+    width: 100%;
+  }
+  .care-home__preview-lines > div {
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+  }
+  .care-home__privacy {
+    flex-direction: column;
+  }
+  .care-startup .echo-consent {
+    padding: var(--space-4);
+  }
 }

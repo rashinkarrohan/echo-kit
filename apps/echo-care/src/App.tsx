@@ -38,6 +38,7 @@ import { EVAL_SUMMARY, SCHEMAS, readLaunch } from "./env";
 import type { Stage } from "./env";
 import { go, useRoute } from "./router";
 import { SharePanel } from "./SharePanel";
+import { HomePage } from "./HomePage";
 
 /** One finished recording (doctor or pharmacy), with its in-memory audio. */
 interface Visit {
@@ -77,6 +78,15 @@ export function App(): ReactElement {
   const [labelFlags, setLabelFlags] = useState<LabelFlag[]>();
   const player = useRef(createPlayer());
   const rec = useRecording(controller);
+
+  // The product home needs no permission and can render while on-device storage opens.
+  if (route === "/home") {
+    return (
+      <Skin skin="care" className="care-page">
+        <HomePage />
+      </Skin>
+    );
+  }
 
   if (!services) {
     return (
@@ -203,7 +213,11 @@ export function App(): ReactElement {
           <p className="echo-disclaimer">{FINAL.disclaimerCare}</p>
         </section>
       ) : (
-        <>
+        <div className="care-startup">
+          <a className="care-back" href="#/home">
+            <span aria-hidden="true">←</span> {CARE.startupBack}
+          </a>
+          <p className="care-startup__step">{CARE.startupStepConsent}</p>
           <ConsentSheet
             choices={choices}
             onChange={setChoices}
@@ -212,6 +226,7 @@ export function App(): ReactElement {
             status={services.persistent ? "ready" : "error"}
           />
           <section className="echo-card care-sample">
+            <h2>{CARE.sampleTitle}</h2>
             <p>{CARE.sampleIntro}</p>
             <a
               className="echo-button echo-button--secondary"
@@ -220,7 +235,7 @@ export function App(): ReactElement {
               {FINAL.playSampleConsult}
             </a>
           </section>
-        </>
+        </div>
       );
       break;
 
@@ -229,6 +244,7 @@ export function App(): ReactElement {
       const next: Stage = route === "/doctor-card" ? "doctor" : "pharmacy";
       screen = (
         <SpeakerCard
+          eyebrow={next === "doctor" ? CARE.doctorCardStep : CARE.pharmacistCardStep}
           message={next === "doctor" ? SPEAKER_CARDS.doctor : SPEAKER_CARDS.pharmacist}
           actions={[
             { label: FINAL.doctorCardStart, onClick: () => startRecording(next) },
@@ -468,7 +484,7 @@ export function App(): ReactElement {
 
   return (
     <Skin skin="care" className="care-page">
-      <main>{screen}</main>
+      <main className="care-main">{screen}</main>
       <footer className="care-footer">
         <a href="#/trust">{ADDED.trustLink}</a>
       </footer>

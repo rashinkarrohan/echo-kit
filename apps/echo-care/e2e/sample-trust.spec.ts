@@ -49,8 +49,10 @@ test("sample consult works offline after the first load, without a microphone or
   const requests: string[] = [];
   page.on("request", (r) => requests.push(r.url()));
 
-  await page.goto(`${PREVIEW}/#/consent`);
-  await expect(page.getByRole("heading", { name: "Before we start" })).toBeVisible();
+  await page.goto(`${PREVIEW}/`);
+  await expect(
+    page.getByRole("heading", { name: "Turn what was said into a receipt you can check." }),
+  ).toBeVisible();
   // Wait until the service worker controls the page (first load done).
   await page.evaluate(async () => {
     await navigator.serviceWorker.ready;

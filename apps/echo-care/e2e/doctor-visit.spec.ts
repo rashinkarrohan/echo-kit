@@ -23,13 +23,31 @@ async function axe(page: Page, screen: string): Promise<void> {
 const ADVICE =
   /\byou should\b|\bwe recommend\b|\bincrease (the|your) dose\b|\bdecrease (the|your) dose\b|\bstop taking\b|\bdiagnos/i;
 
-test("doctor visit: consent, doctor card, record, read-back, receipt with working anchors", async ({
+test("doctor visit: home, consent, doctor card, record, read-back, receipt with working anchors", async ({
   page,
 }) => {
-  await page.goto(`${SAMPLE}#/consent`);
+  await page.goto(SAMPLE);
+
+  // Home: one clear promise, one primary action, a no-microphone sample and privacy.
+  await expect(
+    page.getByRole("heading", { name: "Turn what was said into a receipt you can check." }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Audio and text stay on your phone unless you choose to share."),
+  ).toBeVisible();
+  const startVisit = page.getByRole("link", { name: "Start a visit" });
+  await expect(startVisit).toBeVisible();
+  await expect(startVisit).toHaveCSS("color", "rgb(255, 255, 255)");
+  await expect(page.getByRole("link", { name: "Play sample consult" })).toBeVisible();
+  await expect(page.getByLabel("Example receipt")).toContainText("Heard clearly");
+  await expect(page.getByLabel("Example receipt")).toContainText("Check this");
+  await expect(page.getByLabel("Example receipt")).toContainText("Not said");
+  await axe(page, "home");
+  await page.getByRole("link", { name: "Start a visit" }).click();
 
   // Consent: nothing on by default; agree needs record + speech-to-text.
   await expect(page.getByRole("heading", { name: "Before we start" })).toBeVisible();
+  await expect(page.getByText("Step 1 of 2")).toBeVisible();
   const agree = page.getByRole("button", { name: "I agree and continue" });
   await expect(agree).toBeDisabled();
   await axe(page, "consent");
@@ -40,6 +58,7 @@ test("doctor visit: consent, doctor card, record, read-back, receipt with workin
 
   // Doctor card.
   await expect(page.getByRole("dialog", { name: /I have hearing loss/ })).toBeVisible();
+  await expect(page.getByText("Step 2 of 2 · Show this screen to the doctor")).toBeVisible();
   await axe(page, "doctor card");
   await page.getByRole("button", { name: "They agreed, start" }).click();
 
@@ -117,4 +136,17 @@ test("consent is required: the record screen cannot start a visit without it", a
   await page.goto(`${SAMPLE}#/record`);
   await expect(page.getByText(/There is no receipt yet/)).toBeVisible();
   await expect(page.locator("mark")).toHaveCount(0);
+});
+
+test("home reflows at phone width and 200% zoom without horizontal scrolling", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await page.evaluate(() => {
+    document.documentElement.style.zoom = "2";
+  });
+  await expect(page.getByRole("link", { name: "Start a visit" })).toBeVisible();
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+  expect(overflow).toBeLessThanOrEqual(1);
 });

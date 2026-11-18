@@ -339,6 +339,8 @@
 }
 .echo-checklist__source { font-size: var(--text-small); }
 .echo a { color: var(--accent); text-underline-offset: 3px; }
+.echo a.echo-button { color: var(--onAccent); }
+.echo a.echo-button--secondary { color: var(--accent); }
 
 /* Comparison ledger (Echo Cover) */
 .echo-ledger-wrap {
@@ -405,6 +407,14 @@
   min-height: 60vh;
   border: 2px solid var(--line);
   border-radius: var(--radius);
+}
+.echo-speaker__eyebrow {
+  align-self: flex-start;
+  margin: 0;
+  color: var(--accent);
+  font-size: var(--text-base);
+  font-weight: 700;
+  letter-spacing: 0.01em;
 }
 .echo-speaker__message {
   font-size: var(--text-speaker);

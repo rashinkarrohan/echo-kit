@@ -3,6 +3,7 @@
 import { goTo, useHashRoute } from "@echo/ui";
 
 export type Route =
+  | "/home"
   | "/consent"
   | "/doctor-card"
   | "/pharmacy"
@@ -14,6 +15,7 @@ export type Route =
   | "/trust";
 
 const ROUTES: readonly Route[] = [
+  "/home",
   "/consent",
   "/doctor-card",
   "/pharmacy",
@@ -30,5 +32,5 @@ export function go(route: Route): void {
 }
 
 export function useRoute(): Route {
-  return useHashRoute(ROUTES, "/consent").route;
+  return useHashRoute(ROUTES, "/home").route;
 }

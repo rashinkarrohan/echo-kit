@@ -4,6 +4,38 @@
  */
 export const CARE = {
   appName: "Echo Care",
+  homeEyebrow: "For doctor and pharmacy conversations",
+  homeTitle: "Turn what was said into a receipt you can check.",
+  homeIntro:
+    "Follow the conversation with large-text captions. Afterwards, check each fact against the words it came from.",
+  homeStart: "Start a visit",
+  homeExampleLabel: "Example receipt",
+  homeExampleTitle: "What was said",
+  homeExampleMedicine: "Medicine name",
+  homeExampleDose: "Dose",
+  homeExampleSideEffects: "Side effects",
+  homeTestResults: "How Echo did in tests",
+  homeAfterConversation: "After the conversation",
+  homeAnchorText: "Each fact links back to the words it came from.",
+  homeBuiltFor: "Simple at every step",
+  homeStepsTitle: "How Echo Care works",
+  homeFollowTitle: "Follow the conversation",
+  homeFollowText:
+    "Large-text captions highlight medicine names, numbers, dates and how often so you can check them.",
+  homeRepeatTitle: "Ask to hear it again",
+  homeRepeatText:
+    "Show a large Please repeat card whenever a medicine name or dose needs checking.",
+  homeReceiptTitle: "Check the receipt",
+  homeReceiptText:
+    "Each fact includes the original words and a Hear it button. Anything unsure is marked Check this.",
+  homePrivacyTitle: "Private by default",
+  homePrivacyText: "Audio and text stay on your phone unless you choose to share.",
+  homePrivacyDetail:
+    "Nothing starts until everyone agrees. Nothing is shared unless you choose it.",
+  startupStepConsent: "Step 1 of 2",
+  startupBack: "Back to home",
+  doctorCardStep: "Step 2 of 2 · Show this screen to the doctor",
+  pharmacistCardStep: "Show this screen to the pharmacist",
   loadingApp: "Opening Echo Care.",
   storageFallback:
     "This browser cannot keep data after you close the page. Nothing was sent anywhere.",
@@ -30,6 +62,7 @@ export const CARE = {
   shareCancelled: "Not shared.",
   doctorTitle: "Doctor visit",
   pharmacyTitle: "Pharmacy",
+  sampleTitle: "Prefer to look around first?",
   sampleIntro:
     "Try Echo Care with a sample visit read by actors. No microphone, and nothing is kept.",
   sampleEnd: "End the sample",

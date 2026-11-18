@@ -282,12 +282,14 @@ describe("SpeakerCard", () => {
   it("is a labelled dialog and focuses its first action", () => {
     render(
       <SpeakerCard
+        eyebrow="Show this screen to the doctor"
         message={FINAL.pleaseRepeatCard}
         actions={[{ label: "Done", onClick: () => {} }]}
       />,
     );
     const dialog = screen.getByRole("dialog", { name: FINAL.pleaseRepeatCard });
     expect(dialog.getAttribute("aria-modal")).toBe("true");
+    expect(within(dialog).getByText("Show this screen to the doctor")).toBeTruthy();
     expect(document.activeElement?.textContent).toBe("Done");
   });
 });

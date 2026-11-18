@@ -19,13 +19,17 @@ export const SPEAKER_CARDS = {
 /**
  * Full-screen, large-text card turned towards the other person (Please repeat,
  * doctor card, pharmacist card). Focus moves to the first action when it opens.
- * `inline` renders it in the page flow (for previews and tests).
+ * `inline` renders it in the page flow (for previews and tests). An optional eyebrow
+ * tells the user who to show the full-screen card to.
  */
 export function SpeakerCard({
+  eyebrow,
   message,
   actions,
   inline = false,
 }: {
+  /** Short instruction shown above the speaker-facing message */
+  eyebrow?: string;
   message: string;
   actions: SpeakerAction[];
   inline?: boolean;
@@ -39,6 +43,7 @@ export function SpeakerCard({
       aria-modal={inline ? undefined : true}
       aria-labelledby={id}
     >
+      {eyebrow !== undefined && <p className="echo-speaker__eyebrow">{eyebrow}</p>}
       <p id={id} className="echo-speaker__message">
         {message}
       </p>
