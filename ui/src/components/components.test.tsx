@@ -120,6 +120,12 @@ describe("CaptionView", () => {
     expect(screen.getByRole("status").textContent).toContain("Captions will appear here");
   });
 
+  it("accepts product-specific uncertainty wording", () => {
+    render(<CaptionView lines={[]} uncertainty="Money and percentages can be wrong." />);
+    expect(screen.getByText("Money and percentages can be wrong.")).toBeTruthy();
+    expect(screen.queryByText(FINAL.captionUncertainty)).toBeNull();
+  });
+
   it("permission denied is an alert with the copy-deck text", () => {
     render(<CaptionView lines={[]} status="permission-denied" />);
     expect(screen.getByRole("alert").textContent).toBe(FINAL.micDenied);
@@ -243,6 +249,14 @@ describe("ComparisonTable", () => {
     );
   });
 
+  it("hides audio controls for anchors whose audio was not kept", () => {
+    const { container } = render(
+      <ComparisonTable rows={rows} onPlay={() => {}} canPlay={(a) => a.segmentIds[0] === "a1"} />,
+    );
+    expect(screen.getAllByRole("button", { name: /^Hear it/ })).toHaveLength(1);
+    expect(container.textContent).toContain("Audio not kept");
+  });
+
   it("needs at least two sellers", () => {
     render(<ComparisonTable rows={compareQuotes([records[0]], ["price"])} />);
     expect(screen.getByRole("status").textContent).toContain("at least two sellers");
@@ -335,6 +349,20 @@ describe("ConsentSheet", () => {
       screen.getByRole<HTMLButtonElement>("button", { name: "I agree and continue" }),
     );
     expect(onAgree).toHaveBeenCalled();
+  });
+
+  it("hides optional sharing when an app has no share action", () => {
+    render(
+      <ConsentSheet
+        choices={{ record: false, transcribe: false, share: false }}
+        onChange={() => {}}
+        onAgree={() => {}}
+        disclaimer="d"
+        showShare={false}
+      />,
+    );
+    expect(screen.queryByRole("switch", { name: FINAL.consentShare })).toBeNull();
+    expect(screen.getAllByRole("switch")).toHaveLength(2);
   });
 
   it("shows a specific storage fallback instead of a generic error", () => {

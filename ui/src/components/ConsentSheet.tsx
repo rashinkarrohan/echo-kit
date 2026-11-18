@@ -22,6 +22,7 @@ export function ConsentSheet({
   disclaimer,
   status = "ready",
   statusText,
+  showShare = true,
 }: {
   choices: ConsentChoices;
   onChange: (next: ConsentChoices) => void;
@@ -30,6 +31,8 @@ export function ConsentSheet({
   disclaimer: string;
   status?: ViewStatus;
   statusText?: StatusText;
+  /** Hide when the product has no sharing action and therefore needs no share consent. */
+  showShare?: boolean;
 }): ReactElement {
   const titleId = useId();
   const canAgree = choices.record && choices.transcribe;
@@ -56,7 +59,7 @@ export function ConsentSheet({
         <legend className="echo-visually-hidden">{FINAL.consentTitle}</legend>
         {toggle("record", FINAL.consentRecord)}
         {toggle("transcribe", FINAL.consentTranscribe)}
-        {toggle("share", FINAL.consentShare)}
+        {showShare && toggle("share", FINAL.consentShare)}
       </fieldset>
       <div className="echo-actions">
         <button type="button" className="echo-button" disabled={!canAgree} onClick={onAgree}>

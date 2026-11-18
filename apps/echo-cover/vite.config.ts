@@ -25,6 +25,8 @@ export default defineConfig({
         description: "Compare what hearing-aid sellers said",
         theme_color: "#1F3A6E",
         background_color: "#F3F4F8",
+        display: "standalone",
+        start_url: "/#/home",
       },
     }),
   ],

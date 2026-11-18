@@ -26,13 +26,15 @@ Kiro builds each screen exactly as written. Where copy is given it is final; Kir
 12. `/trust`: eval numbers: facts kept, dropped, invented (target 0), unanchored (target 0), flagged-token recall, runs, date.
 
 ## Echo Cover screens
-1. `/consent`: same wording and toggles.
-2. `/questions`: "Questions to ask before you buy". Each question from the schema checklist as a large tick-row with a small "Source" link. Button "Start recording a seller".
-3. `/record`: seller name field (required: "Who are you talking to?"), live captions with money, percentages, durations and commission wording highlighted, "Stop and review".
-4. `/review/:seller`: gap check for that seller: each question Answered (with "Hear it" chip) / Not discussed / Unclear.
-5. `/compare`: a ledger table: rows = price, what is included, trial and returns, financing, commission; columns = sellers. Each cell shows the value, its "Hear it" chip, or an amber "Not discussed". A row where values differ gets a "Differs" tag. No ranking, no "best", no highlighting of one seller.
-6. `/confirm`: a drafted message: "Hello, thank you for your time. To confirm what we discussed: [for each fact: label: value]. [For each Not discussed item: I would also like to know: question]. Please reply in writing to confirm." Button "Copy message". Text: "Echo does not send anything. Keep the reply."
-7. `/trust`: as in Care.
+1. `/home`: a distinct navy ledger-style product home. Title "Compare what sellers said, side by side." Explain the two-seller minimum, anchored receipts, neutral comparison, fictional actor sample, on-phone privacy and the Cover disclaimer. Primary "Start comparing"; secondary "Play sample consult". When saved live conversations exist, show their count and "Open saved comparisons".
+2. `/saved`: "Saved seller conversations" lists live receipts stored on the phone, newest first, with seller name, date, fact count and "Open seller receipt". With two or more conversations, show "Compare these sellers". Restored anchors say "Audio not kept" rather than showing dead controls.
+3. `/consent`: all-party consent wording with separate toggles for recording and on-device transcription. Do not request sharing consent because Echo Cover has no share action. Show the storage fallback explicitly when receipts cannot persist.
+4. `/questions`: "Questions to ask before you buy". Each question from the schema checklist is a checkbox row with a small "Source" link. Button "Start recording a seller".
+5. `/record`: seller or clinic name field (required and unique), Cover-specific caption uncertainty naming money, percentages, time periods and commission wording, Pause/Resume, "Stop and review", and deliberate "Discard recording" confirmation.
+6. `/review/:seller`: the seller's gap check and receipt, explicit "N of at least 2 sellers recorded" progress, and contextual actions. Before two sellers, "Record another seller" is primary and comparison explains why it is disabled. At two or more, "Compare sellers" becomes primary. Deleting a seller conversation requires confirmation.
+7. `/compare`: h1 "Compare sellers" and a ledger table: rows = price, what is included, trial and returns, financing, commission; columns = sellers in recording order. Each cell shows the value, its "Hear it" chip when audio remains in memory, "Audio not kept" after reload, or amber "Not discussed". A row where values differ gets a "Differs" tag. No ranking, no "best", no highlighting of one seller.
+8. `/confirm/:seller`: a drafted message: "Hello, thank you for your time. To confirm what we discussed: [for each fact: label: value]. [For each Not discussed item: I would also like to know: question]. Please reply in writing to confirm." Button "Copy message". Text: "Echo does not send anything. Keep the reply." Include clear routes back to the seller review and comparison.
+9. `/trust`: as in Care.
 
 ## Sample consult mode (both apps)
 A prominent "Play sample consult" button on the home screen runs a bundled scripted consult with its audio and pre-made segments: captions appear on schedule, the receipt (or comparison) builds, anchor chips play the bundled audio. No model download, no microphone, works offline after first load.

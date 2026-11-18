@@ -99,6 +99,10 @@
   outline-offset: 2px;
 }
 
+.echo h1[tabindex="-1"]:focus {
+  outline: none;
+}
+
 .echo-visually-hidden {
   position: absolute;
   width: 1px;

@@ -30,7 +30,10 @@ test("sample sales work offline after the first load, without a microphone or mo
   const requests: string[] = [];
   page.on("request", (r) => requests.push(r.url()));
 
-  await page.goto(`${PREVIEW}/#/consent`);
+  await page.goto(`${PREVIEW}/`);
+  await expect(
+    page.getByRole("heading", { name: "Compare what sellers said, side by side." }),
+  ).toBeVisible();
   await page.evaluate(async () => {
     await navigator.serviceWorker.ready;
   });
@@ -42,12 +45,12 @@ test("sample sales work offline after the first load, without a microphone or mo
   await context.setOffline(true);
   await page.getByRole("link", { name: "Play sample consult" }).click();
   await page.getByRole("button", { name: "Start recording a seller" }).click();
-  await expect(page.getByLabel("Who are you talking to?")).toHaveValue("Seller A");
+  await expect(page.getByLabel("Seller or clinic name")).toHaveValue("Seller A");
   await page.getByRole("button", { name: "Start recording", exact: true }).click();
   await expect(page.getByText(/If you prefer to pay monthly/)).toBeVisible({ timeout: 60_000 });
   await page.getByRole("button", { name: "Stop and review" }).click();
   await page.getByRole("button", { name: "Record another seller" }).click();
-  await expect(page.getByLabel("Who are you talking to?")).toHaveValue("Seller D");
+  await expect(page.getByLabel("Seller or clinic name")).toHaveValue("Seller D");
   await page.getByRole("button", { name: "Start recording", exact: true }).click();
   await expect(page.getByText(/I am paid a salary/)).toBeVisible({ timeout: 60_000 });
   await page.getByRole("button", { name: "Stop and review" }).click();

@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import type { QuoteComparisonRow } from "@echo/engine";
+import type { Anchor, QuoteComparisonRow } from "@echo/engine";
 import { ADDED, FINAL, factLabel } from "../copy";
 import { ChecklistStamp, StatusMessage } from "./common";
 import type { ViewStatus } from "./common";
@@ -14,11 +14,14 @@ import type { PlayAnchor } from "./AnchorChip";
 export function ComparisonTable({
   rows,
   onPlay,
+  canPlay,
   status = "ready",
   title = ADDED.compareTitle,
 }: {
   rows: QuoteComparisonRow[];
   onPlay?: PlayAnchor;
+  /** False for anchors restored after reload, because audio is not persisted by default. */
+  canPlay?: (anchor: Anchor) => boolean;
   status?: ViewStatus;
   title?: string;
 }): ReactElement {
@@ -67,7 +70,10 @@ export function ComparisonTable({
                         <>
                           <span className="echo-ledger__value">{cell.value}</span>
                           {cell.anchor && (
-                            <AnchorChip anchor={cell.anchor} {...(onPlay ? { onPlay } : {})} />
+                            <AnchorChip
+                              anchor={cell.anchor}
+                              {...(onPlay && (canPlay?.(cell.anchor) ?? true) ? { onPlay } : {})}
+                            />
                           )}
                         </>
                       )}

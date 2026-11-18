@@ -184,6 +184,20 @@ export class RecordingController {
     return result;
   }
 
+  /** Stop capture without building or storing a receipt. Used only after explicit discard. */
+  async discard(): Promise<void> {
+    this.script?.stop();
+    if (this.capture) await this.capture.stop();
+    await Promise.all(this.pending);
+    this.script = undefined;
+    this.capture = undefined;
+    this.session = undefined;
+    this.pending = [];
+    this.paused = false;
+    this.snapshot = { status: "idle", lines: [], prompts: [] };
+    for (const listener of [...this.listeners]) listener();
+  }
+
   /** In-memory audio of the given segments, for "Hear it". */
   audioFor(segmentIds: string[]): Float32Array[] {
     return this.session?.audioFor(segmentIds) ?? [];

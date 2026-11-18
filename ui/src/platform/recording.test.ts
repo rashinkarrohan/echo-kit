@@ -79,6 +79,23 @@ describe("RecordingController (scripted)", () => {
     expect(c.audioFor(["seg-0002"])[0].length).toBe(80000);
   });
 
+  it("discard stops playback without storing a receipt", async () => {
+    const store = new MemoryStore();
+    const c = new RecordingController();
+    await c.start({
+      sessionId: "discarded",
+      schema,
+      ledger: consented(),
+      store,
+      source: { kind: "scripted", consult, speed: 1 },
+    });
+    await c.discard();
+    expect(c.state.status).toBe("idle");
+    await new Promise((r) => setTimeout(r, 30));
+    expect(c.state.lines).toEqual([]);
+    expect(await store.getReceipt("discarded")).toEqual({ ok: true, value: undefined });
+  });
+
   it("pause stops new segments until resumed", async () => {
     const c = new RecordingController();
     await c.start({

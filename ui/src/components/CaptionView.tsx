@@ -17,9 +17,12 @@ export interface CaptionLine {
 export function CaptionView({
   lines,
   status = "ready",
+  uncertainty = FINAL.captionUncertainty,
 }: {
   lines: CaptionLine[];
   status?: ViewStatus;
+  /** Product-specific reminder of which caption details need checking */
+  uncertainty?: string;
 }): ReactElement {
   const shown = status === "ready" && lines.length === 0 ? "empty" : status;
   return (
@@ -48,7 +51,7 @@ export function CaptionView({
           ))}
         </ol>
       </div>
-      <p className="echo-uncertainty">{FINAL.captionUncertainty}</p>
+      <p className="echo-uncertainty">{uncertainty}</p>
     </section>
   );
 }

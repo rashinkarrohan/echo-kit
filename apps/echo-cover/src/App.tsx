@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactElement } from "react";
 import { CONSENT_WORDING_VERSION, compareQuotes, quoteRecordFromFacts } from "@echo/engine";
 import type { Anchor, QuoteRecord, Receipt } from "@echo/engine";
@@ -10,8 +10,6 @@ import {
   FINAL,
   ReceiptList,
   RecordingController,
-  ADDED,
-  Skin,
   StatusMessage,
   TrustPanel,
   clock,
@@ -25,9 +23,24 @@ import type { ConsentChoices, ViewStatus } from "@echo/ui";
 import { COVER } from "./copy";
 import { COMPARE_FIELDS, EVAL_SUMMARY, SALE, readLaunch } from "./env";
 import { draftConfirmMessage } from "./draft";
+import { HomePage } from "./HomePage";
+import { SavedSales } from "./SavedSales";
+import type { SavedSale } from "./SavedSales";
+import { CoverShell } from "./CoverShell";
 
-type Route = "/consent" | "/questions" | "/record" | "/review" | "/compare" | "/confirm" | "/trust";
+type Route =
+  | "/home"
+  | "/saved"
+  | "/consent"
+  | "/questions"
+  | "/record"
+  | "/review"
+  | "/compare"
+  | "/confirm"
+  | "/trust";
 const ROUTES: readonly Route[] = [
+  "/home",
+  "/saved",
   "/consent",
   "/questions",
   "/record",
@@ -39,16 +52,27 @@ const ROUTES: readonly Route[] = [
 
 const fieldOrder = Object.fromEntries(SALE.facts.map((f) => [f.key, f.fields]));
 
+const PAGE_TITLES: Record<Route, string> = {
+  "/home": "Echo Cover — compare what sellers said",
+  "/saved": "Saved seller conversations — Echo Cover",
+  "/consent": "Before we start — Echo Cover",
+  "/questions": "Questions to ask — Echo Cover",
+  "/record": "Record a seller — Echo Cover",
+  "/review": "Seller receipt — Echo Cover",
+  "/compare": "Compare sellers — Echo Cover",
+  "/confirm": "Confirm in writing — Echo Cover",
+  "/trust": "Test results — Echo Cover",
+};
+
 /** One recorded seller conversation, with its in-memory audio. */
-interface Sale {
-  seller: string;
-  receipt: Receipt;
+interface Sale extends SavedSale {
   record: QuoteRecord;
-  controller: RecordingController;
+  /** Present only until this page is closed; audio is not restored. */
+  controller?: RecordingController;
 }
 
 export function App(): ReactElement {
-  const { route, param } = useHashRoute(ROUTES, "/consent");
+  const { route, param } = useHashRoute(ROUTES, "/home");
   const launch = useMemo(() => readLaunch(window.location.search), []);
   const services = useDeviceServices("echo-cover", launch.demo);
   const [choices, setChoices] = useState<ConsentChoices>({
@@ -60,19 +84,84 @@ export function App(): ReactElement {
   const sampleSeller = (n: number): string =>
     launch.demo ? (launch.samples?.[n % launch.samples.length]?.seller ?? "") : "";
   const [seller, setSeller] = useState(() => sampleSeller(0));
-  const [sellerError, setSellerError] = useState(false);
+  const [sellerError, setSellerError] = useState<string>();
   const [controller, setController] = useState<RecordingController>();
   const [sales, setSales] = useState<Sale[]>([]);
+  const [salesStatus, setSalesStatus] = useState<ViewStatus>("loading");
+  const [deleteSaleId, setDeleteSaleId] = useState<string>();
+  const [discardConfirm, setDiscardConfirm] = useState(false);
   const [playing, setPlaying] = useState<{ anchor: Anchor; text: string }>();
   const [copied, setCopied] = useState<string>();
   const player = useRef(createPlayer());
   const rec = useRecording(controller);
 
+  useEffect(() => {
+    if (!services) return;
+    if (launch.demo) {
+      setSalesStatus("ready");
+      return;
+    }
+    let active = true;
+    void services.store.listReceipts().then((result) => {
+      if (!active) return;
+      if (!result.ok) {
+        setSalesStatus("error");
+        return;
+      }
+      const restored: Sale[] = result.value
+        .filter(
+          (receipt): receipt is Receipt & { seller: string } =>
+            receipt.schemaId === SALE.id && Boolean(receipt.seller),
+        )
+        .map((receipt) => ({
+          seller: receipt.seller,
+          receipt,
+          record: quoteRecordFromFacts(
+            receipt.conversationId,
+            receipt.seller,
+            receipt.facts,
+            fieldOrder,
+          ),
+        }));
+      setSales((existing) => {
+        const byId = new Map(restored.map((sale) => [sale.receipt.conversationId, sale]));
+        for (const sale of existing) byId.set(sale.receipt.conversationId, sale);
+        return [...byId.values()].sort((a, b) => a.receipt.timestamp - b.receipt.timestamp);
+      });
+      setSalesStatus("ready");
+    });
+    return () => {
+      active = false;
+    };
+  }, [launch.demo, services]);
+
+  const routeReady = route === "/home" || services !== undefined;
+  useEffect(() => {
+    if (!routeReady) return;
+    document.title = PAGE_TITLES[route];
+    setCopied(undefined);
+    const id = window.requestAnimationFrame(() => {
+      const heading = document.querySelector<HTMLElement>("main h1");
+      if (!heading) return;
+      heading.tabIndex = -1;
+      heading.focus();
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [param, route, routeReady]);
+
+  if (route === "/home") {
+    return (
+      <CoverShell route={route} savedCount={launch.demo ? 0 : sales.length}>
+        <HomePage savedCount={launch.demo ? 0 : sales.length} />
+      </CoverShell>
+    );
+  }
+
   if (!services) {
     return (
-      <Skin skin="cover" className="cover-page">
+      <CoverShell route={route} savedCount={0}>
         <StatusMessage status="loading" text={{ loading: COVER.loadingApp }} />
-      </Skin>
+      </CoverShell>
     );
   }
   const { store, ledger } = services;
@@ -80,7 +169,6 @@ export function App(): ReactElement {
   const agree = (): void => {
     ledger.grant("record", CONSENT_WORDING_VERSION);
     ledger.grant("transcribe", CONSENT_WORDING_VERSION);
-    if (choices.share) ledger.grant("share", CONSENT_WORDING_VERSION);
     void ledger.persist();
     goTo("/questions");
   };
@@ -88,23 +176,33 @@ export function App(): ReactElement {
   const start = (): void => {
     const name = seller.trim();
     if (!name) {
-      setSellerError(true);
+      setSellerError(COVER.sellerNeeded);
       return;
     }
-    setSellerError(false);
+    if (sales.some((sale) => sale.seller.toLowerCase() === name.toLowerCase())) {
+      setSellerError(COVER.sellerDuplicate);
+      return;
+    }
+    setSellerError(undefined);
+    setDiscardConfirm(false);
     const c = new RecordingController();
     setController(c);
     const sample = launch.samples?.[sales.length % (launch.samples.length || 1)];
-    void c.start({
-      sessionId: `sale-${sales.length + 1}-${Date.now()}`,
-      schema: SALE,
-      ledger,
-      store,
-      seller: name,
-      source: sample
-        ? { kind: "scripted", consult: sample, speed: launch.speed }
-        : { kind: "live" },
-    });
+    void c
+      .start({
+        sessionId: `sale-${sales.length + 1}-${Date.now()}`,
+        schema: SALE,
+        ledger,
+        store,
+        seller: name,
+        source: sample
+          ? { kind: "scripted", consult: sample, speed: launch.speed }
+          : { kind: "live" },
+      })
+      .catch(() => {
+        setController(undefined);
+        setSellerError(COVER.consentNeeded);
+      });
   };
 
   const stop = async (): Promise<void> => {
@@ -125,20 +223,41 @@ export function App(): ReactElement {
     };
     setSales((s) => [...s, sale]);
     setController(undefined);
+    setDiscardConfirm(false);
     setSeller(sampleSeller(sales.length + 1));
     goTo("/review", String(sales.length + 1));
   };
 
+  const discard = async (): Promise<void> => {
+    if (!controller) return;
+    await controller.discard();
+    setController(undefined);
+    setDiscardConfirm(false);
+  };
+
+  const deleteSale = async (sale: Sale): Promise<void> => {
+    const removed = await store.deleteSession(sale.receipt.conversationId);
+    if (!removed.ok) return;
+    setSales((all) =>
+      all.filter((item) => item.receipt.conversationId !== sale.receipt.conversationId),
+    );
+    setDeleteSaleId(undefined);
+    goTo("/saved");
+  };
+
+  const saleForAnchor = (anchor: Anchor): Sale | undefined =>
+    sales.find(
+      (sale) =>
+        Object.values(sale.record.fields).some((field) => field.anchor === anchor) ||
+        sale.receipt.facts.some((fact) => fact.anchor === anchor) ||
+        sale.receipt.checklist.some((item) => item.anchor === anchor),
+    );
+
+  const canPlay = (anchor: Anchor): boolean => saleForAnchor(anchor)?.controller !== undefined;
+
   const play = (anchor: Anchor, rate: number, sale?: Sale): void => {
-    const owner =
-      sale ??
-      sales.find(
-        (s) =>
-          Object.values(s.record.fields).some((f) => f.anchor === anchor) ||
-          s.receipt.facts.some((f) => f.anchor === anchor) ||
-          s.receipt.checklist.some((c) => c.anchor === anchor),
-      );
-    const chunks = owner?.controller.audioFor(anchor.segmentIds) ?? [];
+    const owner = sale ?? saleForAnchor(anchor);
+    const chunks = owner?.controller?.audioFor(anchor.segmentIds) ?? [];
     setPlaying({
       anchor,
       text: COVER.playing(`${clock(anchor.startMs)} to ${clock(anchor.endMs)}`),
@@ -146,6 +265,23 @@ export function App(): ReactElement {
     void player.current.play(chunks, 16000, rate).then((r) => {
       if (!r.ok) setPlaying({ anchor, text: COVER.playFailed });
     });
+  };
+
+  const openSavedSale = (saved: SavedSale): void => {
+    const index = sales.findIndex(
+      (sale) => sale.receipt.conversationId === saved.receipt.conversationId,
+    );
+    if (index >= 0) goTo("/review", String(index + 1));
+  };
+
+  const copyMessage = async (message: string): Promise<void> => {
+    try {
+      if (!navigator.clipboard) throw new Error("Clipboard unavailable");
+      await navigator.clipboard.writeText(message);
+      setCopied(COVER.copied);
+    } catch {
+      setCopied(COVER.copyFailed);
+    }
   };
 
   const notes = Object.fromEntries(planned.map((id) => [id, COVER.planned]));
@@ -178,6 +314,17 @@ export function App(): ReactElement {
 
   let screen: ReactElement;
   switch (route) {
+    case "/saved":
+      screen = (
+        <SavedSales
+          sales={sales}
+          status={salesStatus}
+          onOpen={openSavedSale}
+          onCompare={() => goTo("/compare")}
+        />
+      );
+      break;
+
     case "/consent":
       screen = launch.demo ? (
         <section className="echo-card">
@@ -191,13 +338,19 @@ export function App(): ReactElement {
           <p className="echo-disclaimer">{FINAL.disclaimerCover}</p>
         </section>
       ) : (
-        <>
+        <div className="cover-startup">
+          <a className="cover-back" href="#/home">
+            <span aria-hidden="true">←</span> {COVER.backHome}
+          </a>
+          <p className="cover-kicker">{COVER.consentStep}</p>
           <ConsentSheet
             choices={choices}
             onChange={setChoices}
             onAgree={agree}
             disclaimer={FINAL.disclaimerCover}
             status={services.persistent ? "ready" : "error"}
+            statusText={{ error: COVER.storageFallback }}
+            showShare={false}
           />
           <section className="echo-card cover-sample">
             <p>{COVER.sampleIntro}</p>
@@ -208,13 +361,14 @@ export function App(): ReactElement {
               {FINAL.playSampleConsult}
             </a>
           </section>
-        </>
+        </div>
       );
       break;
 
     case "/questions":
       screen = (
         <>
+          <p className="cover-kicker">{COVER.questionsStep}</p>
           <h1>{FINAL.questionsBeforeYouBuy}</h1>
           <p>{COVER.questionsHint}</p>
           <ul className="cover-questions">
@@ -224,7 +378,6 @@ export function App(): ReactElement {
                   <span>{item.text}</span>
                   <input
                     type="checkbox"
-                    role="switch"
                     checked={planned.includes(item.id)}
                     onChange={(e) =>
                       setPlanned(
@@ -275,6 +428,7 @@ export function App(): ReactElement {
       const recording = status === "recording" || status === "paused";
       screen = (
         <>
+          <p className="cover-kicker">{COVER.recordStep(sales.length + 1)}</p>
           <h1>{COVER.startRecording}</h1>
           {sampleBadge}
           {!controller ? (
@@ -292,14 +446,17 @@ export function App(): ReactElement {
                   type="text"
                   autoComplete="off"
                   aria-required="true"
-                  aria-invalid={sellerError}
-                  aria-describedby={sellerError ? "cover-seller-error" : undefined}
+                  aria-invalid={sellerError !== undefined}
+                  aria-describedby={sellerError ? "cover-seller-error" : "cover-seller-hint"}
                   value={seller}
                   onChange={(e) => setSeller(e.target.value)}
                 />
+                <p id="cover-seller-hint" className="cover-field-hint">
+                  {COVER.sellerHint}
+                </p>
                 {sellerError && (
                   <p id="cover-seller-error" className="cover-error" role="alert">
-                    {COVER.sellerNeeded}
+                    {sellerError}
                   </p>
                 )}
               </div>
@@ -316,8 +473,20 @@ export function App(): ReactElement {
                     ? COVER.recording(seller.trim())
                     : ""}
               </p>
-              <CaptionView lines={rec?.lines ?? []} status={viewStatus} />
-              <div className="echo-actions">
+              <CaptionView
+                lines={rec?.lines ?? []}
+                status={viewStatus}
+                uncertainty={COVER.captionUncertainty}
+              />
+              <div className="echo-actions cover-record-actions">
+                <button
+                  type="button"
+                  className="echo-button echo-button--secondary"
+                  disabled={!recording}
+                  onClick={() => (status === "paused" ? controller.resume() : controller.pause())}
+                >
+                  {status === "paused" ? COVER.resume : FINAL.pause}
+                </button>
                 <button
                   type="button"
                   className="echo-button"
@@ -326,7 +495,32 @@ export function App(): ReactElement {
                 >
                   {FINAL.stopAndReview}
                 </button>
+                <button
+                  type="button"
+                  className="echo-button echo-button--secondary"
+                  onClick={() => setDiscardConfirm(true)}
+                >
+                  {COVER.discardRecording}
+                </button>
               </div>
+              {discardConfirm && (
+                <div className="cover-confirm" role="group" aria-label={COVER.discardTitle}>
+                  <h2>{COVER.discardTitle}</h2>
+                  <p>{COVER.discardText}</p>
+                  <div className="echo-actions">
+                    <button
+                      type="button"
+                      className="echo-button echo-button--secondary"
+                      onClick={() => setDiscardConfirm(false)}
+                    >
+                      {COVER.cancel}
+                    </button>
+                    <button type="button" className="echo-button" onClick={() => void discard()}>
+                      {COVER.discardPermanently}
+                    </button>
+                  </div>
+                </div>
+              )}
             </>
           )}
           {sellersList}
@@ -343,31 +537,51 @@ export function App(): ReactElement {
           <h1>{COVER.reviewTitle(sale.seller)}</h1>
           {sampleBadge}
           {playingLine}
+          <section className="cover-progress" aria-label={COVER.comparisonProgress}>
+            <strong>{COVER.sellerProgress(sales.length)}</strong>
+            <span>{sales.length < 2 ? COVER.oneMoreSeller : COVER.readyToCompare}</span>
+          </section>
           <ChecklistView
             results={sale.receipt.checklist}
             title={FINAL.questionsBeforeYouBuy}
             showSources
             notes={notes}
-            onPlay={(a, r) => play(a, r, sale)}
+            {...(sale.controller ? { onPlay: (a: Anchor, r: number) => play(a, r, sale) } : {})}
           />
           <ReceiptList
             facts={sale.receipt.facts}
             fieldsByKey={fieldOrder}
             title={COVER.saidTitle(sale.seller)}
-            onPlay={(a, r) => play(a, r, sale)}
+            {...(sale.controller ? { onPlay: (a: Anchor, r: number) => play(a, r, sale) } : {})}
           />
-          <div className="echo-actions">
-            <button type="button" className="echo-button" onClick={() => goTo("/record")}>
-              {COVER.recordAnother}
-            </button>
-            <button
-              type="button"
-              className="echo-button echo-button--secondary"
-              disabled={sales.length < 2}
-              onClick={() => goTo("/compare")}
-            >
-              {COVER.compare}
-            </button>
+          <div className="echo-actions cover-review-actions">
+            {sales.length >= 2 ? (
+              <button type="button" className="echo-button" onClick={() => goTo("/compare")}>
+                {COVER.compare}
+              </button>
+            ) : (
+              <button type="button" className="echo-button" onClick={() => goTo("/record")}>
+                {COVER.recordAnother}
+              </button>
+            )}
+            {sales.length >= 2 ? (
+              <button
+                type="button"
+                className="echo-button echo-button--secondary"
+                onClick={() => goTo("/record")}
+              >
+                {COVER.recordAnother}
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="echo-button echo-button--secondary"
+                disabled
+                aria-describedby="cover-compare-needed"
+              >
+                {COVER.compare}
+              </button>
+            )}
             <button
               type="button"
               className="echo-button echo-button--secondary"
@@ -375,12 +589,54 @@ export function App(): ReactElement {
             >
               {COVER.confirm}
             </button>
+            <button
+              type="button"
+              className="echo-button echo-button--secondary"
+              onClick={() => setDeleteSaleId(sale.receipt.conversationId)}
+            >
+              {COVER.deleteSeller}
+            </button>
           </div>
+          {sales.length < 2 && (
+            <p id="cover-compare-needed" className="cover-field-hint">
+              {COVER.oneMoreSeller}
+            </p>
+          )}
+          {deleteSaleId === sale.receipt.conversationId && (
+            <div className="cover-confirm" role="group" aria-label={COVER.deleteConfirmTitle}>
+              <h2>{COVER.deleteConfirmTitle}</h2>
+              <p>{COVER.deleteConfirmText}</p>
+              <div className="echo-actions">
+                <button
+                  type="button"
+                  className="echo-button echo-button--secondary"
+                  onClick={() => setDeleteSaleId(undefined)}
+                >
+                  {COVER.cancel}
+                </button>
+                <button type="button" className="echo-button" onClick={() => void deleteSale(sale)}>
+                  {COVER.deletePermanently}
+                </button>
+              </div>
+            </div>
+          )}
           {sellersList}
           {disclaimer}
         </>
       ) : (
-        <StatusMessage status="empty" text={{ empty: COVER.noSellers }} />
+        <div className="cover-recovery">
+          <StatusMessage status="empty" text={{ empty: COVER.noSellers }} />
+          <div className="echo-actions">
+            <a className="echo-button" href="#/record">
+              {COVER.startRecordingSeller}
+            </a>
+            {sales.length > 0 && (
+              <a className="echo-button echo-button--secondary" href="#/saved">
+                {COVER.openSaved}
+              </a>
+            )}
+          </div>
+        </div>
       );
       break;
     }
@@ -388,6 +644,8 @@ export function App(): ReactElement {
     case "/compare":
       screen = (
         <>
+          <h1>{COVER.compareTitle}</h1>
+          <p>{COVER.compareIntro}</p>
           {sampleBadge}
           {playingLine}
           <ComparisonTable
@@ -396,11 +654,21 @@ export function App(): ReactElement {
               COMPARE_FIELDS,
             )}
             onPlay={(a, r) => play(a, r)}
+            canPlay={canPlay}
           />
           <div className="echo-actions">
-            <button type="button" className="echo-button" onClick={() => goTo("/record")}>
+            <button
+              type="button"
+              className="echo-button echo-button--secondary"
+              onClick={() => goTo("/record")}
+            >
               {COVER.recordAnother}
             </button>
+            {sales.length > 0 && (
+              <a className="echo-button echo-button--secondary" href="#/saved">
+                {COVER.openSaved}
+              </a>
+            )}
           </div>
           {sellersList}
           {disclaimer}
@@ -424,16 +692,7 @@ export function App(): ReactElement {
             {message}
           </pre>
           <div className="echo-actions">
-            <button
-              type="button"
-              className="echo-button"
-              onClick={() =>
-                void navigator.clipboard.writeText(message).then(
-                  () => setCopied(COVER.copied),
-                  () => setCopied(COVER.copyFailed),
-                )
-              }
-            >
+            <button type="button" className="echo-button" onClick={() => void copyMessage(message)}>
               {COVER.copyMessage}
             </button>
             <button
@@ -441,8 +700,17 @@ export function App(): ReactElement {
               className="echo-button echo-button--secondary"
               onClick={() => goTo("/review", param)}
             >
-              {COVER.reviewTitle(sale.seller)}
+              {COVER.backToReview(sale.seller)}
             </button>
+            {sales.length >= 2 && (
+              <button
+                type="button"
+                className="echo-button echo-button--secondary"
+                onClick={() => goTo("/compare")}
+              >
+                {COVER.backToCompare}
+              </button>
+            )}
           </div>
           <p role="status" className="cover-badge">
             {copied ?? ""}
@@ -451,7 +719,17 @@ export function App(): ReactElement {
           {disclaimer}
         </>
       ) : (
-        <StatusMessage status="empty" text={{ empty: COVER.noSellers }} />
+        <div className="cover-recovery">
+          <StatusMessage status="empty" text={{ empty: COVER.noSellers }} />
+          <div className="echo-actions">
+            <a className="echo-button" href="#/record">
+              {COVER.startRecordingSeller}
+            </a>
+            <a className="echo-button echo-button--secondary" href="#/saved">
+              {COVER.openSaved}
+            </a>
+          </div>
+        </div>
       );
       break;
     }
@@ -462,14 +740,12 @@ export function App(): ReactElement {
   }
 
   return (
-    <Skin skin="cover" className="cover-page">
-      <header className="cover-header">
-        <p className="cover-header__name">{COVER.appName}</p>
-      </header>
-      <main>{screen}</main>
-      <footer className="cover-footer">
-        <a href="#/trust">{ADDED.trustLink}</a>
-      </footer>
-    </Skin>
+    <CoverShell
+      route={route}
+      savedCount={launch.demo ? 0 : sales.length}
+      recording={route === "/record" && controller !== undefined}
+    >
+      {screen}
+    </CoverShell>
   );
 }
