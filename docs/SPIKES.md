@@ -74,3 +74,19 @@ Live test by the owner showed a spoken medicine name captured as "Glory Fiend", 
 **Risk found:** the prompt can turn a real name into a different prompted name (prednisolone heard as "prednisone", 2 clips with tiny.en). That is why exact names with sound-alikes are now Check this.
 **Owner's clip in the browser** (base.en + prompt, headless Chromium, WebAssembly): "Take metformin 500 milligrams. Twice daily after food, come back and see me in three months." Model load about 42 s (first run), about 0.7 to 1.2 s per 5 s of audio on the M4 laptop: about 2x tiny.en. Phone speed is still unmeasured.
 **Not fixed:** names Whisper turns into ordinary English words ("water in" for warfarin, "search align" for sertraline) are not recovered; the English guard deliberately blocks those. small.en is more accurate but about 250 MB and about 3x slower than base.en.
+
+### Model comparison, Nov 13, 2026 (same 48 clips, Node CPU on the M4 laptop)
+"Found" = engine shows the right medicine, exactly or as "sounds like". Times are total seconds for the run (both plain and prompted passes where a prompt applies), so compare them only roughly.
+
+| Model | Licence | Download (quantised) | Runs in our browser stack | Prompt | Name exact | Name found | Dose right |
+|---|---|---|---|---|---|---|---|
+| whisper-tiny.en | Apache-2.0 | ~41 MB | yes | yes | 23 | 38 | 46 |
+| whisper-base.en (default) | Apache-2.0 | ~77 MB | yes | yes | 30 | 38 | 47 |
+| whisper-small.en | Apache-2.0 | ~250 MB | yes | yes | 34 | 41 | not re-measured |
+| **whisper-large-v3-turbo** (q4) | MIT | ~760 MB (q4), ~560 MB (q4f16, WebGPU) | yes | yes | 39 | **45** | **48** |
+| distil-small.en | MIT | ~170 MB | yes | no (prompt breaks it: 9/48) | 5 | 32 | 48 |
+| moonshine-base | MIT | ~60 MB | yes | not supported | 9 | 28 | 46 |
+| parakeet-tdt-0.6b-v2 (int8, onnx-asr) | CC-BY-4.0 | ~660 MB | no (needs a different runtime) | not supported | 24 | 39 | 48 |
+
+Speed: Parakeet was by far the fastest (48 clips in 9.7 s, about 0.2 s each); large-v3-turbo the slowest on CPU (about 4 s per clip), so it needs WebGPU to keep up. Not tried: Google MedASR (medical model; Health AI Developer Foundations terms, gated download, needs the owner to accept the terms; its own docs say it can struggle with non-standard medication names).
+Misses common to the best models are names turned into ordinary words: "low satan" (losartan), "a dovestatin" (atorvastatin), "water in" (warfarin), "search aligned" (sertraline). No model reached 48/48.

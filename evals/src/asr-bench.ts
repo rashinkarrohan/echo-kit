@@ -16,6 +16,7 @@ import {
   AutoProcessor,
   AutoTokenizer,
   WhisperForConditionalGeneration,
+  pipeline,
 } from "@huggingface/transformers";
 import type { Tensor } from "@huggingface/transformers";
 import { cleanWhisperText, decodeWav, drugDetector, normaliseText } from "@echo/engine";
@@ -25,6 +26,9 @@ import { buildMedicinePrompt } from "../../engine/src/asr/prompt";
 const folder = resolve(process.argv[2] ?? "../private/asr-bench");
 const model = process.argv[3] || "Xenova/whisper-tiny.en";
 const promptSize = Number(process.argv[4] ?? "60");
+const dtype = (process.argv[5] || "q8") as "q8" | "q4" | "fp32";
+/** Non-Whisper models (e.g. Moonshine) run through the pipeline, with no prompt. */
+const usePipeline = /moonshine/i.test(model);
 
 const DOSE: Record<string, string> = {};
 for (const line of readFileSync(join(folder, "sentences.tsv"), "utf8").trim().split("\n")) {
@@ -33,6 +37,19 @@ for (const line of readFileSync(join(folder, "sentences.tsv"), "utf8").trim().sp
 }
 
 async function main(): Promise<void> {
+  if (usePipeline) {
+    const asr = await pipeline("automatic-speech-recognition", model, { dtype, device: "cpu" });
+    await runAll(
+      async (audio) => {
+        const out = (await asr(audio)) as { text?: string } | Array<{ text?: string }>;
+        const first = Array.isArray(out) ? out[0] : out;
+        return cleanWhisperText(first?.text ?? "");
+      },
+      undefined,
+      "",
+    );
+    return;
+  }
   const processor = await AutoProcessor.from_pretrained(model);
   const tokenizer = await AutoTokenizer.from_pretrained(model);
   const whisper = await WhisperForConditionalGeneration.from_pretrained(model, {
@@ -48,8 +65,6 @@ async function main(): Promise<void> {
     },
   );
   const promptIds = tokenizer.encode(prompt, { add_special_tokens: false });
-  const inPrompt = new Set(prompt.toLowerCase().match(/[a-z]+/g) ?? []);
-
   async function transcribe(audio: Float32Array, withPrompt: boolean): Promise<string> {
     const { input_features } = (await processor(audio)) as { input_features: Tensor };
     const init = withPrompt
@@ -69,6 +84,19 @@ async function main(): Promise<void> {
     return cleanWhisperText(tokenizer.decode(ids, { skip_special_tokens: true }));
   }
 
+  await runAll(
+    (audio) => transcribe(audio, false),
+    (audio) => transcribe(audio, true),
+    prompt,
+  );
+}
+
+async function runAll(
+  plain: (audio: Float32Array) => Promise<string>,
+  prompted: ((audio: Float32Array) => Promise<string>) | undefined,
+  prompt: string,
+): Promise<void> {
+  const inPrompt = new Set(prompt.toLowerCase().match(/[a-z]+/g) ?? []);
   const files = readdirSync(folder)
     .filter((f) => f.endsWith(".wav"))
     .sort();
@@ -86,7 +114,9 @@ async function main(): Promise<void> {
     const wav = decodeWav(readFileSync(join(folder, f)).buffer);
     if (!wav.ok) throw new Error(`${f}: ${wav.error}`);
     for (const mode of ["plain", "prompted"] as const) {
-      const text = await transcribe(wav.value.samples, mode === "prompted");
+      const run = mode === "plain" ? plain : prompted;
+      if (!run) continue;
+      const text = await run(wav.value.samples);
       const norm = normaliseText(text);
       const heard = ` ${norm} `.includes(` ${drug} `);
       const tokens = drugDetector.detect({ id: "x", index: 0, startMs: 0, endMs: 0, text }, drugs);
@@ -104,7 +134,7 @@ async function main(): Promise<void> {
   }
   console.log(rows.join("\n"));
   console.log(
-    `\nmodel ${model}, prompt ${prompt.split(",").length} names (${promptIds.length} tokens), ${files.length} clips`,
+    `\nmodel ${model} (${dtype}), prompt ${prompted ? prompt.split(",").length : 0} names, ${files.length} clips`,
   );
   for (const mode of ["plain", "prompted"] as const) {
     const s = score[mode];
