@@ -19,7 +19,8 @@ export default defineConfig({
         globIgnores: ["**/*.wasm"],
         // The sample sales' actor recordings (about 350 KB) work offline after first load.
         globPatterns: ["**/*.{js,css,html,mp3,png,svg}"],
-        runtimeCaching: [{ urlPattern: /\.wasm$/, handler: "CacheFirst", options: { cacheName: "echo-speech-runtime" } }],
+        // The speech runtime and the 2 MB speech-check model (Silero VAD), on first use.
+        runtimeCaching: [{ urlPattern: /\.(wasm|onnx)$/, handler: "CacheFirst", options: { cacheName: "echo-speech-runtime" } }],
       },
       manifest: {
         name: "Echo Cover",
@@ -39,6 +40,7 @@ export default defineConfig({
   ],
   server: { port: 5182, strictPort: true, headers: isolation },
   preview: { port: 5182, strictPort: true, headers: isolation },
-  optimizeDeps: { exclude: ["@huggingface/transformers"] },
+  // The ONNX runtime loads its own wasm files; pre-bundling breaks their paths.
+  optimizeDeps: { exclude: ["@huggingface/transformers", "onnxruntime-web"] },
   worker: { format: "es" },
 });

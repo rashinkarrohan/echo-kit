@@ -14,6 +14,8 @@ export interface SpikeResult {
   userAgent: string;
   model: string;
   device?: string;
+  /** Silero VAD loaded in the speech worker */
+  speechCheck?: boolean;
   crossOriginIsolated: boolean;
   clipSeconds?: number;
   loadMs?: number;

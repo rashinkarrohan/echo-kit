@@ -22,7 +22,8 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,mp3,png,svg}"],
         runtimeCaching: [
           {
-            urlPattern: /\.wasm$/,
+            // The speech runtime and the 2 MB speech-check model (Silero VAD), on first use.
+            urlPattern: /\.(wasm|onnx)$/,
             handler: "CacheFirst",
             options: { cacheName: "echo-speech-runtime" },
           },
@@ -46,6 +47,7 @@ export default defineConfig({
   ],
   server: { port: 5181, strictPort: true, headers: isolation },
   preview: { port: 5181, strictPort: true, headers: isolation },
-  optimizeDeps: { exclude: ["@huggingface/transformers"] },
+  // The ONNX runtime loads its own wasm files; pre-bundling breaks their paths.
+  optimizeDeps: { exclude: ["@huggingface/transformers", "onnxruntime-web"] },
   worker: { format: "es" },
 });

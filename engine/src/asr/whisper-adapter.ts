@@ -28,8 +28,21 @@ export type WorkerRequest =
   | { type: "transcribe"; id: number; samples: Float32Array };
 
 export type WorkerReply =
-  | { type: "loaded"; id: number; device: AsrDevice }
-  | { type: "result"; id: number; text: string; ms: number }
+  | {
+      type: "loaded";
+      id: number;
+      device: AsrDevice;
+      /** The speech check (Silero VAD) loaded; without it only the energy gate applies */
+      speechCheck?: boolean;
+    }
+  | {
+      type: "result";
+      id: number;
+      text: string;
+      ms: number;
+      /** The speech check found no speech, so Whisper was not asked (text is empty) */
+      noSpeech?: boolean;
+    }
   | { type: "error"; id: number; error: string };
 
 /** How the adapter talks to its worker (a real Worker in the browser, a fake in tests). */
@@ -73,6 +86,8 @@ export class WhisperAdapter implements AsrAdapter {
   device: AsrDevice | undefined;
   /** Worker-measured time for the last segment, for the latency spike */
   lastLatencyMs: number | undefined;
+  /** Whether the worker's speech check (Silero VAD) loaded, once loaded */
+  speechCheck = false;
 
   private readonly model: string;
   private readonly devices: AsrDevice[];
@@ -124,6 +139,7 @@ export class WhisperAdapter implements AsrAdapter {
       })).then((reply): Result<void> => {
         if (reply.type === "loaded") {
           this.device = reply.device;
+          this.speechCheck = reply.speechCheck === true;
           return { ok: true, value: undefined };
         }
         this.loading = undefined; // allow a retry

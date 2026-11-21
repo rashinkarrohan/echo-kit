@@ -18,9 +18,13 @@ import {
   WhisperForConditionalGeneration,
 } from "@huggingface/transformers";
 import type { Tensor } from "@huggingface/transformers";
+// The same onnxruntime-web build transformers.js loads (one runtime, one set of wasm files).
+import * as ort from "onnxruntime-web/webgpu";
 import { buildMedicinePrompt, buildWordsPrompt } from "@echo/engine";
 import type { AsrDevice, WorkerReply, WorkerRequest } from "@echo/engine";
 import { dtypeFor, isMultilingual, usesMedicinePrompt } from "./whisper-models";
+import { SileroVad } from "./silero-vad";
+import type { VadTensor } from "./silero-vad";
 
 /** The parts of the worker global scope used here (avoids mixing DOM and WebWorker libs). */
 interface WorkerScope {
@@ -46,6 +50,28 @@ async function hasWebGpuAdapter(): Promise<boolean> {
 
 type Transcriber = (audio: Float32Array) => Promise<string>;
 let transcriber: Transcriber | undefined;
+
+/** Silero VAD (about 2 MB, cached with the speech runtime). Without it, every segment the
+ *  energy gate passes goes to Whisper, as before. */
+let vad: SileroVad | undefined;
+const VAD_MODEL = new URL("./models/silero-vad-v6.onnx", import.meta.url);
+
+async function loadVad(): Promise<void> {
+  if (vad) return;
+  try {
+    const bytes = new Uint8Array(await (await fetch(VAD_MODEL)).arrayBuffer());
+    const session = await ort.InferenceSession.create(bytes, { executionProviders: ["wasm"] });
+    vad = new SileroVad({
+      tensor: (type, data, dims) => new ort.Tensor(type, data, dims) as unknown as VadTensor,
+      run: async (feeds) =>
+        (await session.run(
+          feeds as unknown as ort.InferenceSession.FeedsType,
+        )) as unknown as Record<string, VadTensor>,
+    });
+  } catch {
+    vad = undefined; // fall back to the energy gate alone
+  }
+}
 
 function message(e: unknown): string {
   if (e instanceof Error) return e.message;
@@ -121,11 +147,14 @@ scope.onmessage = (event) => {
   void (async () => {
     try {
       if (req.type === "load") {
-        const device = await load(req.model, req.devices, {
-          medicines: req.medicines ?? [],
-          words: req.words ?? [],
-        });
-        scope.postMessage({ type: "loaded", id: req.id, device });
+        const [device] = await Promise.all([
+          load(req.model, req.devices, {
+            medicines: req.medicines ?? [],
+            words: req.words ?? [],
+          }),
+          loadVad(),
+        ]);
+        scope.postMessage({ type: "loaded", id: req.id, device, speechCheck: vad !== undefined });
         return;
       }
       if (!transcriber) {
@@ -133,6 +162,17 @@ scope.onmessage = (event) => {
         return;
       }
       const t0 = performance.now();
+      // No speech (a cough, a knock, a fan): Whisper is not asked, so it cannot invent words.
+      if (vad && !(await vad.hasSpeech(req.samples))) {
+        scope.postMessage({
+          type: "result",
+          id: req.id,
+          text: "",
+          ms: Math.round(performance.now() - t0),
+          noSpeech: true,
+        });
+        return;
+      }
       const text = await transcriber(req.samples);
       scope.postMessage({
         type: "result",

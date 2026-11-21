@@ -4,5 +4,5 @@
     "noEmit": true,
     "rootDir": "../.."
   },
-  "include": ["spike/**/*.ts", "gallery/**/*.tsx", "tests/**/*.ts"]
+  "include": ["spike/**/*.ts", "gallery/**/*.tsx", "vad/**/*.ts", "tests/**/*.ts"]
 }

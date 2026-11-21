@@ -21,6 +21,8 @@ test("transcribes the bundled 10-second actor clip on the device", async ({ page
   expect(result.error).toBeUndefined();
   expect(result.segments.filter((s) => s.error)).toEqual([]);
   expect(["webgpu", "wasm"]).toContain(result.device);
+  // The speech check (Silero VAD) loaded in the worker and let every spoken segment through.
+  expect(result.speechCheck).toBe(true);
 
   const heard = ` ${result.normalisedText} `;
   for (const phrase of ["500 milligrams", "twice daily", "come back", "3 months"]) {

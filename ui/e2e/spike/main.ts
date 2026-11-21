@@ -47,6 +47,7 @@ async function run(): Promise<SpikeResult> {
   result.loadMs = Math.round(performance.now() - t0);
   if (!loaded.ok) return { ...result, error: loaded.error };
   if (asr.device) result.device = asr.device;
+  result.speechCheck = asr.speechCheck;
 
   const segmenter = new Segmenter({ sampleRate: 16000 });
   const pieces = [];

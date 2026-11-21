@@ -99,6 +99,7 @@ export type { DecodedWav } from "./audio/wav";
 export { repeatPrompts } from "./guard/prompts";
 export type { RepeatPrompt, RepeatPromptKind, FlaggedSegment } from "./guard/prompts";
 export { buildMedicinePrompt, buildWordsPrompt } from "./asr/prompt";
+export { SILERO_CONTEXT, SILERO_FRAME, hasSpeechFrames, sileroInputs } from "./audio/vad";
 export type { PromptOptions } from "./asr/prompt";
 export { matchDrugs, soundKey, soundAlikes } from "./guard/drug-match";
 export type { DrugMatch } from "./guard/drug-match";

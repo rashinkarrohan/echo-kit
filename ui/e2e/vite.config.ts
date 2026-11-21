@@ -19,6 +19,7 @@ export default defineConfig({
             "Cross-Origin-Embedder-Policy": "require-corp",
           },
   },
-  optimizeDeps: { exclude: ["@huggingface/transformers"] },
+  // The ONNX runtime loads its own wasm files; pre-bundling breaks their paths.
+  optimizeDeps: { exclude: ["@huggingface/transformers", "onnxruntime-web"] },
   worker: { format: "es" },
 });
