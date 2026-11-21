@@ -29,9 +29,18 @@ export const SCHEMAS: Record<Stage, ConversationSchema> = {
  * "care-01" is the doctor visit care-01 followed by the pharmacy visit care-02.
  * "misheard" is care-11, where the speech engine misheard two medicine names.
  */
+/** Actor recordings (public/samples) cut by each consult's segment times. */
+const voiced = (consult: ScriptedConsult, file: string): ScriptedConsult => ({
+  ...consult,
+  audioUrl: `${import.meta.env.BASE_URL}samples/${file}`,
+});
+const doctorVisit = voiced(care01, "care-01.mp3");
+const pharmacyVisit = voiced(care02, "care-02.mp3");
+
+/** care-11 is text only: it simulates what a speech engine misheard, so it has no recording. */
 export const SAMPLES: Record<string, Record<Stage, ScriptedConsult>> = {
-  "care-01": { doctor: care01, pharmacy: care02 },
-  misheard: { doctor: care11, pharmacy: care02 },
+  "care-01": { doctor: doctorVisit, pharmacy: pharmacyVisit },
+  misheard: { doctor: care11, pharmacy: pharmacyVisit },
 };
 
 export interface Launch {

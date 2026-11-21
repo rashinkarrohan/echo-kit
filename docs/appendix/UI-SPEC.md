@@ -37,7 +37,7 @@ Kiro builds each screen exactly as written. Where copy is given it is final; Kir
 9. `/trust`: as in Care.
 
 ## Sample consult mode (both apps)
-A prominent "Play sample consult" button on the home screen runs a bundled scripted consult with its audio and pre-made segments: captions appear on schedule, the receipt (or comparison) builds, anchor chips play the bundled audio. No model download, no microphone, works offline after first load.
+A prominent "Play sample consult" button on the home screen runs a bundled scripted consult with its audio and pre-made segments: captions appear on schedule, the receipt (or comparison) builds, anchor chips play the bundled audio. No model download, no microphone, works offline after first load. The audio is an actor reading docs/RECORDING-SCRIPT.md word for word, split at the pauses into the consult's segments (`apps/*/public/samples/*.mp3`). A sample with no recording (the misheard-names test sample) shows "Audio not kept" instead of audio buttons.
 
 ## Definition of done per app
 - Every screen above exists with its states; axe reports zero serious or critical issues; keyboard-only completes the main flow; 200% zoom has no horizontal scroll; reduced motion removes animation.

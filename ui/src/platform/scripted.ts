@@ -1,7 +1,8 @@
 /**
  * Scripted consults (actors only) fed into a session as if they were being recorded.
  * Used by the sample mode and by browser tests. No microphone, no speech model.
- * Audio is silent here; the sample-consult mode with recorded audio is Step 23.
+ * With an actor recording, each segment is cut from it, so "Hear it" plays the actor's
+ * voice; without one, segments are silent and the apps show that audio is not available.
  */
 
 import type { AudioSegment } from "@echo/engine";
@@ -10,18 +11,25 @@ export interface ScriptedConsult {
   id: string;
   /** Echo Cover: the seller in a scripted sale */
   seller?: string;
+  /** Actor recording of the whole consult, cut by the segment times (Step 23) */
+  audioUrl?: string;
   segments: Array<{ id: string; startMs: number; endMs: number; text: string }>;
 }
 
-export function scriptedAudio(consult: ScriptedConsult, sampleRate = 16000): AudioSegment[] {
-  return consult.segments.map((s, index) => ({
-    id: s.id,
-    index,
-    startMs: s.startMs,
-    endMs: s.endMs,
-    samples: new Float32Array(Math.round(((s.endMs - s.startMs) / 1000) * sampleRate)),
-    hasSpeech: true,
-  }));
+export function scriptedAudio(
+  consult: ScriptedConsult,
+  sampleRate = 16000,
+  recording?: Float32Array,
+): AudioSegment[] {
+  return consult.segments.map((s, index) => {
+    const length = Math.round(((s.endMs - s.startMs) / 1000) * sampleRate);
+    const samples = new Float32Array(length);
+    if (recording) {
+      const from = Math.round((s.startMs / 1000) * sampleRate);
+      samples.set(recording.subarray(from, Math.min(from + length, recording.length)));
+    }
+    return { id: s.id, index, startMs: s.startMs, endMs: s.endMs, samples, hasSpeech: true };
+  });
 }
 
 export function scriptedLines(consult: ScriptedConsult): string[] {

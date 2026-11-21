@@ -17,6 +17,8 @@ export default defineConfig({
       workbox: {
         // The speech runtime (about 27 MB) is cached on first use, not at install.
         globIgnores: ["**/*.wasm"],
+        // The sample sales' actor recordings (about 350 KB) work offline after first load.
+        globPatterns: ["**/*.{js,css,html,mp3}"],
         runtimeCaching: [{ urlPattern: /\.wasm$/, handler: "CacheFirst", options: { cacheName: "echo-speech-runtime" } }],
       },
       manifest: {

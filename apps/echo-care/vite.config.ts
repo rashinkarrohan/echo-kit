@@ -18,6 +18,8 @@ export default defineConfig({
         // The speech runtime (about 27 MB) is cached on first use, not at install,
         // so opening the app or the sample consult never downloads it.
         globIgnores: ["**/*.wasm"],
+        // The sample consult's actor recordings (about 330 KB) work offline after first load.
+        globPatterns: ["**/*.{js,css,html,mp3}"],
         runtimeCaching: [
           {
             urlPattern: /\.wasm$/,

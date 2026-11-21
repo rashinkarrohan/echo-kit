@@ -253,7 +253,7 @@ export function App(): ReactElement {
         sale.receipt.checklist.some((item) => item.anchor === anchor),
     );
 
-  const canPlay = (anchor: Anchor): boolean => saleForAnchor(anchor)?.controller !== undefined;
+  const canPlay = (anchor: Anchor): boolean => saleForAnchor(anchor)?.controller?.hasAudio === true;
 
   const play = (anchor: Anchor, rate: number, sale?: Sale): void => {
     const owner = sale ?? saleForAnchor(anchor);
@@ -546,13 +546,17 @@ export function App(): ReactElement {
             title={FINAL.questionsBeforeYouBuy}
             showSources
             notes={notes}
-            {...(sale.controller ? { onPlay: (a: Anchor, r: number) => play(a, r, sale) } : {})}
+            {...(sale.controller?.hasAudio
+              ? { onPlay: (a: Anchor, r: number) => play(a, r, sale) }
+              : {})}
           />
           <ReceiptList
             facts={sale.receipt.facts}
             fieldsByKey={fieldOrder}
             title={COVER.saidTitle(sale.seller)}
-            {...(sale.controller ? { onPlay: (a: Anchor, r: number) => play(a, r, sale) } : {})}
+            {...(sale.controller?.hasAudio
+              ? { onPlay: (a: Anchor, r: number) => play(a, r, sale) }
+              : {})}
           />
           <div className="echo-actions cover-review-actions">
             {sales.length >= 2 ? (

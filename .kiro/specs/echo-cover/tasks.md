@@ -8,5 +8,6 @@
   - _Requirements: 7_
 - [x] 23. Sample consult and trust page (S23, Cover part)
   - sample mode (`?sample=...&demo=1`, "Play sample consult" link): in memory, no microphone, no model, works offline (tested); `/trust` reads evals/results.json at build time
-  - [ ] sample audio is silent: needs consults recorded by consenting actors with signed releases
+  - [x] actor recordings of cover-01, cover-04 and cover-02 (docs/RECORDING-SCRIPT.md) split into the script's segments; `public/samples/*.mp3`, cached offline; Hear it plays them (tested: speech in every segment, `ui/e2e/tests/sample-audio.spec.ts`)
+  - [ ] signed release recorded in docs/RELEASES.md, then commit the recordings (they are gitignored until then)
   - _Requirements: 4_

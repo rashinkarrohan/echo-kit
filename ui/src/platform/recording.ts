@@ -21,6 +21,8 @@ import { startCapture } from "./capture";
 import type { CaptureDeps, CaptureHandle } from "./capture";
 import { playScript, scriptedAudio, scriptedLines } from "./scripted";
 import type { ScriptPlayback, ScriptedConsult } from "./scripted";
+import { loadSampleAudio } from "./sample-audio";
+import type { LoadAudio } from "./sample-audio";
 import { createWhisperAdapter } from "./whisper";
 
 export type RecordingStatus =
@@ -40,7 +42,13 @@ export type RecordingSource =
       createAsr?: () => AsrAdapter & { load?: () => Promise<Result<void>> };
       captureDeps?: CaptureDeps;
     }
-  | { kind: "scripted"; consult: ScriptedConsult; speed?: number };
+  | {
+      kind: "scripted";
+      consult: ScriptedConsult;
+      speed?: number;
+      /** Loads `consult.audioUrl`; defaults to fetching and decoding the bundled file */
+      loadAudio?: LoadAudio;
+    };
 
 export interface RecordingOptions {
   sessionId: string;
@@ -67,9 +75,18 @@ export class RecordingController {
   private script: ScriptPlayback | undefined;
   private paused = false;
   private pending: Array<Promise<unknown>> = [];
+  private audioAvailable = false;
 
   get state(): RecordingSnapshot {
     return this.snapshot;
+  }
+
+  /**
+   * True when "Hear it" can play real audio: a live recording, or a sample whose actor
+   * recording loaded. False for silent text-only samples, so no dead buttons are shown.
+   */
+  get hasAudio(): boolean {
+    return this.audioAvailable;
   }
 
   subscribe(listener: () => void): () => void {
@@ -122,8 +139,18 @@ export class RecordingController {
     };
 
     if (source.kind === "scripted") {
+      let recording: Float32Array | undefined;
+      if (source.consult.audioUrl) {
+        const loaded = await (source.loadAudio ?? loadSampleAudio)(source.consult.audioUrl);
+        // Without the file the sample still runs; the apps then say audio is not available.
+        if (loaded.ok) recording = loaded.value;
+      }
+      if (this.session !== session) return; // discarded while loading
+      this.audioAvailable = recording !== undefined;
       this.set({ status: "recording" });
-      this.script = playScript(scriptedAudio(source.consult), add, { speed: source.speed ?? 1 });
+      this.script = playScript(scriptedAudio(source.consult, 16000, recording), add, {
+        speed: source.speed ?? 1,
+      });
       return;
     }
 
@@ -138,6 +165,7 @@ export class RecordingController {
       return;
     }
     this.capture = captured.value;
+    this.audioAvailable = true;
     if (asr.load) {
       this.set({ status: "loading-model" });
       const loaded = await asr.load();
@@ -194,6 +222,7 @@ export class RecordingController {
     this.session = undefined;
     this.pending = [];
     this.paused = false;
+    this.audioAvailable = false;
     this.snapshot = { status: "idle", lines: [], prompts: [] };
     for (const listener of [...this.listeners]) listener();
   }

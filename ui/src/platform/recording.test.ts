@@ -96,6 +96,54 @@ describe("RecordingController (scripted)", () => {
     expect(await store.getReceipt("discarded")).toEqual({ ok: true, value: undefined });
   });
 
+  it("plays the actor recording for a scripted consult that has one", async () => {
+    const recording = new Float32Array(9 * 16000).fill(0.25);
+    const c = new RecordingController();
+    await c.start({
+      sessionId: "voiced",
+      schema,
+      ledger: consented(),
+      source: {
+        kind: "scripted",
+        consult: { ...consult, audioUrl: "samples/test.wav" },
+        speed: 1000,
+        loadAudio: (url) => {
+          expect(url).toBe("samples/test.wav");
+          return Promise.resolve({ ok: true, value: recording });
+        },
+      },
+    });
+    await new Promise((r) => setTimeout(r, 30));
+    await c.stop();
+    expect(c.hasAudio).toBe(true);
+    expect(c.audioFor(["seg-0002"])[0][0]).toBe(0.25);
+  });
+
+  it("has no audio to offer when the recording cannot be loaded, or there is none", async () => {
+    const failed = new RecordingController();
+    await failed.start({
+      sessionId: "no-file",
+      schema,
+      ledger: consented(),
+      source: {
+        kind: "scripted",
+        consult: { ...consult, audioUrl: "samples/missing.wav" },
+        speed: 1000,
+        loadAudio: () => Promise.resolve({ ok: false, error: "404" }),
+      },
+    });
+    expect(failed.hasAudio).toBe(false);
+
+    const textOnly = new RecordingController();
+    await textOnly.start({
+      sessionId: "text-only",
+      schema,
+      ledger: consented(),
+      source: { kind: "scripted", consult, speed: 1000 },
+    });
+    expect(textOnly.hasAudio).toBe(false);
+  });
+
   it("pause stops new segments until resumed", async () => {
     const c = new RecordingController();
     await c.start({

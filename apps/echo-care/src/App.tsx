@@ -467,12 +467,12 @@ export function App(): ReactElement {
           <ReceiptList
             facts={receipt.facts}
             fieldsByKey={fieldsFor(current.stage)}
-            {...(current.controller ? { onPlay: play } : {})}
+            {...(current.controller?.hasAudio ? { onPlay: play } : {})}
             noteFor={medicineNote}
           />
           <ChecklistView
             results={receipt.checklist}
-            {...(current.controller ? { onPlay: play } : {})}
+            {...(current.controller?.hasAudio ? { onPlay: play } : {})}
           />
           {receipt.nextSteps.length > 0 && (
             <ul className="care-next">
@@ -590,7 +590,7 @@ export function App(): ReactElement {
               {playingLine}
               <LabelFlagList
                 flags={labelFlags}
-                {...(current?.controller ? { onPlay: play } : {})}
+                {...(visits.some((v) => v.controller?.hasAudio) ? { onPlay: play } : {})}
               />
               <div className="echo-actions">
                 <button

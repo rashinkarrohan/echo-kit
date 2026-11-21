@@ -26,7 +26,17 @@ export const COMPARE_FIELDS = ["price", "inclusions", "trial_returns", "financin
  * Scripted sales (actors, fictional prices) used in order for each seller recorded:
  * ?sample=sales. Seller 1 hears cover-01, seller 2 cover-04, seller 3 cover-02.
  */
-export const SAMPLES: Record<string, ScriptedConsult[]> = { sales: [cover01, cover04, cover02] };
+const voiced = (consult: ScriptedConsult, file: string): ScriptedConsult => ({
+  ...consult,
+  audioUrl: `${import.meta.env.BASE_URL}samples/${file}`,
+});
+export const SAMPLES: Record<string, ScriptedConsult[]> = {
+  sales: [
+    voiced(cover01, "cover-01.mp3"),
+    voiced(cover04, "cover-04.mp3"),
+    voiced(cover02, "cover-02.mp3"),
+  ],
+};
 
 export interface Launch {
   samples?: ScriptedConsult[];

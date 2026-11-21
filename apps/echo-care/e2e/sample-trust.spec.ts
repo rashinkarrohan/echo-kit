@@ -70,6 +70,10 @@ test("sample consult works offline after the first load, without a microphone or
   await page.getByRole("button", { name: "Stop and review" }).click();
   await page.getByRole("button", { name: "See the receipt" }).click();
   await expect(page.locator(".echo-receipt-line")).toHaveCount(3);
+  // The actor recording is cached: Hear it is offered and plays, even offline.
+  const medicine = page.locator(".echo-receipt-line").first();
+  await medicine.getByRole("button", { name: /^Hear it/ }).click();
+  await expect(page.locator(".care-playing")).toHaveText(/^Playing \d+:\d\d to \d+:\d\d$/);
   await context.setOffline(false);
 
   // No speech model or runtime was fetched, and the microphone was never asked for.

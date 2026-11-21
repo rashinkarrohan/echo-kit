@@ -4,11 +4,11 @@
   "schemaId": "pharmacy-counter",
   "note": "Scripted by actors. No real person or data.",
   "segments": [
-    {"id": "seg-0001", "startMs": 0, "endMs": 5500, "text": "Here is your metformin, five hundred milligram tablets."},
-    {"id": "seg-0002", "startMs": 5500, "endMs": 12500, "text": "Take one tablet in the morning and one tablet in the evening, with food."},
-    {"id": "seg-0003", "startMs": 12500, "endMs": 20000, "text": "Common side effects can include an upset stomach or feeling sick, so taking it with food helps."},
-    {"id": "seg-0004", "startMs": 20000, "endMs": 27500, "text": "If you miss a dose, take it when you remember, but do not take two together."},
-    {"id": "seg-0005", "startMs": 27500, "endMs": 32500, "text": "Keep the tablets in a cool dry place."}
+    {"id": "seg-0001", "startMs": 0, "endMs": 4080, "text": "Here is your metformin, five hundred milligram tablets."},
+    {"id": "seg-0002", "startMs": 4080, "endMs": 8600, "text": "Take one tablet in the morning and one tablet in the evening, with food."},
+    {"id": "seg-0003", "startMs": 8600, "endMs": 15360, "text": "Common side effects can include an upset stomach or feeling sick, so taking it with food helps."},
+    {"id": "seg-0004", "startMs": 15360, "endMs": 21020, "text": "If you miss a dose, take it when you remember, but do not take two together."},
+    {"id": "seg-0005", "startMs": 21020, "endMs": 24060, "text": "Keep the tablets in a cool dry place."}
   ],
   "planted": [
     {"key": "medicine", "fields": {"name": "metformin", "strength": "500 milligram", "how_to_take": "one tablet in the morning and one tablet in the evening, with food"}, "quote": "metformin, five hundred milligram tablets. Take one tablet in the morning and one tablet in the evening, with food"},

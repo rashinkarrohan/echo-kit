@@ -22,6 +22,14 @@ describe("scripted consults", () => {
     expect(scriptedLines(consult)).toEqual(["one", "two"]);
   });
 
+  it("cuts each segment from the actor recording when one is given", () => {
+    const recording = new Float32Array(9 * 16000).map((_, i) => ((i % 100) + 1) / 100);
+    const audio = scriptedAudio(consult, 16000, recording);
+    expect(audio.map((a) => a.samples.length)).toEqual([64000, 80000]);
+    expect(audio[1].samples[0]).toBe(recording[64000]);
+    expect(audio[1].samples.buffer).not.toBe(recording.buffer);
+  });
+
   it("sends each segment when it ends, scaled by speed, and can pause", async () => {
     vi.useFakeTimers();
     const sent: string[] = [];

@@ -5,10 +5,10 @@
   "seller": "Seller B",
   "note": "Scripted by actors. Fictional prices. No real business.",
   "segments": [
-    {"id": "seg-0001", "startMs": 0, "endMs": 6500, "text": "Our model is four thousand two hundred dollars for the pair."},
-    {"id": "seg-0002", "startMs": 6500, "endMs": 12000, "text": "That includes the fitting session only."},
-    {"id": "seg-0003", "startMs": 12000, "endMs": 18500, "text": "You get a sixty day trial and you can return them within that time."},
-    {"id": "seg-0004", "startMs": 18500, "endMs": 25500, "text": "Our staff do earn a commission on every sale, which is normal in this business."}
+    {"id": "seg-0001", "startMs": 0, "endMs": 4320, "text": "Our model is four thousand two hundred dollars for the pair."},
+    {"id": "seg-0002", "startMs": 4320, "endMs": 7700, "text": "That includes the fitting session only."},
+    {"id": "seg-0003", "startMs": 7700, "endMs": 12320, "text": "You get a sixty day trial and you can return them within that time."},
+    {"id": "seg-0004", "startMs": 12320, "endMs": 17220, "text": "Our staff do earn a commission on every sale, which is normal in this business."}
   ],
   "planted": [
     {"key": "price", "fields": {"amount": "4200 dollars", "per": "pair"}, "quote": "four thousand two hundred dollars for the pair"},

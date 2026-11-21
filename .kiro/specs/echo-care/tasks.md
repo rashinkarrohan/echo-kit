@@ -6,7 +6,7 @@
   - _Requirements: 2, 4, 8_
 - [x] 19. Doctor stage (S19)
   - consent, doctor card, record with live captions, Please repeat, read-back, receipt
-  - hash routes (#/consent ...) for static hosting; `?sample=care-01` runs a scripted consult (silent audio until S23); `apps/echo-care/e2e/doctor-visit.spec.ts` (`pnpm --filter echo-care e2e`)
+  - hash routes (#/consent ...) for static hosting; `?sample=care-01` runs a scripted consult with the actor recording (S23); `apps/echo-care/e2e/doctor-visit.spec.ts` (`pnpm --filter echo-care e2e`)
   - _Requirements: 1, 2, 3, 4, 8_
 - [x] 20. Pharmacy stage and label check (S20)
   - manual entry with an optional photo (never stored); OCR not spiked (docs/SPIKES.md); `apps/echo-care/e2e/pharmacy-label.spec.ts`
@@ -16,5 +16,6 @@
   - _Requirements: 6_
 - [x] 23. Sample consult and trust page (S23, Care part)
   - sample mode (`?sample=...&demo=1`, "Play sample consult" link): in memory, no microphone, no model, works offline (tested); `/trust` reads evals/results.json at build time
-  - [ ] sample audio is silent: needs consults recorded by consenting actors with signed releases
+  - [x] actor recordings of care-01 and care-02 (docs/RECORDING-SCRIPT.md) split into the script's segments; `public/samples/*.mp3`, cached offline; Hear it plays them (tested: speech in every segment, `ui/e2e/tests/sample-audio.spec.ts`)
+  - [ ] signed release recorded in docs/RELEASES.md, then commit the recordings (they are gitignored until then)
   - _Requirements: 7_

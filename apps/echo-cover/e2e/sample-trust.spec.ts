@@ -56,6 +56,12 @@ test("sample sales work offline after the first load, without a microphone or mo
   await page.getByRole("button", { name: "Stop and review" }).click();
   await page.getByRole("button", { name: "Compare sellers" }).click();
   await expect(page.getByRole("columnheader")).toHaveText(["Seller A", "Seller D"]);
+  // The actor recordings are cached: Hear it is offered and plays, even offline.
+  await page
+    .getByRole("button", { name: /^Hear it/ })
+    .first()
+    .click();
+  await expect(page.locator(".cover-playing")).toHaveText(/^Playing \d+:\d\d to \d+:\d\d$/);
   await context.setOffline(false);
 
   expect(requests.filter((u) => /huggingface|\.onnx|\.wasm|asr-worker/.test(u))).toEqual([]);
