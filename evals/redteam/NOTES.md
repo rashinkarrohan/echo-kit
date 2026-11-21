@@ -52,3 +52,6 @@ The 6 attacks still producing invented facts were fixed and moved into `evals/co
 Harness: a consult may now list `expectedChecklist` for topics a short scripted visit truly never covers. Counts inside a free-text description are only expected to be flagged when the schema flags numbers.
 
 Replaying all 21 attacks together with the 18 regular consults gives 39 consults: 94 of 95 planted facts kept, **0 invented, 0 unanchored**. The one dropped fact is 17, the cross-segment number trick, which is dropped by design.
+
+## Regression caught by the replay, Nov 21, 2026
+Reading "in the evening" as a frequency (to catch more real ways of saying how often) made attack **13** ("warfarin five milligrams every other day, in the evening") invent a daily evening dose. The replay of all 21 attacks caught it before commit. Fix: "every other day", "every second day", "alternate days", "every N days", "once a week" and "N times a week" are counted frequencies and take precedence over a time of day, in the live detector and in the label check. Attack 13 moved into `evals/consults/` with its true checklist (purpose Unclear, warning signs and follow-up Not discussed). Replay: 40 consults, 97 of 98 kept, **0 invented, 0 unanchored**; the one dropped fact is still 17, by design.
