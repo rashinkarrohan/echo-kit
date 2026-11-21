@@ -1,0 +1,21 @@
+{
+  "id": "care-12",
+  "app": "echo-care",
+  "schemaId": "pharmacy-counter",
+  "note": "Scripted by actors. No real person or data. UK chemist counter; strength and dosing said as words in separate segments; the listener asks for a repeat; things to avoid never mentioned.",
+  "segments": [
+    {"id": "seg-0001", "startMs": 0, "endMs": 6000, "text": "Right, this is the nitrofurantoin your GP sent over, fifty milligram capsules."},
+    {"id": "seg-0002", "startMs": 6000, "endMs": 12500, "text": "Take one capsule every six hours, with food, for three days."},
+    {"id": "seg-0003", "startMs": 12500, "endMs": 16000, "text": "Sorry, was that every six hours?"},
+    {"id": "seg-0004", "startMs": 16000, "endMs": 19500, "text": "Yes, that's right, every six hours."},
+    {"id": "seg-0005", "startMs": 19500, "endMs": 26500, "text": "Side effects can include feeling sick or a headache, and your wee may look darker."},
+    {"id": "seg-0006", "startMs": 26500, "endMs": 33500, "text": "If you forget to take a capsule, take it when you remember, unless it's nearly time for the next one."},
+    {"id": "seg-0007", "startMs": 33500, "endMs": 39500, "text": "Keep them in the box at room temperature, out of the reach of children."}
+  ],
+  "planted": [
+    {"key": "medicine", "fields": {"name": "nitrofurantoin", "strength": "50 milligram", "how_to_take": "one capsule every six hours, with food, for three days"}, "quote": "nitrofurantoin your GP sent over, fifty milligram capsules. Take one capsule every six hours, with food, for three days"},
+    {"key": "side_effects", "fields": {"description": "feeling sick or a headache, and wee may look darker"}, "quote": "Side effects can include feeling sick or a headache, and your wee may look darker"},
+    {"key": "missed_dose", "fields": {"description": "take it when you remember, unless it is nearly time for the next one"}, "quote": "If you forget to take a capsule, take it when you remember, unless it's nearly time for the next one"}
+  ],
+  "plantedGapItemIds": ["q-avoid"]
+}

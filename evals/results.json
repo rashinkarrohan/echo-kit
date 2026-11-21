@@ -1,17 +1,17 @@
 {
-  "date": "2026-11-21T14:24:39.722Z",
-  "runs": 48,
+  "date": "2026-11-21T15:06:27.134Z",
+  "runs": 49,
   "extractor": "rules",
   "passed": true,
   "totals": {
-    "consults": 25,
-    "plantedFacts": 79,
-    "kept": 79,
+    "consults": 26,
+    "plantedFacts": 82,
+    "kept": 82,
     "dropped": 0,
     "invented": 0,
     "unanchored": 0,
     "rejectedByValidator": 0,
-    "fieldRecall": 0.9928571428571429,
+    "fieldRecall": 0.993103448275862,
     "flaggedTokenRecall": 1,
     "checklistAccuracy": 1,
     "labelChecks": 7,
@@ -592,6 +592,55 @@
           },
           {
             "id": "q-follow-up",
+            "expected": "Answered",
+            "actual": "Answered"
+          }
+        ]
+      }
+    },
+    {
+      "id": "care-12",
+      "schemaId": "pharmacy-counter",
+      "failures": [],
+      "planted": 3,
+      "kept": 3,
+      "dropped": 0,
+      "invented": 0,
+      "unanchored": 0,
+      "rejectedByValidator": 0,
+      "fieldsPlanted": 5,
+      "fieldsKept": 5,
+      "tokensExpected": 6,
+      "tokensFound": 6,
+      "checklistTotal": 5,
+      "checklistCorrect": 5,
+      "details": {
+        "droppedFacts": [],
+        "inventedFacts": [],
+        "missedTokens": [],
+        "checklist": [
+          {
+            "id": "q-how-when",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-side-effects",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-missed-dose",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-avoid",
+            "expected": "Not discussed",
+            "actual": "Not discussed"
+          },
+          {
+            "id": "q-storage",
             "expected": "Answered",
             "actual": "Answered"
           }

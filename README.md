@@ -40,7 +40,7 @@ Live recording uses an on-device Whisper model (whisper-base.en by default, abou
 7. **Stamps.** A fact is **Heard clearly** only when every value is in its quote and its medicine name is an exact, unambiguous match. Otherwise it is **Check this**. A checklist question nobody raised is **Not discussed**.
 
 ## How well it does (scripted tests)
-`pnpm evals` runs the whole pipeline on 25 scripted conversations (fictional, read by actors), including the attacks our red-team agent wrote to make Echo invent facts. Latest run: **79 of 79 planted facts kept, 0 made up, 0 without a quote**, and every number and medicine name flagged. The **Test results** page in each app shows the same numbers. These are scripted conversations, not real visits; real speech is harder, and the drug-name bench in docs/SPIKES.md shows where speech recognition still mishears names.
+`pnpm evals` runs the whole pipeline on 26 scripted conversations (fictional, read by actors), including the attacks our red-team agent wrote to make Echo invent facts. Latest run: **82 of 82 planted facts kept, 0 made up, 0 without a quote**, and every number and medicine name flagged. The **Test results** page in each app shows the same numbers. These are scripted conversations, not real visits; real speech is harder, and the drug-name bench in docs/SPIKES.md shows where speech recognition still mishears names.
 
 ## What it does not do
 - It gives no medical, legal or financial advice and calculates no doses. It says what was said: "said", "sounds like", "check this".
