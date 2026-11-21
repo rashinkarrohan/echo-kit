@@ -19,7 +19,7 @@
 - `ui/e2e/spike/`: the spike page (also used on the phone). `ui/e2e/tests/asr.spec.ts`: the Playwright Verify.
 - `evals/src/spike-asr.ts` (`pnpm --filter @echo/evals spike:asr [wav] [model] [dtype]`): the same measurement in Node.
 
-**Test clip.** `ui/e2e/fixtures/sample-10s.wav`: 12.8 s, 16 kHz mono, read by Rohan Rashinkar (project owner) from the script "Take metformin, five hundred milligrams, twice daily after food. Come back and see me in three months." Recorded Nov 13, 2026 with Voice Memos, converted with `afconvert`. The WAV has no metadata chunks (checked: only `fmt `, `FLLR`, `data`). The original `.m4a` is kept only in `private/` (gitignored). **A written release for this recording is still needed** (see the end of this file).
+**Test clip.** `ui/e2e/fixtures/sample-10s.wav`: 12.8 s, 16 kHz mono, read by Rohan Rashinkar (project owner) from the script "Take metformin, five hundred milligrams, twice daily after food. Come back and see me in three months." Recorded Nov 13, 2026 with Voice Memos, converted with `afconvert`. The WAV has no metadata chunks (checked: only `fmt `, `FLLR`, `data`). The original `.m4a` is kept only in `private/` (gitignored). Written release signed Nov 21, 2026 (docs/RELEASES.md).
 
 ### Measurements, Nov 13, 2026
 
@@ -52,7 +52,7 @@ WebGPU was not measured: headless Chromium reported no GPU adapter, so the worke
 **Still to do before this spike is closed.**
 1. Run the spike page on the reference phone and fill in the table: `pnpm --filter @echo/ui spike:asr` (serves on the Wi-Fi network), open the printed Network URL plus `/spike/` on the phone, wait for "Done", and copy the JSON. Phones block workers and cross-origin isolation on plain `http://` from another device, so the phone run may need an HTTPS tunnel or a deployed preview; to be confirmed when tried.
 2. Decide tiny.en vs base.en from the phone numbers.
-3. Record the written release for the test clip in `docs/RELEASES.md`.
+3. ~~Record the written release for the test clip in `docs/RELEASES.md`.~~ Done Nov 21, 2026.
 
 ## S16 medicine-name accuracy, Nov 13, 2026
 Live test by the owner showed a spoken medicine name captured as "Glory Fiend", "Glorofing", "Global", and "a medicine" wrongly flagged as amlodipine. Work done:

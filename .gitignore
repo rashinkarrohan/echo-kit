@@ -22,10 +22,6 @@ Thumbs.db
 
 # Private (never commit)
 private/
-# Actor recordings for the sample consults: committed only once every speaker's written
-# release is recorded in docs/RELEASES.md (Step 23). Without them the samples still run
-# and say "Audio not kept" instead of showing audio buttons.
-apps/*/public/samples/*.mp3
 
 # Playwright
 test-results/
