@@ -18,7 +18,7 @@ export default defineConfig({
         // The speech runtime (about 27 MB) is cached on first use, not at install.
         globIgnores: ["**/*.wasm"],
         // The sample sales' actor recordings (about 350 KB) work offline after first load.
-        globPatterns: ["**/*.{js,css,html,mp3}"],
+        globPatterns: ["**/*.{js,css,html,mp3,png,svg}"],
         runtimeCaching: [{ urlPattern: /\.wasm$/, handler: "CacheFirst", options: { cacheName: "echo-speech-runtime" } }],
       },
       manifest: {
@@ -29,6 +29,11 @@ export default defineConfig({
         background_color: "#F3F4F8",
         display: "standalone",
         start_url: "/#/home",
+        icons: [
+          { src: "icons/icon-192.png", sizes: "192x192", type: "image/png" },
+          { src: "icons/icon-512.png", sizes: "512x512", type: "image/png" },
+          { src: "icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+        ],
       },
     }),
   ],

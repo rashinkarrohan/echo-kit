@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Echo Care: a receipt tick on calm green. Full-bleed so it also works as a maskable icon. -->
+  <rect width="512" height="512" fill="#0B6B5D"/>
+  <rect x="136" y="112" width="240" height="288" rx="28" fill="#FFFFFF"/>
+  <path d="M136 368 l30 32 30-32 30 32 30-32 30 32 30-32 30 32 30-32 V400 H136 Z" fill="#0B6B5D"/>
+  <path d="M190 252 l46 46 90-100" fill="none" stroke="#0B6B5D" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

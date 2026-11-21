@@ -19,7 +19,7 @@ export default defineConfig({
         // so opening the app or the sample consult never downloads it.
         globIgnores: ["**/*.wasm"],
         // The sample consult's actor recordings (about 330 KB) work offline after first load.
-        globPatterns: ["**/*.{js,css,html,mp3}"],
+        globPatterns: ["**/*.{js,css,html,mp3,png,svg}"],
         runtimeCaching: [
           {
             urlPattern: /\.wasm$/,
@@ -34,6 +34,13 @@ export default defineConfig({
         description: "Doctor visit and pharmacy counter receipt tool",
         theme_color: "#0B6B5D",
         background_color: "#F5F8F7",
+        display: "standalone",
+        start_url: "/#/home",
+        icons: [
+          { src: "icons/icon-192.png", sizes: "192x192", type: "image/png" },
+          { src: "icons/icon-512.png", sizes: "512x512", type: "image/png" },
+          { src: "icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+        ],
       },
     }),
   ],

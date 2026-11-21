@@ -42,6 +42,33 @@ test("/trust shows the latest eval numbers", async ({ page }) => {
   ).toEqual([]);
 });
 
+test("the app can be installed: manifest with standard and maskable icons that load", async ({
+  page,
+  request,
+}) => {
+  await page.goto(`${PREVIEW}/`);
+  const href = await page.locator('link[rel="manifest"]').getAttribute("href");
+  const manifest = (await (await request.get(`${PREVIEW}/${href}`)).json()) as {
+    name: string;
+    start_url: string;
+    display: string;
+    icons: Array<{ src: string; sizes: string; purpose?: string }>;
+  };
+  expect(manifest.name).toBe("Echo Care");
+  expect(manifest.display).toBe("standalone");
+  expect(manifest.icons.map((i) => i.sizes)).toEqual(
+    expect.arrayContaining(["192x192", "512x512"]),
+  );
+  expect(manifest.icons.some((i) => i.purpose === "maskable")).toBe(true);
+  for (const icon of manifest.icons) {
+    const res = await request.get(`${PREVIEW}/${icon.src}`);
+    expect(res.status(), icon.src).toBe(200);
+    expect(res.headers()["content-type"]).toContain("image/png");
+  }
+  const touch = await page.locator('link[rel="apple-touch-icon"]').getAttribute("href");
+  expect((await request.get(`${PREVIEW}/${touch}`)).status()).toBe(200);
+});
+
 test("sample consult works offline after the first load, without a microphone or model", async ({
   page,
   context,
