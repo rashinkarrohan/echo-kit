@@ -10,5 +10,6 @@
   "planted": [
     {"key": "medicine", "fields": {"name": "amlodipine", "dose": "5 milligrams", "frequency": "once a day"}, "quote": "Take amlodipine five milligrams once a day"}
   ],
-  "plantedGapItemIds": ["q-side-effects"]
+  "plantedGapItemIds": ["q-side-effects"],
+  "expectedChecklist": {"q-warning-signs": "Not discussed", "q-follow-up": "Not discussed"}
 }

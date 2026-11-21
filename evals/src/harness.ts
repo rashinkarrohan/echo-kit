@@ -47,6 +47,11 @@ export interface Consult {
   segments: Array<{ id: string; startMs: number; endMs: number; text: string }>;
   planted: PlantedFact[];
   plantedGapItemIds: string[];
+  /**
+   * Checklist results that are not "Answered", beyond the one planted gap. Short red-team
+   * consults cover only part of a visit, so other topics are truly not discussed.
+   */
+  expectedChecklist?: Record<string, Stamp>;
   label?: LabelFields;
   expectedLabelFlags?: string[];
   comparisonWith?: string;
@@ -170,6 +175,10 @@ export function checkConsult(consult: Consult, schema: ConversationSchema): stri
 
   if (consult.plantedGapItemIds.length !== 1)
     problems.push("there must be exactly one planted gap");
+  for (const id of Object.keys(consult.expectedChecklist ?? {})) {
+    if (!schema.checklist.some((c) => c.id === id))
+      problems.push(`expected checklist item ${id} is not in the checklist`);
+  }
   for (const id of consult.plantedGapItemIds) {
     if (!schema.checklist.some((c) => c.id === id))
       problems.push(`planted gap ${id} is not in the checklist`);
@@ -222,23 +231,28 @@ export function runConsult(
     fieldsKept += best;
   }
 
-  // Flagged-token recall: numbers and drug names in planted values must be flagged.
+  // Flagged-token recall: numbers and drug names in planted values must be flagged. A count
+  // inside a free-text description ("two follow up visits") is only expected when the
+  // schema flags numbers at all; Echo Cover flags money, percentages and durations instead.
+  const flagsNumbers = schema.detectors.includes("number");
   const flagged = segments
     .flatMap((s) => flagSegment(s, schema))
     .map((t) => normaliseText(t.value));
   const expectedTokens = consult.planted.flatMap((p) =>
     Object.entries(p.fields).flatMap(([field, value]) => {
       const n = normaliseText(value);
-      return field === "name" ? [n, ...numbersIn(n)] : numbersIn(n);
+      if (field === "name") return [n, ...numbersIn(n)];
+      if (!flagsNumbers && (field === "description" || field === "statement")) return [];
+      return numbersIn(n);
     }),
   );
   const missedTokens = expectedTokens.filter((t) => !flagged.some((f) => containsPhrase(f, t)));
 
   const checklist = gap.map((g) => ({
     id: g.item.id,
-    expected: (consult.plantedGapItemIds.includes(g.item.id)
+    expected: consult.plantedGapItemIds.includes(g.item.id)
       ? "Not discussed"
-      : "Answered") as Stamp,
+      : (consult.expectedChecklist?.[g.item.id] ?? "Answered"),
     actual: g.stamp,
   }));
   for (const c of checklist) {

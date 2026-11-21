@@ -84,6 +84,22 @@ function sentencesOf(text: string): string[] {
     .filter((s) => s.length > 0);
 }
 
+/** Sentences with their original ending (`raw`) and without it (`text`). */
+function sentencesWithEnds(text: string): Array<{ raw: string; text: string }> {
+  return text
+    .split(/(?<=[.!?])\s+/)
+    .map((raw) => raw.trim())
+    .filter((raw) => raw.length > 0)
+    .map((raw) => ({ raw, text: raw.replace(/[.!?]+$/, "").trim() }));
+}
+
+/** A question, asked or reported: "Is there a fee?", "People often ask if ...". */
+function isQuestion(s: { raw: string; text: string }): boolean {
+  return (
+    /\?$/.test(s.raw) || /\b(ask|asks|asked|wonder|wondering)\b.*\b(if|whether)\b/i.test(s.text)
+  );
+}
+
 /** Word index in normalised text where `value` (normalised) occurs, searching from word `from`. */
 function wordIndexOf(normWords: string[], value: string, from: number): number {
   const target = words(normaliseText(value));
@@ -165,6 +181,14 @@ export class RulesExtractor implements Extractor {
 
           const fields: Record<string, string> = {};
           fields[firstField(def, kind)] = token.value;
+          // What a price is "per" is said right after it ("1800 dollars for a single aid"),
+          // so look there first; only then before it, never past the next price (red team 18, 19).
+          if (def.fields.includes("per")) {
+            const per =
+              matchPer(norm.slice(at, end).join(" ")) ??
+              matchPer(norm.slice(prevAnchor, at).join(" "));
+            if (per !== undefined) fields["per"] = per;
+          }
           const win: Window = { segmentIdx: [si], fields };
           this.fill(def, win, segment, piece(segment, text), detectors);
           this.extend(def, win, segments, si, windowWords - used, detectors, kind);
@@ -185,10 +209,16 @@ export class RulesExtractor implements Extractor {
 
       for (const field of def.fields) {
         if (!DESCRIPTION_FIELDS.has(field)) continue;
-        const sentence = sentencesOf(segment.text).find((s) =>
-          any.some((alt) => matchesCue(alt, piece(segment, s), enabled)),
+        const sentences = sentencesWithEnds(segment.text);
+        const i = sentences.findIndex((s) =>
+          any.some((alt) => matchesCue(alt, piece(segment, s.text), enabled)),
         );
-        if (sentence) win.fields[field] = sentence;
+        if (i < 0) continue;
+        // A question ("People often ask if we get a commission.") is not what was said
+        // about it; keep the answer that follows in the same segment (red team 20).
+        const next = sentences[i + 1];
+        win.fields[field] =
+          isQuestion(sentences[i]) && next ? `${sentences[i].raw} ${next.text}` : sentences[i].text;
       }
       this.fill(def, win, segment, piece(segment, text), detectors);
       const onlyDescriptions = def.fields.every((f) => DESCRIPTION_FIELDS.has(f));
@@ -405,7 +435,7 @@ export class RulesExtractor implements Extractor {
           )?.value;
           break;
         case "per":
-          value = norm.match(/\b(pair|each|per ear|both ears)\b/)?.[1];
+          value = matchPer(norm);
           break;
         case "period":
         case "term":
@@ -493,6 +523,11 @@ function firstField(def: FactDef, kind: string): string {
   if (kind === "drug" && def.fields.includes("name")) return "name";
   if (kind === "money" && def.fields.includes("amount")) return "amount";
   return def.fields[0];
+}
+
+/** What a price is for: the pair, one aid, or one ear, as said. */
+function matchPer(text: string): string | undefined {
+  return text.match(/\b(pair|per hearing aid|per aid|single aid|each|per ear|both ears)\b/)?.[1];
 }
 
 /** "250 dollars a month": a money token followed by a monthly cue. */

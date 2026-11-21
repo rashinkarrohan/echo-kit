@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { factMatches, valuesAgree } from "./harness";
+import { RulesExtractor } from "@echo/engine";
+import type { ConversationSchema } from "@echo/engine";
+import { factMatches, runConsult, valuesAgree } from "./harness";
+import type { Consult } from "./harness";
 
 describe("valuesAgree (what counts as invented)", () => {
   it("a number that is not in the planted value is never agreement", () => {
@@ -58,5 +61,65 @@ describe("factMatches", () => {
 
   it("a different key never matches", () => {
     expect(factMatches({ key: "follow_up", fields: { name: "metformin" } }, planted)).toBe(false);
+  });
+});
+
+describe("runConsult expectations", () => {
+  const schema = (detectors: string[], key: string, fields: string[]): ConversationSchema => ({
+    id: "s",
+    skin: detectors.includes("drug") ? "care" : "cover",
+    detectors,
+    disclaimer: "d",
+    facts: [{ key, fields, cues: { any: ["includes"] } }],
+    checklist: [
+      { id: "q-a", text: "A?", sourceUrl: "user-planned", cues: { any: ["includes"] } },
+      { id: "q-b", text: "B?", sourceUrl: "user-planned", cues: { any: ["warranty"] } },
+      { id: "q-c", text: "C?", sourceUrl: "user-planned", cues: { any: ["trial"] } },
+    ],
+    nextSteps: [],
+  });
+  const consult = (extra: Partial<Consult> = {}): Consult => ({
+    id: "c",
+    app: "echo-cover",
+    schemaId: "s",
+    segments: [
+      {
+        id: "seg-0001",
+        startMs: 0,
+        endMs: 4000,
+        text: "That includes the fitting and two follow up visits.",
+      },
+    ],
+    planted: [
+      {
+        key: "inclusions",
+        fields: { description: "That includes the fitting and two follow up visits" },
+        quote: "That includes the fitting and two follow up visits",
+      },
+    ],
+    plantedGapItemIds: ["q-c"],
+    ...extra,
+  });
+  const cover = schema(["money", "percent", "duration", "commission"], "inclusions", [
+    "description",
+  ]);
+
+  it("a consult can state that more than its planted gap was not discussed", () => {
+    const naive = runConsult(consult(), cover, new RulesExtractor());
+    expect(naive.checklistCorrect).toBe(2); // q-b is expected Answered, but was not discussed
+    const exact = runConsult(
+      consult({ expectedChecklist: { "q-b": "Not discussed" } }),
+      cover,
+      new RulesExtractor(),
+    );
+    expect(exact.checklistCorrect).toBe(3);
+  });
+
+  it("a count inside a description is only expected flagged when the schema flags numbers", () => {
+    expect(runConsult(consult(), cover, new RulesExtractor()).details.missedTokens).toEqual([]);
+    const withNumbers = schema(["number", "money"], "inclusions", ["description"]);
+    const r = runConsult(consult(), withNumbers, new RulesExtractor());
+    expect(r.tokensExpected).toBe(1);
+    expect(r.details.missedTokens).toEqual([]);
   });
 });

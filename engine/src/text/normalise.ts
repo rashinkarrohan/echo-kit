@@ -231,5 +231,9 @@ export function normaliseText(text: string): string {
     (_, whole: string, frac: string) => `${whole}.${frac.replace(/ /g, "")}`,
   );
 
+  // "one and a half" -> "1.5" (red team 11, 21): only directly after a whole number,
+  // so "an hour and a half" is left alone and no number is ever added to another.
+  result = result.replace(/\b(\d+) and a 0\.5\b/g, (_, whole: string) => `${whole}.5`);
+
   return result.replace(/\s+/g, " ").trim();
 }

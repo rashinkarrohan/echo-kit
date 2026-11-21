@@ -38,6 +38,28 @@ describe("numberDetector", () => {
     expect(tokens[0].value).toBe("15");
   });
 
+  it.each([
+    [
+      "Take paracetamol, between two and three tablets, every six hours.",
+      "between 2 and 3 tablets",
+    ],
+    ["one or two tablets at night", "1 or 2 tablets"],
+    ["ten to twenty milligrams", "10 to 20 milligrams"],
+  ])("keeps a spoken range as one value, never one end of it: %s", (text, range) => {
+    const values = numberDetector.detect(makeSegment(0, 0, 3000, text)).map((t) => t.value);
+    expect(values).toContain(range);
+    // Neither end is flagged on its own as if it were the dose.
+    const ends = range.match(/\d+/g) ?? [];
+    expect(values.filter((v) => v !== range && ends.some((n) => v.startsWith(n)))).toEqual([]);
+  });
+
+  it("does not take numbers joined by 'and' or 'to' without a unit for a range", () => {
+    const values = numberDetector
+      .detect(makeSegment(0, 0, 3000, "come back in 2 to 3 weeks, room 4 or 5"))
+      .map((t) => t.value);
+    expect(values).toEqual(["2", "3", "4", "5"]);
+  });
+
   it("returns empty for text with no numbers", () => {
     const seg = makeSegment(0, 0, 3000, "no numbers here");
     const tokens = numberDetector.detect(seg);

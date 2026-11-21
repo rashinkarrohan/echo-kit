@@ -18,7 +18,8 @@ facts:
   - key: warning_sign
     fields: [description]
     cues:
-      any: ["if you (feel|get|have|notice|start|develop|are|become|see)", "call the (clinic|doctor|surgery)", "emergency", "go to (the )?hospital", "urgent", "straight away"]
+      # "If you have any questions..." and "call the clinic reception" are admin, not warnings (red team 15).
+      any: ["if you (feel|get|have(?! any (other |more )?(questions?|queries))|notice|start|develop|are|become|see)", "call the (clinic|doctor|surgery)(?! reception)", "emergency", "go to (the )?hospital", "urgent", "straight away"]
       windowWords: 25
 checklist:
   - id: q-medicine-purpose
@@ -40,7 +41,7 @@ checklist:
     text: "When should I call or come back sooner?"
     sourceUrl: user-planned
     cues:
-      any: ["if you (feel|get|have|notice|start|develop|are|become|see)", "call the (clinic|doctor|surgery)", "emergency", "straight away"]
+      any: ["if you (feel|get|have(?! any (other |more )?(questions?|queries))|notice|start|develop|are|become|see)", "call the (clinic|doctor|surgery)(?! reception)", "emergency", "straight away"]
   - id: q-follow-up
     text: "When is my next appointment?"
     sourceUrl: user-planned

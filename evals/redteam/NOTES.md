@@ -40,3 +40,15 @@ No attack produced an unanchored fact. Every accepted quote was whole segments, 
 
 ## After the S27 extractor fix (Nov 13, 2026)
 Replaying all 21 attacks: invented facts 15 -> 7. Fixed: 01, 02, 04, 06, 07, 09, 10, 14 (and 03, 05, 08, 11, 13, 17 still hold or drop safely). Still invented: 12 (range), 15 ("if you" parking), 16 ("aspiring"), 18, 19, 20 (seller wording), 21 (one and a half).
+
+## Second fix, Nov 21, 2026: no invented facts left
+The 6 attacks still producing invented facts were fixed and moved into `evals/consults/`, so they run in every `pnpm evals`: 12, 15, 18, 19, 20, 21.
+- **12 (range):** the number detector keeps "between 2 and 3 tablets", "1 or 2 tablets" and "10 to 20 mg" as one value. It needs a unit, so "in 2 to 3 weeks" stays separate. The dose is now the whole range, as said.
+- **11, 21 (one and a half):** `normaliseText` reads "N and a half" as N.5, but only directly after a whole number; "an hour and a half" is unchanged.
+- **15 (parking):** the warning-sign cues ignore "if you have any questions" and "call the clinic reception" (doctor-visit and physio schemas, facts and checklist).
+- **18, 19 (price per):** "per" is looked for right after the amount first, then before it, never past the next price. "per aid" and "single aid" were added.
+- **20 (no commission):** when the cue sentence is a question, or a reported one ("people ask if…"), the statement keeps the answer that follows in the same segment.
+
+Harness: a consult may now list `expectedChecklist` for topics a short scripted visit truly never covers. Counts inside a free-text description are only expected to be flagged when the schema flags numbers.
+
+Replaying all 21 attacks together with the 18 regular consults gives 39 consults: 94 of 95 planted facts kept, **0 invented, 0 unanchored**. The one dropped fact is 17, the cross-segment number trick, which is dropped by design.

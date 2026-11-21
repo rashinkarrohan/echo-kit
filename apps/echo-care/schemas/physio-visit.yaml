@@ -16,7 +16,7 @@ facts:
   - key: warning_sign
     fields: [description]
     cues:
-      any: ["if (it|you|the pain) (gets|get|feel|is|becomes)", "stop and call", "call the (clinic|surgery|practice)", "straight away"]
+      any: ["if (it|you|the pain) (gets|get|feel|is|becomes)", "stop and call", "call the (clinic|surgery|practice)(?! reception)", "straight away"]
       windowWords: 25
 checklist:
   - id: q-exercises
@@ -33,7 +33,7 @@ checklist:
     text: "When should I stop and call you?"
     sourceUrl: user-planned
     cues:
-      any: ["if (it|you|the pain) (gets|get|feel|is|becomes)", "stop and call", "call the (clinic|surgery|practice)"]
+      any: ["if (it|you|the pain) (gets|get|feel|is|becomes)", "stop and call", "call the (clinic|surgery|practice)(?! reception)"]
   - id: q-next
     text: "When is my next appointment?"
     sourceUrl: user-planned

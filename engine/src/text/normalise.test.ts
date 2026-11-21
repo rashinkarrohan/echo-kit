@@ -123,6 +123,16 @@ describe("normaliseText", () => {
     expect(normaliseText("one one")).toBe("1 1");
   });
 
+  it('reads "and a half" after a number as .5 (red team 11, 21)', () => {
+    expect(normaliseText("one and a half tablets")).toBe("1.5 tablets");
+    expect(normaliseText("Take two and a half milligrams")).toBe("take 2.5 milligrams");
+    expect(normaliseText("for one and a half weeks")).toBe("for 1.5 weeks");
+    expect(normaliseText(normaliseText("one and a half tablets"))).toBe("1.5 tablets");
+    // Only directly after a number: other "and a half" phrases are left alone.
+    expect(normaliseText("an hour and a half")).toBe("an hour and a 0.5");
+    expect(normaliseText("one and two")).toBe("1 and 2");
+  });
+
   it('reads spoken decimals ("nine point nine" -> 9.9)', () => {
     expect(normaliseText("nine point nine percent")).toBe("9.9 percent");
     expect(normaliseText("zero point five milligrams")).toBe("0.5 milligrams");

@@ -62,18 +62,34 @@ export const numberDetector: EntityDetector = {
     ];
     const unitPattern = units.join("|");
 
+    // A spoken range with a unit ("between 2 and 3 tablets", "1 or 2 tablets", "10 to 20 mg")
+    // is one value. Taking one end of it would invent a dose (red team 12). Without a unit
+    // ("in 2 to 3 weeks") the numbers stay separate.
+    const num = "\\d+(?:\\.\\d+)?";
+    const range = new RegExp(
+      `\\b(?:between\\s+${num}\\s+and|${num}\\s+(?:to|or))\\s+${num}\\s*(?:${unitPattern})\\b`,
+      "gi",
+    );
+    const found: Array<{ at: number; value: string }> = [];
+    const covered: Array<[number, number]> = [];
+    let match;
+    while ((match = range.exec(normalized)) !== null) {
+      covered.push([match.index, match.index + match[0].length]);
+      found.push({ at: match.index, value: match[0].trim() });
+    }
+
     // Match number with unit or bare number
     const pattern = new RegExp(`\\b(\\d+(?:\\.\\d+)?)\\s*(${unitPattern})?\\b`, "gi");
 
-    let match;
     while ((match = pattern.exec(normalized)) !== null) {
-      const value = match[0].trim();
+      const at = match.index;
+      if (covered.some(([a, b]) => at >= a && at < b)) continue;
+      found.push({ at, value: match[0].trim() });
+    }
 
-      tokens.push({
-        kind: "number",
-        value,
-        lowConfidence: hasLowConfidence(segment, value),
-      });
+    // In spoken order, so "the first dose heard" means the same as before ranges existed.
+    for (const { value } of found.sort((a, b) => a.at - b.at)) {
+      tokens.push({ kind: "number", value, lowConfidence: hasLowConfidence(segment, value) });
     }
 
     return tokens;
