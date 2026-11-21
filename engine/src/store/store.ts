@@ -23,6 +23,9 @@ export interface EchoStore {
   deleteSession(id: string): Promise<Result<void>>;
   saveConsentRecords(records: ConsentRecord[]): Promise<Result<void>>;
   getConsentRecords(): Promise<Result<ConsentRecord[]>>;
+  /** The user's own medicines list (Echo Care), as typed; an empty list clears it */
+  saveMedicines(names: string[]): Promise<Result<void>>;
+  getMedicines(): Promise<Result<string[]>>;
 }
 
 const ok = <T>(value: T): Result<T> => ({ ok: true, value });
@@ -37,6 +40,7 @@ export class MemoryStore implements EchoStore {
   private audio = new Map<string, ArrayBuffer[]>();
   private receipts = new Map<string, Receipt>();
   private consent: ConsentRecord[] = [];
+  private medicines: string[] = [];
 
   saveSession(session: StoredSession): Promise<Result<void>> {
     this.sessions.set(session.id, copy(session));
@@ -87,5 +91,14 @@ export class MemoryStore implements EchoStore {
 
   getConsentRecords(): Promise<Result<ConsentRecord[]>> {
     return done(copy(this.consent));
+  }
+
+  saveMedicines(names: string[]): Promise<Result<void>> {
+    this.medicines = [...names];
+    return done(undefined);
+  }
+
+  getMedicines(): Promise<Result<string[]>> {
+    return done([...this.medicines]);
   }
 }

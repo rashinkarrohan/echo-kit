@@ -100,6 +100,8 @@ export const CARE = {
     `Echo heard “${heard}”. It sounds like ${suggestion}, but it may have been misheard.`,
   promptUnknownName: (heard: string) =>
     `Echo heard “${heard}” before a dose. It is not a medicine name Echo knows.`,
+  promptUnclearDose: (heard: string, suggestion: string) =>
+    `Echo heard “${heard}”. It may have been ${suggestion}, but it may have been misheard.`,
   promptAsk: "Tap Please repeat to ask them to say the name and dose again.",
   tryAgain: "Try again",
   consentNeeded: "Echo needs your consent before it can record.",
@@ -112,4 +114,40 @@ export const CARE = {
   playFailed: "This part could not be played.",
   sampleBadge: "Sample consult (actors, no microphone)",
   noReceipt: "There is no receipt yet. Record a visit first.",
+  medicinesStep: "Optional · Stored only on this phone",
+  medicinesTitle: "Your medicines",
+  medicinesIntro:
+    "Type the medicines you take. Echo listens for these names first, so it is more likely to hear them right.",
+  medicinesNoConfirm:
+    "Echo still shows what it heard. Any name it is unsure of is marked Check this.",
+  medicinesPrivacy:
+    "This list stays on this phone. It is not shared and is not put on any receipt.",
+  medicinesLabel: "Medicine name",
+  medicinesHint: "Name only, for example metformin. Leave out the dose.",
+  medicinesAdd: "Add",
+  medicinesListLabel: "Medicines on your list",
+  medicinesRemove: (name: string) => `Remove ${name}`,
+  medicinesRemoveShort: "Remove",
+  medicinesClearConfirm: "Delete the whole list from this phone?",
+  medicinesClearYes: "Delete the list",
+  medicinesEmpty: "No medicines added yet.",
+  medicinesLoading: "Opening your list.",
+  medicinesClear: "Delete the whole list",
+  medicinesCleared: "Your list was deleted from this phone.",
+  medicinesErrors: {
+    empty: "Type a medicine name first.",
+    invalid: "Type the name only, using letters. Leave out the dose.",
+    duplicate: "That medicine is already on the list.",
+    full: "The list is full (20 names). Remove one to add another.",
+  },
+  medicinesSaveFailed: "The list could not be saved on this phone. Nothing was sent anywhere.",
+  medicinesDone: "Done",
+  medicinesLink: "Your medicines",
+  consentMedicinesTitle: "Help Echo hear your medicines (optional)",
+  consentMedicinesText: (count: number) =>
+    count === 0
+      ? "Add the names of medicines you take. They stay on this phone."
+      : `${count} ${count === 1 ? "medicine" : "medicines"} on your list. They stay on this phone.`,
+  consentMedicinesButton: (count: number) =>
+    count === 0 ? "Add your medicines" : "Edit your medicines",
 } as const;

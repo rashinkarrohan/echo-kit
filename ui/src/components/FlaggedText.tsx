@@ -44,7 +44,11 @@ export function FlaggedText({
         if (!part.token) return <span key={i}>{part.text}</span>;
         const t = part.token;
         const note = noteFor(t);
-        const hint = note ? medicineHintText(note) : undefined;
+        const hint = note
+          ? medicineHintText(note)
+          : t.kind === "number" && t.suggestion !== undefined
+            ? ADDED.hintUnclearDose(t.suggestion)
+            : undefined;
         return (
           <span key={i}>
             <mark className="echo-flag" data-kind={t.kind}>

@@ -9,9 +9,11 @@
  * Otherwise it gets check_this.
  */
 
-import type { Fact, Segment, VerifiedFact } from "../types";
+import type { DrugDictionary, Fact, Segment, VerifiedFact } from "../types";
+import { DRUG_DICTIONARY } from "../guard/registry";
 import { normaliseText } from "../text/normalise";
 import { medicineNameNote } from "../guard/name-note";
+import { unclearCounts } from "../guard/care-detectors";
 import { containsPhrase } from "../validate/validate-fact";
 
 export type { VerifiedFact } from "../types";
@@ -55,9 +57,14 @@ function hasLowConfidenceInQuote(quote: string, segment: Segment): boolean {
  *
  * @param facts - Validated facts to verify
  * @param segments - All segments from conversation
+ * @param dictionary - Medicine names, with the user's own list if they gave one
  * @returns Facts with stamps assigned
  */
-export function verifyFacts(facts: Fact[], segments: Segment[]): VerifiedFact[] {
+export function verifyFacts(
+  facts: Fact[],
+  segments: Segment[],
+  dictionary: DrugDictionary = DRUG_DICTIONARY,
+): VerifiedFact[] {
   const verified: VerifiedFact[] = [];
 
   for (const fact of facts) {
@@ -82,11 +89,15 @@ export function verifyFacts(facts: Fact[], segments: Segment[]): VerifiedFact[] 
     if (
       stamp === "heard_clearly" &&
       fact.fields["name"] !== undefined &&
-      medicineNameNote(fact.fields["name"]) !== undefined
+      medicineNameNote(fact.fields["name"], dictionary) !== undefined
     ) {
       stamp = "check_this";
     }
 
+    // Check 2b: a dose heard as "to puffs" may have been 2; the line needs checking
+    if (stamp === "heard_clearly" && unclearCounts(normalizedQuote).length > 0) {
+      stamp = "check_this";
+    }
     // Check 3: No low confidence tokens in the quote
     if (stamp === "heard_clearly") {
       // Check all segments referenced by this fact

@@ -22,6 +22,8 @@ export type WorkerRequest =
       devices: AsrDevice[];
       /** Medicine names for the Whisper prompt, most important first (see asr/prompt.ts) */
       medicines?: string[];
+      /** Plain words for the prompt instead of medicine names (buildWordsPrompt) */
+      words?: string[];
     }
   | { type: "transcribe"; id: number; samples: Float32Array };
 
@@ -46,6 +48,12 @@ export interface WhisperOptions {
    * Empty list turns the prompt off.
    */
   medicines?: string[];
+  /**
+   * Plain words to prompt with instead of medicine names (Echo Cover). On the owner's five
+   * recordings, sales words kept 18 of 18 facts against 15 with the medicine prompt
+   * (docs/SPIKES.md, Nov 21, 2026).
+   */
+  words?: string[];
 }
 
 /** base.en: better medicine names than tiny.en in the S16 bench, about 2x slower (docs/SPIKES.md). */
@@ -69,6 +77,7 @@ export class WhisperAdapter implements AsrAdapter {
   private readonly model: string;
   private readonly devices: AsrDevice[];
   private readonly medicines: string[] | undefined;
+  private readonly words: string[] | undefined;
   private nextId = 1;
   private loading: Promise<Result<void>> | undefined;
   private readonly waiting = new Map<number, (reply: WorkerReply) => void>();
@@ -80,6 +89,7 @@ export class WhisperAdapter implements AsrAdapter {
     this.model = options.model ?? DEFAULT_WHISPER_MODEL;
     this.devices = options.devices ?? ["webgpu", "wasm"];
     this.medicines = options.medicines;
+    this.words = options.words;
     this.id = `whisper:${this.model}`;
     transport.onReply((reply) => {
       const resolve = this.waiting.get(reply.id);
@@ -106,7 +116,11 @@ export class WhisperAdapter implements AsrAdapter {
         id,
         model: this.model,
         devices: this.devices,
-        ...(this.medicines ? { medicines: this.medicines } : {}),
+        ...(this.words && this.words.length > 0
+          ? { words: this.words }
+          : this.medicines
+            ? { medicines: this.medicines }
+            : {}),
       })).then((reply): Result<void> => {
         if (reply.type === "loaded") {
           this.device = reply.device;

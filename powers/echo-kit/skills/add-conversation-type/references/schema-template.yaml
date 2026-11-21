@@ -4,6 +4,10 @@
 id: <kebab-case-id>
 skin: care # care (cards) or cover (ledger)
 detectors: [number, date] # only: number, drug, frequency, date, money, percent, duration, commission
+# Optional: plain words the speech engine should expect, instead of medicine names. A list
+# of terms (at most three words each), never a sentence: a sentence-like prompt was written
+# out as speech on near-silence. Leave out for medical conversations.
+# speechWords: [<word>, <word>]
 disclaimer: "Echo records and summarises what was said. It is not medical advice and not an interpreter."
 facts:
   - key: <fact_key>

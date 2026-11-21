@@ -19,12 +19,14 @@
 import type {
   AsrAdapter,
   ConversationSchema,
+  DrugDictionary,
   Extractor,
   FlaggedToken,
   Receipt,
   Result,
   Segment,
 } from "../types";
+import { dictionaryWith } from "../guard/registry";
 import type { AudioSegment } from "../audio/segmenter";
 import type { ConsentLedger } from "../consent/ledger";
 import type { EchoStore } from "../store/store";
@@ -65,6 +67,8 @@ export interface SessionOptions {
   seller?: string;
   /** Store audio on the device (opt-in; off by default) */
   keepAudio?: boolean;
+  /** Echo Care: the user's own medicines, typed by them; matched more loosely, never auto-filled */
+  medicines?: readonly string[];
   now?: () => number;
 }
 
@@ -93,9 +97,11 @@ export class ConversationSession {
   };
   private previousFlagged: FlaggedSegment | undefined;
   private readonly now: () => number;
+  private readonly dictionary: DrugDictionary;
 
   constructor(private readonly options: SessionOptions) {
     this.now = options.now ?? (() => Date.now());
+    this.dictionary = dictionaryWith(options.medicines);
   }
 
   get id(): string {
@@ -199,7 +205,7 @@ export class ConversationSession {
 
     this.emit("caption", { segment: { ...segment }, hasSpeech: audio.hasSpeech });
     if (text.length > 0) {
-      const tokens = flagSegment(segment, this.options.schema);
+      const tokens = flagSegment(segment, this.options.schema, this.dictionary);
       this.emit("flags", { segmentId: segment.id, tokens });
       const current: FlaggedSegment = { segment, tokens };
       if (this.options.schema.detectors.includes("drug")) {
@@ -221,7 +227,7 @@ export class ConversationSession {
     await this.queue;
 
     const { schema, store, extractor, seller } = this.options;
-    const { facts, checklist } = runPipeline(this.segments, schema, extractor);
+    const { facts, checklist } = runPipeline(this.segments, schema, extractor, this.dictionary);
     const receipt: Receipt = {
       conversationId: this.id,
       schemaId: schema.id,

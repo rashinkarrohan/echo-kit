@@ -56,3 +56,11 @@ describe("repeatPrompts", () => {
     expect(repeatPrompts(flagged(0, "come back in three months"))).toEqual([]);
   });
 });
+
+describe("repeatPrompts: unclear doses", () => {
+  it("asks to repeat a dose heard as 'to puffs', saying what it may have been", () => {
+    expect(repeatPrompts(flagged(0, "Use the salbutamol inhaler to puffs when needed."))).toEqual([
+      { kind: "unclear-dose", segmentId: "seg-0001", heard: "to puffs", suggestion: "2 puffs" },
+    ]);
+  });
+});

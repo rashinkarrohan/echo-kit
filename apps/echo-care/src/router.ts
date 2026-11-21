@@ -6,6 +6,7 @@ export type Route =
   | "/home"
   | "/visits"
   | "/consent"
+  | "/medicines"
   | "/doctor-card"
   | "/pharmacy"
   | "/record"
@@ -19,6 +20,7 @@ const ROUTES: readonly Route[] = [
   "/home",
   "/visits",
   "/consent",
+  "/medicines",
   "/doctor-card",
   "/pharmacy",
   "/record",

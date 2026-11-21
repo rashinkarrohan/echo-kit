@@ -36,6 +36,7 @@ export {
   clock,
   medicineHintText,
   medicineNoteText,
+  doseNoteText,
 } from "./copy";
 export { SKINS, SHARED, CONTRAST_PAIRS, contrastRatio } from "./tokens";
 export type { SkinName } from "./tokens";

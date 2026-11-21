@@ -6,6 +6,7 @@
 import type {
   ChecklistResult,
   ConversationSchema,
+  DrugDictionary,
   Extractor,
   FlaggedToken,
   RawFact,
@@ -27,19 +28,28 @@ export interface PipelineOutput {
   checklist: ChecklistResult[];
 }
 
+/**
+ * `dictionary` carries the user's own medicines list, if any; the default rules
+ * extractor and the verifier both use it, so captions and the receipt agree.
+ */
 export function runPipeline(
   segments: Segment[],
   schema: ConversationSchema,
-  extractor: Extractor = new RulesExtractor(),
+  extractor?: Extractor,
+  dictionary: DrugDictionary = DRUG_DICTIONARY,
 ): PipelineOutput {
-  const raw = extractor.extract(segments, schema);
+  const raw = (extractor ?? new RulesExtractor({ dictionary })).extract(segments, schema);
   const { accepted, rejected } = validateFacts(raw, segments);
-  const facts = verifyFacts(accepted, segments);
+  const facts = verifyFacts(accepted, segments, dictionary);
   const checklist = runGapCheck(facts, schema, segments);
   return { raw, rejected, facts, checklist };
 }
 
 /** Flag tokens in one segment with the detectors the schema enables. */
-export function flagSegment(segment: Segment, schema: ConversationSchema): FlaggedToken[] {
-  return flagTokens(segment, detectorsFor(schema.detectors), DRUG_DICTIONARY);
+export function flagSegment(
+  segment: Segment,
+  schema: ConversationSchema,
+  dictionary: DrugDictionary = DRUG_DICTIONARY,
+): FlaggedToken[] {
+  return flagTokens(segment, detectorsFor(schema.detectors), dictionary);
 }

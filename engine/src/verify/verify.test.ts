@@ -304,3 +304,20 @@ describe("verifyFacts", () => {
     });
   });
 });
+
+describe("verifyFacts: unclear dose words", () => {
+  it("stamps Check this when the quote has a dose heard as 'to puffs'", () => {
+    const segments = [makeSegment(0, 0, 4000, "Use the salbutamol inhaler to puffs when needed.")];
+    const fact: Fact = {
+      key: "medicine",
+      fields: { name: "salbutamol", frequency: "when needed" },
+      anchor: {
+        segmentIds: ["seg-0001"],
+        startMs: 0,
+        endMs: 4000,
+        quote: "Use the salbutamol inhaler to puffs when needed.",
+      },
+    };
+    expect(verifyFacts([fact], segments)[0].stamp).toBe("check_this");
+  });
+});

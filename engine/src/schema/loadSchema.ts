@@ -32,6 +32,12 @@ function nonEmptyString(v: unknown): v is string {
   return typeof v === "string" && v.length > 0;
 }
 
+/**
+ * One speech word or short term: letters, spaces and hyphens, 2 to 30 characters, at most
+ * three words ("per aid", "hearing aids"), so a schema cannot hand Whisper a sentence.
+ */
+const SPEECH_WORD = /^[A-Za-z][A-Za-z-]*(?: [A-Za-z-]+){0,2}$/;
+
 export function loadSchema(yamlText: string): Result<ConversationSchema> {
   try {
     const data: unknown = parse(yamlText);
@@ -113,6 +119,25 @@ export function loadSchema(yamlText: string): Result<ConversationSchema> {
       typedNextSteps.push({ label: step["label"] });
     }
 
+    // Optional speech words: a short list of plain words or phrases, never sentences
+    // (a sentence-like prompt was written out as speech on near-silence; docs/SPIKES.md).
+    const speechWords: unknown = data["speechWords"];
+    if (speechWords !== undefined) {
+      if (
+        !Array.isArray(speechWords) ||
+        speechWords.length > 40 ||
+        !speechWords.every(
+          (w) => typeof w === "string" && w.length >= 2 && w.length <= 30 && SPEECH_WORD.test(w),
+        )
+      ) {
+        return {
+          ok: false,
+          error:
+            "speechWords must be a list of up to 40 plain terms of at most three words (letters, spaces, hyphens)",
+        };
+      }
+    }
+
     const schema: ConversationSchema = {
       id,
       skin,
@@ -121,6 +146,7 @@ export function loadSchema(yamlText: string): Result<ConversationSchema> {
       facts: typedFacts,
       checklist: typedChecklist,
       nextSteps: typedNextSteps,
+      ...(Array.isArray(speechWords) ? { speechWords: speechWords as string[] } : {}),
     };
 
     return { ok: true, value: schema };

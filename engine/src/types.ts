@@ -100,6 +100,11 @@ export interface ConversationSchema {
   }>;
   checklist: ChecklistItem[];
   nextSteps: Array<{ label: string }>;
+  /**
+   * Plain words to prompt the speech engine with ("pair", "commission"), as a list, never
+   * a sentence. When absent, the app prompts with medicine names.
+   */
+  speechWords?: string[];
 }
 
 /** The user's mark on a read-back item. Only an explicit tap changes it from "unmarked". */
@@ -202,6 +207,8 @@ export interface QuoteComparisonRow {
 /** Drug-name dictionary used by the drug detector */
 export interface DrugDictionary {
   drugs: readonly string[];
+  /** The user's own medicines (typed by them, kept on the device), matched more loosely */
+  personal?: readonly string[];
 }
 
 /** Entity detector definition */

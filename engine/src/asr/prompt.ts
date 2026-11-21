@@ -33,3 +33,24 @@ export function buildMedicinePrompt(
   }
   return names.length === 0 ? "" : ` Medicines: ${names.join(", ")}.`;
 }
+
+/**
+ * Build " Words: a, b, c." from plain words a conversation type uses (Echo Cover: "pair",
+ * "commission"...), within the token budget. A list, never a sentence: on near-silence a
+ * sentence-like prompt was written out as speech ("The price for the pair is $100,000"),
+ * a word list was not (docs/SPIKES.md, Nov 21, 2026).
+ */
+export function buildWordsPrompt(
+  words: readonly string[],
+  countTokens: (text: string) => number,
+  maxTokens = 200,
+): string {
+  const kept: string[] = [];
+  for (const raw of words) {
+    const word = raw.trim();
+    if (word.length === 0 || kept.includes(word)) continue;
+    if (countTokens(` Words: ${[...kept, word].join(", ")}.`) > maxTokens) break;
+    kept.push(word);
+  }
+  return kept.length === 0 ? "" : ` Words: ${kept.join(", ")}.`;
+}

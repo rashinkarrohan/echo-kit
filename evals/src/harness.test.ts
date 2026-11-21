@@ -21,6 +21,24 @@ describe("valuesAgree (what counts as invented)", () => {
     expect(valuesAgree("frequency", "once daily", "twice daily")).toBe(false);
   });
 
+  // Speech engines write units as symbols and abbreviations (real-voice check, Nov 21, 2026).
+  it("the same amount written with a symbol or abbreviation agrees", () => {
+    expect(valuesAgree("dose", "500mg", "500 milligrams")).toBe(true);
+    expect(valuesAgree("strength", "500mg", "500 milligram")).toBe(true);
+    expect(valuesAgree("amount", "$3800", "3800 dollars")).toBe(true);
+    expect(valuesAgree("amount", "$3,800", "3800 dollars")).toBe(true);
+    expect(valuesAgree("rate", "12%", "12 percent")).toBe(true);
+    expect(valuesAgree("rate", "9.9%", "9.9 percent")).toBe(true);
+  });
+
+  it("a different amount or unit still disagrees", () => {
+    expect(valuesAgree("dose", "500mcg", "500 milligrams")).toBe(false);
+    expect(valuesAgree("dose", "50mg", "500 milligrams")).toBe(false);
+    expect(valuesAgree("amount", "$380", "3800 dollars")).toBe(false);
+    expect(valuesAgree("rate", "12%", "21 percent")).toBe(false);
+    expect(valuesAgree("amount", "3800 pounds", "3800 dollars")).toBe(false);
+  });
+
   it("a description must cover most of the planted content words", () => {
     expect(
       valuesAgree(

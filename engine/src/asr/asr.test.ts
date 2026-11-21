@@ -95,6 +95,17 @@ describe("WhisperAdapter", () => {
     expect(asr.lastLatencyMs).toBe(812);
   });
 
+  it("sends plain prompt words instead of medicine names when given (Echo Cover)", async () => {
+    const { transport, sent } = fakeWorker((req) =>
+      req.type === "load"
+        ? { type: "loaded", id: req.id, device: "wasm" }
+        : { type: "result", id: req.id, text: "ok", ms: 1 },
+    );
+    await new WhisperAdapter(transport, { words: ["pair", "commission"] }).load();
+    expect(sent[0]).toMatchObject({ type: "load", words: ["pair", "commission"] });
+    expect(sent[0]).not.toHaveProperty("medicines");
+  });
+
   it("never claims word confidence (Whisper in transformers.js does not give it)", async () => {
     const { transport } = fakeWorker((req) =>
       req.type === "load"

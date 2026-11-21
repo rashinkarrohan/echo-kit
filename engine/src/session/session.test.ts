@@ -170,6 +170,40 @@ describe("ConversationSession events", () => {
     ]);
   });
 
+  it("uses the user's own medicines list for captions, prompts and the receipt", async () => {
+    const heard = ["Keep taking the blamepiride, two milligrams with breakfast."];
+    const without = session({ asr: new MockAdapter(heard) }).s;
+    const withList = session({ asr: new MockAdapter(heard), medicines: ["Glimepiride"] }).s;
+    const flags = record(withList, "flags");
+    const prompts = record(withList, "prompt");
+    for (const s of [without, withList]) {
+      s.start();
+      await s.addAudio(audio(0));
+    }
+    expect(flags[0].tokens.find((t) => t.kind === "drug")).toMatchObject({
+      value: "blamepiride",
+      suggestion: "glimepiride",
+    });
+    expect(prompts).toEqual([
+      {
+        kind: "unclear-medicine-name",
+        segmentId: "seg-0001",
+        heard: "blamepiride",
+        suggestion: "glimepiride",
+      },
+    ]);
+    const a = await without.stop();
+    const b = await withList.stop();
+    if (!a.ok || !b.ok) throw new Error("no receipt");
+    const medicine = (r: typeof b.value) => r.facts.find((f) => f.key === "medicine");
+    // The heard word is kept and the line is Check this: the list never confirms a name.
+    expect(medicine(b.value)).toMatchObject({
+      fields: { name: "blamepiride", dose: "2 milligrams" },
+      stamp: "check_this",
+    });
+    expect(medicine(a.value)?.fields["name"]).toBe("blamepiride");
+  });
+
   it("raises no medicine prompts for a schema without the drug detector", async () => {
     const cover: ConversationSchema = {
       ...schema,

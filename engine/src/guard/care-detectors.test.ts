@@ -107,6 +107,29 @@ describe("frequencyDetector", () => {
     { input: "four times daily", canonical: "4/day" },
     { input: "every 8 hours", canonical: "every-8-hours" },
     { input: "as needed", canonical: "prn" },
+    // Other ways of saying "as needed" (care-04: "two puffs, when you need it")
+    { input: "when needed", canonical: "prn" },
+    { input: "if needed", canonical: "prn" },
+    { input: "as required", canonical: "prn" },
+    { input: "when required", canonical: "prn" },
+    { input: "when you need it", canonical: "prn" },
+    { input: "if you need them", canonical: "prn" },
+    { input: "as and when", canonical: "prn" },
+    { input: "every morning", canonical: "morning" },
+    { input: "in the evening", canonical: "evening" },
+    { input: "every evening", canonical: "evening" },
+    { input: "at bedtime", canonical: "night" },
+    { input: "daily", canonical: "1/day" },
+    { input: "every day", canonical: "1/day" },
+    // Less often than daily (red team 13: "every other day, in the evening" is not daily)
+    { input: "every other day", canonical: "every-2-days" },
+    { input: "every second day", canonical: "every-2-days" },
+    { input: "on alternate days", canonical: "every-2-days" },
+    { input: "every 3 days", canonical: "every-3-days" },
+    { input: "once a week", canonical: "1/week" },
+    { input: "weekly", canonical: "1/week" },
+    { input: "twice a week", canonical: "2/week" },
+    { input: "3 times a week", canonical: "3/week" },
     { input: "after food", canonical: "after-food" },
     { input: "with food", canonical: "after-food" },
     { input: "before food", canonical: "before-food" },
@@ -334,5 +357,33 @@ describe("drugDetector near matches from real speech-engine output (S16)", () =>
 
   it("an exact drug name still has no suggestion", () => {
     expect(detect("metformin")[0].suggestion).toBeUndefined();
+  });
+});
+
+describe("numberDetector: 'two' heard as 'to' (S16 bench: 'inhaler to puffs')", () => {
+  it.each([
+    ["Use the salbutamol inhaler to puffs when needed.", "to puffs", "2 puffs"],
+    ["Take too tablets at night.", "too tablets", "2 tablets"],
+    ["using the spray, to sprays in each nostril", "to sprays", "2 sprays"],
+  ])("'%s' flags '%s' as unclear, sounding like '%s'", (text, heard, suggestion) => {
+    const unclear = numberDetector
+      .detect(makeSegment(0, 0, 4000, text))
+      .filter((t) => t.suggestion);
+    expect(unclear).toEqual([{ kind: "number", value: heard, suggestion, lowConfidence: true }]);
+  });
+
+  it.each([
+    "We will switch you to tablets next month.",
+    "Go back to capsules if the liquid is hard.",
+    "Listen to the drops falling.",
+  ])("leaves ordinary 'to' alone: '%s'", (text) => {
+    expect(
+      numberDetector.detect(makeSegment(0, 0, 4000, text)).filter((t) => t.suggestion),
+    ).toEqual([]);
+  });
+
+  it("never turns the unclear words into a dose value", () => {
+    const tokens = numberDetector.detect(makeSegment(0, 0, 4000, "use the inhaler to puffs"));
+    expect(tokens.every((t) => !/\d/.test(t.value))).toBe(true);
   });
 });

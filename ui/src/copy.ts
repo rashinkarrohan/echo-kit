@@ -90,6 +90,8 @@ export const ADDED = {
   hintSoundsLike: (name: string) => `Sounds like ${name}?`,
   hintCouldAlsoBe: (names: readonly string[]) => `Could also be ${names.join(" or ")}?`,
   hintUnknown: "Not a medicine name Echo knows",
+  /** Hint after a dose heard as "to puffs" (speech engines write "two" as "to") */
+  hintUnclearDose: (suggestion: string) => `Sounds like ${suggestion}?`,
   flagged: "flagged",
   loading: "Loading.",
   trustTitle: "How Echo did in tests",
@@ -193,4 +195,9 @@ export function medicineNoteText(heard: string, note: MedicineNameNote): string 
     return `Echo heard “${heard}”. This is not a medicine name Echo knows. ${check}`;
   const name = heard.charAt(0).toUpperCase() + heard.slice(1);
   return `${name} sounds like ${note.names.slice(0, 2).join(" or ")}. Check which one is on the label.`;
+}
+
+/** Why a medicine's dose on the receipt needs checking: a count heard as "to puffs". */
+export function doseNoteText(heard: string, suggestion: string): string {
+  return `Echo heard “${heard}”. It may have been ${suggestion}. Check the dose on the label or with your pharmacist.`;
 }

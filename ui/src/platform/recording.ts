@@ -56,6 +56,9 @@ export interface RecordingOptions {
   ledger: ConsentLedger;
   store?: EchoStore;
   seller?: string;
+  /** Echo Care: the user's own medicines; prompts the speech engine and the name matcher */
+  medicines?: readonly string[];
+
   source: RecordingSource;
 }
 
@@ -106,7 +109,18 @@ export class RecordingController {
     const asr: AsrAdapter & { load?: () => Promise<Result<void>> } =
       source.kind === "scripted"
         ? new MockAdapter(scriptedLines(source.consult))
-        : (source.createAsr ?? (() => createWhisperAdapter()))();
+        : (
+            source.createAsr ??
+            (() =>
+              createWhisperAdapter(
+                {},
+                {
+                  ...(options.medicines ? { medicines: options.medicines } : {}),
+                  // The schema's own words (Echo Cover) replace the medicine prompt.
+                  ...(options.schema.speechWords ? { words: options.schema.speechWords } : {}),
+                },
+              ))
+          )();
 
     const session = new ConversationSession({
       id: options.sessionId,
@@ -115,6 +129,9 @@ export class RecordingController {
       ledger: options.ledger,
       ...(options.store ? { store: options.store } : {}),
       ...(options.seller !== undefined ? { seller: options.seller } : {}),
+      ...(options.medicines && options.medicines.length > 0
+        ? { medicines: options.medicines }
+        : {}),
     });
     session.start(); // consent gate
     this.session = session;

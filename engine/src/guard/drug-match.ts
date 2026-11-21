@@ -250,12 +250,99 @@ function unknownNamesBeforeDoses(words: readonly string[]): DrugMatch[] {
   return out;
 }
 
+/** One of the user's own medicines: as typed (lowercased), letters only, and its sound key. */
+interface PersonalEntry {
+  name: string;
+  joined: string;
+  key: string;
+}
+
+function personalEntries(personal: readonly string[]): PersonalEntry[] {
+  const out: PersonalEntry[] = [];
+  for (const raw of personal) {
+    const name = raw.trim().toLowerCase().replace(/\s+/g, " ");
+    const joined = name.replace(/[^a-z]/g, "");
+    if (joined.length < 3 || out.some((e) => e.joined === joined)) continue;
+    out.push({ name, joined, key: soundKey(joined) });
+  }
+  return out;
+}
+
+/**
+ * Closest of the user's own medicines to a heard word. The list is short (the user typed
+ * it), so the match may be looser than against the whole FDA list: any first sound, and
+ * about a third of the sound key may differ ("blamepiride" for glimepiride). Everyday
+ * English words never match ("blame", "water").
+ */
+function closestPersonal(heard: string, entries: readonly PersonalEntry[]): Near | undefined {
+  if (heard.length < 5 || isEverydayWord(heard)) return undefined;
+  const key = soundKey(heard);
+  if (key.length < 3) return undefined;
+  let best: Near | undefined;
+  for (const e of entries) {
+    const maxKey = Math.max(1, Math.floor(e.key.length * 0.34));
+    const keyDist = levenshtein(key, e.key, maxKey);
+    if (keyDist > maxKey) continue;
+    const maxLetters = Math.ceil(e.joined.length * 0.4);
+    const letterDist = levenshtein(heard, e.joined, maxLetters);
+    if (letterDist > maxLetters) continue;
+    if (
+      !best ||
+      keyDist < best.keyDist ||
+      (keyDist === best.keyDist && letterDist < best.letterDist)
+    ) {
+      best = { drug: e.name, keyDist, letterDist, rank: -1 };
+    }
+  }
+  return best;
+}
+
+interface Option {
+  length: number;
+  m: Near;
+}
+
+function byCloseness(a: Option, b: Option): number {
+  return a.m.keyDist - b.m.keyDist || a.m.letterDist - b.m.letterDist || a.length - b.length;
+}
+
+/** Closest listed medicine to the one, two or three words starting at `i`. */
+function closestListed(
+  words: readonly string[],
+  i: number,
+  mine: readonly PersonalEntry[],
+  index: Index,
+): Option | undefined {
+  const found: Option[] = [];
+  for (const n of [1, 2, 3]) {
+    const parts = words.slice(i, i + n);
+    if (parts.length < n || !parts.slice(1).every((p) => /^[a-z]{2,}$/.test(p))) break;
+    if (n > 1 && parts.some((p) => index.exact.has(p))) break;
+    // Joined words must not start with an everyday word ("dove sat in" is not atorvastatin).
+    if (n > 1 && isEverydayWord(parts[0])) break;
+    const m = closestPersonal(parts.join(""), mine);
+    if (m) found.push({ length: n, m });
+  }
+  return found.sort(byCloseness)[0];
+}
+
 /**
  * Find medicine names in normalised words. Exact names first; otherwise a near match on
  * one word, or on two or three words joined, whichever is closest.
+ *
+ * `personal` is the user's own medicines list. A listed name heard exactly counts as
+ * exact even if it is not in the FDA list (a brand such as "calpol"); a near match to a
+ * listed name is only a "sounds like" suggestion, preferred when it is at least as close
+ * as the nearest FDA name.
  */
-export function matchDrugs(words: readonly string[], drugs: readonly string[]): DrugMatch[] {
+export function matchDrugs(
+  words: readonly string[],
+  drugs: readonly string[],
+  personal: readonly string[] = [],
+): DrugMatch[] {
   const index = indexFor(drugs);
+  const mine = personalEntries(personal);
+  const mineByJoined = new Map(mine.map((e) => [e.joined, e.name]));
   const out: DrugMatch[] = [];
   const isPart = (w: string | undefined): w is string =>
     w !== undefined && /^[a-z]{2,}$/.test(w) && !FUNCTION_WORDS.has(w);
@@ -267,14 +354,15 @@ export function matchDrugs(words: readonly string[], drugs: readonly string[]): 
     const word = words[i];
     // A name split into words that join to an exact name ("hydro chlorothiazide").
     let joinedExact = 0;
+    let joinedName = "";
     for (const n of [3, 2]) {
       const parts = words.slice(i, i + n);
-      if (
-        parts.length === n &&
-        parts.every((p) => /^[a-z]+$/.test(p)) &&
-        index.exact.has(parts.join(""))
-      ) {
+      if (parts.length !== n || !parts.every((p) => /^[a-z]+$/.test(p))) continue;
+      const joined = parts.join("");
+      const listed = mineByJoined.get(joined);
+      if (index.exact.has(joined) || listed !== undefined) {
         joinedExact = n;
+        joinedName = listed ?? joined;
         break;
       }
     }
@@ -284,18 +372,18 @@ export function matchDrugs(words: readonly string[], drugs: readonly string[]): 
         length: joinedExact,
         heard: words.slice(i, i + joinedExact).join(" "),
         exact: false,
-        suggestion: words.slice(i, i + joinedExact).join(""),
+        suggestion: joinedName,
       });
       i += joinedExact - 1;
       continue;
     }
-    if (index.exact.has(word)) {
+    if (index.exact.has(word) || mineByJoined.has(word)) {
       out.push({ at: i, length: 1, heard: word, exact: true });
       continue;
     }
     if (!isPart(word)) continue;
 
-    const options: Array<{ length: number; m: Near }> = [];
+    const options: Option[] = [];
     if (!ENGLISH.has(word)) {
       for (const m of singleWordOptions(word, index)) options.push({ length: 1, m });
     }
@@ -313,11 +401,13 @@ export function matchDrugs(words: readonly string[], drugs: readonly string[]): 
       const m = closest(joined, index);
       if (m) options.push({ length: n, m });
     }
-    if (options.length === 0) continue;
-    options.sort(
-      (a, b) => a.m.keyDist - b.m.keyDist || a.m.letterDist - b.m.letterDist || a.length - b.length,
-    );
-    const best = options[0];
+    options.sort(byCloseness);
+    const listed = mine.length > 0 ? closestListed(words, i, mine, index) : undefined;
+    const best =
+      listed !== undefined && (options.length === 0 || listed.m.keyDist <= options[0].m.keyDist)
+        ? listed
+        : options[0];
+    if (best === undefined) continue;
     out.push({
       at: i,
       length: best.length,

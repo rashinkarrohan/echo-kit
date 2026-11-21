@@ -32,17 +32,40 @@ export function workerTransport(worker: WorkerLike): AsrTransport {
 
 export { WHISPER_MODELS, modelFromQuery } from "./whisper-models";
 
+/** What to prompt the speech engine with, per app. */
+export interface SpeechVocabulary {
+  /** Echo Care: the user's own medicines, put before the common medicine names */
+  medicines?: readonly string[];
+  /** Echo Cover: plain sales words, used instead of medicine names */
+  words?: readonly string[];
+}
+
 /**
- * Create an on-device Whisper adapter running in a module worker. By default it prompts
- * Whisper with the most common medicine names; `?prompt=0` turns that off.
+ * Whisper prompt options: plain words when the app gives them (Echo Cover), otherwise the
+ * user's own medicines followed by the common list (Echo Care). `?prompt=0` turns it off.
  */
-export function createWhisperAdapter(options: WhisperOptions = {}): WhisperAdapter {
+export function promptOptions(
+  search: string,
+  { medicines = [], words = [] }: SpeechVocabulary = {},
+): Pick<WhisperOptions, "medicines" | "words"> {
+  if (new URLSearchParams(search).get("prompt") === "0") return { medicines: [] };
+  if (words.length > 0) return { words: [...words] };
+  return { medicines: [...medicines, ...DRUG_DICTIONARY.drugs] };
+}
+
+/**
+ * Create an on-device Whisper adapter running in a module worker, prompted as
+ * `promptOptions` describes.
+ */
+export function createWhisperAdapter(
+  options: WhisperOptions = {},
+  vocabulary: SpeechVocabulary = {},
+): WhisperAdapter {
   const worker = new Worker(new URL("./asr-worker.ts", import.meta.url), { type: "module" });
   const search = typeof location === "undefined" ? "" : location.search;
-  const promptOff = new URLSearchParams(search).get("prompt") === "0";
   return new WhisperAdapter(workerTransport(worker), {
     model: modelFromQuery(search),
-    ...(promptOff ? { medicines: [] } : { medicines: [...DRUG_DICTIONARY.drugs] }),
+    ...promptOptions(search, vocabulary),
     ...options,
   });
 }

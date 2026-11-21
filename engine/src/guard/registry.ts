@@ -3,7 +3,7 @@
  * Also provides the shared cue matcher used by the extractor and the gap check.
  */
 
-import type { EntityDetector, FlaggedToken, Segment } from "../types";
+import type { DrugDictionary, EntityDetector, FlaggedToken, Segment } from "../types";
 import { normaliseText } from "../text/normalise";
 import { numberDetector, frequencyDetector, dateDetector, drugDetector } from "./care-detectors";
 import {
@@ -27,6 +27,11 @@ export const DETECTORS: Readonly<Record<string, EntityDetector>> = {
 
 /** Generic medicine names from the FDA NDC Directory (public domain); see scripts/build-drug-list.mjs. */
 export const DRUG_DICTIONARY: { drugs: string[] } = { drugs: drugsData.drugs };
+
+/** The medicine dictionary plus the user's own medicines list (empty list: the default). */
+export function dictionaryWith(personal: readonly string[] = []): DrugDictionary {
+  return personal.length === 0 ? DRUG_DICTIONARY : { drugs: DRUG_DICTIONARY.drugs, personal };
+}
 
 export function getDetector(id: string): EntityDetector | undefined {
   return Object.prototype.hasOwnProperty.call(DETECTORS, id) ? DETECTORS[id] : undefined;

@@ -1,7 +1,24 @@
 import { describe, it, expect } from "vitest";
 import type { WorkerReply, WorkerRequest } from "@echo/engine";
-import { workerTransport } from "./whisper";
+import { promptOptions, workerTransport } from "./whisper";
 import type { WorkerLike } from "./whisper";
+
+describe("promptOptions", () => {
+  it("Echo Care: the user's own medicines first, then the common list", () => {
+    const { medicines = [] } = promptOptions("", { medicines: ["Glimepiride", "co-codamol"] });
+    expect(medicines.slice(0, 2)).toEqual(["Glimepiride", "co-codamol"]);
+    expect(medicines).toContain("metformin");
+  });
+  it("Echo Cover: plain words instead of medicine names", () => {
+    expect(promptOptions("", { words: ["pair", "commission"] })).toEqual({
+      words: ["pair", "commission"],
+    });
+  });
+  it("?prompt=0 turns every prompt off", () => {
+    expect(promptOptions("?prompt=0", { medicines: ["glimepiride"] })).toEqual({ medicines: [] });
+    expect(promptOptions("?prompt=0", { words: ["pair"] })).toEqual({ medicines: [] });
+  });
+});
 
 describe("workerTransport", () => {
   it("transfers a copy of the samples so the caller keeps its audio", () => {

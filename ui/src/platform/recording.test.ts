@@ -79,6 +79,28 @@ describe("RecordingController (scripted)", () => {
     expect(c.audioFor(["seg-0002"])[0].length).toBe(80000);
   });
 
+  it("passes the user's own medicines list to the session", async () => {
+    const misheard = {
+      id: "c2",
+      segments: [{ id: "seg-0001", startMs: 0, endMs: 5000, text: "Keep the blamepiride, 2 mg." }],
+    };
+    const c = new RecordingController();
+    await c.start({
+      sessionId: "s2",
+      schema,
+      ledger: consented(),
+      medicines: ["glimepiride"],
+      source: { kind: "scripted", consult: misheard, speed: 1000 },
+    });
+    await new Promise((r) => setTimeout(r, 30));
+    expect(c.state.lines[0].tokens.find((t) => t.kind === "drug")?.suggestion).toBe("glimepiride");
+    const r = await c.stop();
+    expect(r.ok && r.value.facts[0]).toMatchObject({
+      fields: { name: "blamepiride" },
+      stamp: "check_this",
+    });
+  });
+
   it("discard stops playback without storing a receipt", async () => {
     const store = new MemoryStore();
     const c = new RecordingController();

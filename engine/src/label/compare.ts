@@ -7,6 +7,7 @@
 
 import type { Anchor, Fact, LabelFields, LabelFlag } from "../types";
 import { normaliseText } from "../text/normalise";
+import { AS_NEEDED } from "../guard/care-detectors";
 
 const COUNT_WORDS: Record<string, number> = { once: 1, twice: 2, thrice: 3 };
 
@@ -21,7 +22,15 @@ export function canonicalFrequency(text: string): string | undefined {
   const everyHours = t.match(/\bevery (\d+) hours?\b/);
   if (everyHours) return `every-${everyHours[1]}-hours`;
 
-  if (/\b(as needed|when needed|if needed|as required|when required|prn)\b/.test(t)) return "prn";
+  if (AS_NEEDED.test(t)) return "prn";
+
+  // Less often than daily, before times of day ("every other day, in the evening").
+  if (/\b(every (other|second) day|alternate days)\b/.test(t)) return "every-2-days";
+  const everyDays = t.match(/\bevery (\d+) days\b/);
+  if (everyDays) return `every-${everyDays[1]}-days`;
+  if (/\b(once|1 time)( a| per)? week\b|\bweekly\b/.test(t)) return "1/week";
+  const perWeek = t.match(/\b(twice|\d+ times)( a| per)? week\b/);
+  if (perWeek) return `${perWeek[1] === "twice" ? 2 : parseInt(perWeek[1], 10)}/week`;
 
   const counted = t.match(/\b(once|twice|thrice|\d+ times?)( a| per| each)? (day|daily)\b/);
   if (counted) {

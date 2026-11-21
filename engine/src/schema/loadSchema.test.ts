@@ -31,6 +31,38 @@ nextSteps:
     }
   });
 
+  describe("speechWords (optional words to prompt the speech engine with)", () => {
+    const base = `
+id: sale
+skin: cover
+detectors: [money]
+disclaimer: "d"
+facts: []
+checklist: []
+nextSteps: []
+`;
+    it("loads a list of plain words", () => {
+      const r = loadSchema(`${base}speechWords: [pair, per aid, follow-up, commission]\n`);
+      expect(r.ok && r.value.speechWords).toEqual(["pair", "per aid", "follow-up", "commission"]);
+    });
+    it("is absent when not given", () => {
+      const r = loadSchema(base);
+      expect(r.ok && "speechWords" in r.value).toBe(false);
+    });
+    it.each([
+      ["not a list", "speechWords: pair\n"],
+      ["a sentence", 'speechWords: ["The price for the pair is high."]\n'],
+      ["a phrase of more than three words", 'speechWords: ["the price for the pair"]\n'],
+      ["an empty word", 'speechWords: [pair, ""]\n'],
+      [
+        "too many words",
+        `speechWords: [${Array.from({ length: 41 }, (_, i) => `w${"abcdefghijklmnopqrstuvwxyzabcdefghijklmnopq"[i]}x`).join(", ")}]\n`,
+      ],
+    ])("rejects %s", (_name, extra) => {
+      expect(loadSchema(`${base}${extra}`).ok).toBe(false);
+    });
+  });
+
   it("rejects schema with missing id", () => {
     const yaml = `
 skin: care

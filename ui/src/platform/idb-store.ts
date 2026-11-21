@@ -17,10 +17,12 @@ interface EchoDB extends DBSchema {
   audio: { key: [string, number]; value: AudioChunk; indexes: { bySession: string } };
   receipts: { key: string; value: Receipt };
   consent: { key: string; value: { id: "ledger"; records: ConsentRecord[] } };
+  /** Version 2: the user's own medicines list */
+  settings: { key: string; value: { id: "medicines"; names: string[] } };
 }
 
 const DB_NAME = "echo-kit";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 const ok = <T>(value: T): Result<T> => ({ ok: true, value });
 const err = (e: unknown): { ok: false; error: string } => ({
@@ -34,12 +36,16 @@ export class IdbStore implements EchoStore {
   static async open(name: string = DB_NAME): Promise<Result<IdbStore>> {
     try {
       const db = await openDB<EchoDB>(name, DB_VERSION, {
-        upgrade(database) {
-          database.createObjectStore("sessions", { keyPath: "id" });
-          const audio = database.createObjectStore("audio", { keyPath: ["sessionId", "seq"] });
-          audio.createIndex("bySession", "sessionId");
-          database.createObjectStore("receipts", { keyPath: "conversationId" });
-          database.createObjectStore("consent", { keyPath: "id" });
+        // Existing data is kept: version 1 stores are only created on a fresh database.
+        upgrade(database, oldVersion) {
+          if (oldVersion < 1) {
+            database.createObjectStore("sessions", { keyPath: "id" });
+            const audio = database.createObjectStore("audio", { keyPath: ["sessionId", "seq"] });
+            audio.createIndex("bySession", "sessionId");
+            database.createObjectStore("receipts", { keyPath: "conversationId" });
+            database.createObjectStore("consent", { keyPath: "id" });
+          }
+          if (oldVersion < 2) database.createObjectStore("settings", { keyPath: "id" });
         },
       });
       return ok(new IdbStore(db));
@@ -146,6 +152,25 @@ export class IdbStore implements EchoStore {
     try {
       const row = await this.db.get("consent", "ledger");
       return ok(row?.records ?? []);
+    } catch (e) {
+      return err(e);
+    }
+  }
+
+  async saveMedicines(names: string[]): Promise<Result<void>> {
+    try {
+      if (names.length === 0) await this.db.delete("settings", "medicines");
+      else await this.db.put("settings", { id: "medicines", names: [...names] });
+      return ok(undefined);
+    } catch (e) {
+      return err(e);
+    }
+  }
+
+  async getMedicines(): Promise<Result<string[]>> {
+    try {
+      const row = await this.db.get("settings", "medicines");
+      return ok(row?.names ?? []);
     } catch (e) {
       return err(e);
     }

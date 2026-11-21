@@ -30,6 +30,7 @@ export {
   detectorsFor,
   matchesCue,
 } from "./guard/index";
+export { dictionaryWith } from "./guard/registry";
 
 // Extraction
 export { RulesExtractor } from "./extract/rules-extractor";
@@ -47,7 +48,7 @@ export { runGapCheck } from "./gap/gap-check";
 export { canonicalFrequency, canonicalDose, compareLabel } from "./label/compare";
 
 // Quote comparison (Echo Cover)
-export { compareQuotes, quoteRecordFromFacts } from "./compare/compare-quotes";
+export { compareQuotes, comparableValue, quoteRecordFromFacts } from "./compare/compare-quotes";
 
 // Read-back
 export { buildReadBack, applyMark, scoreReadBack, unexpectedNumbers } from "./readback/readback";
@@ -97,9 +98,10 @@ export { decodeWav, encodeWav } from "./audio/wav";
 export type { DecodedWav } from "./audio/wav";
 export { repeatPrompts } from "./guard/prompts";
 export type { RepeatPrompt, RepeatPromptKind, FlaggedSegment } from "./guard/prompts";
-export { buildMedicinePrompt } from "./asr/prompt";
+export { buildMedicinePrompt, buildWordsPrompt } from "./asr/prompt";
 export type { PromptOptions } from "./asr/prompt";
 export { matchDrugs, soundKey, soundAlikes } from "./guard/drug-match";
 export type { DrugMatch } from "./guard/drug-match";
 export { medicineNameNote } from "./guard/name-note";
+export { unclearCounts, AS_NEEDED } from "./guard/care-detectors";
 export type { MedicineNameNote } from "./guard/name-note";

@@ -13,6 +13,7 @@ import {
   RulesExtractor,
   assertOrdered,
   canonicalFrequency,
+  comparableValue,
   compareLabel,
   compareQuotes,
   containsPhrase,
@@ -99,14 +100,28 @@ function contentWords(normalised: string): string[] {
 }
 
 /**
+ * Normalised text with units written one way: "$3,800" and "3800 dollars", "12%" and
+ * "12 percent" (as the quote comparison does), "500mg" and "500 milligrams". Speech
+ * engines write symbols; scripts spell them out. Different units stay different.
+ */
+function sameUnits(value: string): string {
+  return comparableValue(value)
+    .replace(/(\d)(mg|mcg|ml|g)\b/g, "$1 $2")
+    .replace(/\bmilligrams?\b/g, "mg")
+    .replace(/\bmicrograms?\b/g, "mcg")
+    .replace(/\bmillilit(?:re|er)s?\b/g, "ml")
+    .replace(/\bgrams?\b/g, "g");
+}
+
+/**
  * Does an extracted value agree with the planted (true) value?
  * - Every number in the extracted value must be in the planted value (an extra number is an invention).
  * - Frequencies compare by canonical form.
  * - Otherwise at least 60% of the planted content words must be in the extracted value.
  */
 export function valuesAgree(field: string, said: string, truth: string): boolean {
-  const a = normaliseText(said);
-  const b = normaliseText(truth);
+  const a = sameUnits(said);
+  const b = sameUnits(truth);
   const truthNumbers = new Set(numbersIn(b));
   if (numbersIn(a).some((n) => !truthNumbers.has(n))) return false;
   if (a === b) return true;

@@ -14,6 +14,7 @@
 
 import type {
   ConversationSchema,
+  DrugDictionary,
   EntityDetector,
   Extractor,
   FlaggedToken,
@@ -37,8 +38,8 @@ interface Window {
 
 const DEFAULT_WINDOW_WORDS = 25;
 const DESCRIPTION_FIELDS = new Set(["description", "statement"]);
-const COUNT_FREQUENCY = /^(\d+\/day|every-\d+-hours|prn)$/;
-const TIME_OF_DAY_FREQUENCY = /^(morning|night)$/;
+const COUNT_FREQUENCY = /^(\d+\/day|\d+\/week|every-\d+-(?:hours|days)|prn)$/;
+const TIME_OF_DAY_FREQUENCY = /^(morning|evening|night)$/;
 const MASS_UNIT = /\d\s*(mg|mcg|g|ml|milligrams?|grams?|micrograms?|units?)$/;
 const COUNT_UNIT = /\d\s*(tablets?|capsules?|drops?|puffs?)$/;
 const NEGATION_BEFORE = /\b(not|dont|never|avoid|stop)\b/;
@@ -110,7 +111,18 @@ function wordIndexOf(normWords: string[], value: string, from: number): number {
   return -1;
 }
 
+export interface RulesExtractorOptions {
+  /** Medicine names to match; defaults to the FDA list with no personal list */
+  dictionary?: DrugDictionary;
+}
+
 export class RulesExtractor implements Extractor {
+  private readonly dictionary: DrugDictionary;
+
+  constructor(options: RulesExtractorOptions = {}) {
+    this.dictionary = options.dictionary ?? DRUG_DICTIONARY;
+  }
+
   extract(segments: Segment[], schema: ConversationSchema): RawFact[] {
     if (segments.length === 0) return [];
     const detectors = detectorsFor(schema.detectors);
@@ -232,7 +244,7 @@ export class RulesExtractor implements Extractor {
   }
 
   private tokens(segment: Segment, detectors: EntityDetector[]): FlaggedToken[] {
-    return detectors.flatMap((d) => d.detect(segment, DRUG_DICTIONARY));
+    return detectors.flatMap((d) => d.detect(segment, this.dictionary));
   }
 
   /**

@@ -92,5 +92,24 @@ export function runStoreContract(
       await store.saveConsentRecords(records);
       expect(await store.getConsentRecords()).toEqual({ ok: true, value: records });
     });
+
+    it("saves, replaces and clears the user's own medicines list", async () => {
+      const store = await makeStore();
+      expect(await store.getMedicines()).toEqual({ ok: true, value: [] });
+      await store.saveMedicines(["Metformin", "co-codamol"]);
+      expect(await store.getMedicines()).toEqual({ ok: true, value: ["Metformin", "co-codamol"] });
+      await store.saveMedicines(["warfarin"]);
+      expect(await store.getMedicines()).toEqual({ ok: true, value: ["warfarin"] });
+      await store.saveMedicines([]);
+      expect(await store.getMedicines()).toEqual({ ok: true, value: [] });
+    });
+
+    it("deleting a session leaves the medicines list alone", async () => {
+      const store = await makeStore();
+      await store.saveMedicines(["warfarin"]);
+      await store.saveSession(sampleSession("s1"));
+      await store.deleteSession("s1");
+      expect(await store.getMedicines()).toEqual({ ok: true, value: ["warfarin"] });
+    });
   });
 }

@@ -2,7 +2,7 @@
   "id": "redteam-13",
   "app": "echo-care",
   "schemaId": "doctor-visit",
-  "note": "Red team. Scripted by actors, fictional. 'every other day' is not a known frequency.",
+  "note": "Red team. Scripted by actors, fictional. 'every other day' with a time of day: once 'in the evening' was read, the frequency must stay 'every other day', never a daily evening dose (Nov 21, 2026).",
   "segments": [
     {"id": "seg-0001", "startMs": 0, "endMs": 5000, "text": "Your blood test came back and we need a small change."},
     {"id": "seg-0002", "startMs": 5000, "endMs": 11500, "text": "Take warfarin five milligrams every other day, in the evening."}
@@ -10,5 +10,10 @@
   "planted": [
     {"key": "medicine", "fields": {"name": "warfarin", "dose": "5 milligrams", "frequency": "every other day"}, "quote": "Take warfarin five milligrams every other day"}
   ],
-  "plantedGapItemIds": ["q-side-effects"]
+  "plantedGapItemIds": ["q-side-effects"],
+  "expectedChecklist": {
+    "q-medicine-purpose": "Unclear",
+    "q-warning-signs": "Not discussed",
+    "q-follow-up": "Not discussed"
+  }
 }

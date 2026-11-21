@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import fc from "fast-check";
 import { matchDrugs, soundKey, soundAlikes } from "./drug-match";
 import drugs from "../../data/drugs.json";
 
@@ -105,5 +106,103 @@ describe("soundAlikes (look-alike, sound-alike medicines)", () => {
 
   it("metformin has none", () => {
     expect(soundAlikes("metformin", list)).toEqual([]);
+  });
+});
+
+describe("matchDrugs with the user's own medicines list", () => {
+  const mine = (text: string, personal: string[]) =>
+    matchDrugs(text.toLowerCase().split(/\s+/), list, personal);
+
+  // Bench misses (S16, base.en with the medicine prompt) that only a personal list recovers.
+  it.each([
+    ["blamepiride 2 milligrams with breakfast", "blamepiride", "glimepiride"],
+    ["take a dovastatin 20mg at night", "dovastatin", "atorvastatin"],
+  ])("'%s': '%s' sounds like %s only when the user listed it", (text, heard, name) => {
+    expect(found(text).some((m) => m.suggestion === name)).toBe(false);
+    const m = mine(text, [name, "metformin"]).find((x) => x.heard === heard);
+    expect(m).toMatchObject({ exact: false, suggestion: name });
+  });
+
+  it("never replaces what was heard: a listed name is only a suggestion", () => {
+    const m = mine("blamepiride 2 milligrams", ["glimepiride"])[0];
+    expect(m.heard).toBe("blamepiride");
+    expect(m.exact).toBe(false);
+  });
+
+  it("treats a listed name heard exactly as exact, even when it is not in the FDA list", () => {
+    expect(found("calpol 5 ml")).toMatchObject([{ heard: "calpol", unknown: true }]);
+    expect(mine("calpol 5 ml", ["Calpol"])).toMatchObject([{ heard: "calpol", exact: true }]);
+  });
+
+  it("matches a listed name with spaces or hyphens as typed", () => {
+    expect(mine("co codamol 2 tablets", ["Co-codamol"])).toMatchObject([
+      { heard: "co codamol", suggestion: "co-codamol" },
+    ]);
+  });
+
+  it("does not take ordinary words for a listed medicine", () => {
+    for (const text of [
+      "the blame is not yours",
+      "take a break first",
+      "drink plenty of water",
+      "a dove sat in the garden",
+    ]) {
+      const ms = mine(text, ["glimepiride", "atorvastatin", "warfarin"]);
+      expect(ms.filter((m) => m.suggestion !== undefined)).toEqual([]);
+    }
+  });
+
+  it("does not pull a clearly different heard medicine onto a listed one", () => {
+    // metoprolol is exact; a misheard metoprolol stays nearer metoprolol than listed metformin
+    expect(mine("metoprolol 25 mg", ["metformin"])).toMatchObject([
+      { heard: "metoprolol", exact: true },
+    ]);
+    expect(mine("metaprylol 25 mg", ["metformin"])[0].suggestion).toBe("metoprolol");
+  });
+
+  it("an empty list changes nothing", () => {
+    const text = "take meriforming 500 milligrams";
+    expect(mine(text, [])).toEqual(found(text));
+  });
+});
+
+describe("property: a personal list only adds suggestions", () => {
+  const vocab = [
+    "take",
+    "metformin",
+    "blamepiride",
+    "dovastatin",
+    "the",
+    "water",
+    "500",
+    "mg",
+    "twice",
+    "daily",
+    "dove",
+    "sat",
+    "in",
+    "garden",
+    "aspirin",
+    "meriforming",
+    "with",
+    "breakfast",
+  ];
+  it("keeps heard words as heard and never drops an exact name", () => {
+    fc.assert(
+      fc.property(
+        fc.array(fc.constantFrom(...vocab), { minLength: 1, maxLength: 10 }),
+        fc.subarray(["glimepiride", "atorvastatin", "warfarin", "Calpol", "co-codamol"]),
+        (words, personal) => {
+          const withList = matchDrugs(words, list, personal);
+          for (const m of withList) {
+            expect(m.heard).toBe(words.slice(m.at, m.at + m.length).join(" "));
+          }
+          for (const m of matchDrugs(words, list).filter((x) => x.exact)) {
+            expect(withList).toContainEqual(m);
+          }
+        },
+      ),
+      { numRuns: 300 },
+    );
   });
 });

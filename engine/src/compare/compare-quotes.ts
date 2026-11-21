@@ -13,7 +13,7 @@ import { normaliseText } from "../text/normalise";
  * Comparison form of a value: normalised, with currency symbols and percent signs
  * written as words, so "$3800" and "3800 dollars" compare equal.
  */
-function comparable(value: string): string {
+export function comparableValue(value: string): string {
   return normaliseText(value)
     .replace(/\$\s*(\d+(?:\.\d+)?)/g, "$1 dollars")
     .replace(/£\s*(\d+(?:\.\d+)?)/g, "$1 pounds")
@@ -41,7 +41,7 @@ export function compareQuotes(quotes: QuoteRecord[], fields: string[]): QuoteCom
 
     const discussed = cells
       .filter((c) => c.value !== null)
-      .map((c) => comparable(c.value as string));
+      .map((c) => comparableValue(c.value as string));
     const differs = discussed.length >= 2 && new Set(discussed).size > 1;
 
     return { field, cells, differs };

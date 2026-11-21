@@ -26,6 +26,12 @@ describe("canonicalFrequency", () => {
     ["every eight hours", "every-8-hours"],
     ["as needed", "prn"],
     ["when required", "prn"],
+    ["when you need it", "prn"],
+    ["as and when", "prn"],
+    // Not daily, even with a time of day (red team 13)
+    ["every other day, in the evening", "every-2-days"],
+    ["one tablet once a week in the morning", "1/week"],
+    ["twice a week", "2/week"],
     ["one tablet in the morning and one tablet in the evening, with food", "2/day"],
     ["once in the morning and once in the evening", "2/day"],
     ["in the morning", "1/day"],

@@ -6,9 +6,10 @@
  * samples and never leaves the device; the only network use is the one-time model
  * download from Hugging Face, which the browser caches.
  *
- * Medicine names: when the load request carries `medicines`, they are given to Whisper
- * as a text prompt ("previous text"), which makes it more likely to spell them right.
- * The prompt is removed from the output; only what was heard is returned.
+ * Prompt: when the load request carries `medicines` (Echo Care) or plain `words` (Echo
+ * Cover), they are given to Whisper as a text prompt ("previous text"), which makes it
+ * more likely to spell them right. The prompt is removed from the output; only what was
+ * heard is returned.
  */
 
 import {
@@ -17,7 +18,7 @@ import {
   WhisperForConditionalGeneration,
 } from "@huggingface/transformers";
 import type { Tensor } from "@huggingface/transformers";
-import { buildMedicinePrompt } from "@echo/engine";
+import { buildMedicinePrompt, buildWordsPrompt } from "@echo/engine";
 import type { AsrDevice, WorkerReply, WorkerRequest } from "@echo/engine";
 import { dtypeFor, isMultilingual, usesMedicinePrompt } from "./whisper-models";
 
@@ -51,7 +52,16 @@ function message(e: unknown): string {
   return typeof e === "string" ? e : "Speech engine error";
 }
 
-async function loadOn(model: string, device: AsrDevice, medicines: string[]): Promise<Transcriber> {
+interface PromptSource {
+  medicines: string[];
+  words: string[];
+}
+
+async function loadOn(
+  model: string,
+  device: AsrDevice,
+  { medicines, words }: PromptSource,
+): Promise<Transcriber> {
   const processor = await AutoProcessor.from_pretrained(model);
   const tokenizer = await AutoTokenizer.from_pretrained(model);
   const whisper = await WhisperForConditionalGeneration.from_pretrained(model, {
@@ -60,12 +70,12 @@ async function loadOn(model: string, device: AsrDevice, medicines: string[]): Pr
   });
 
   const token = (t: string): number => tokenizer.convert_tokens_to_ids(t);
-  const prompt = usesMedicinePrompt(model)
-    ? buildMedicinePrompt(
-        medicines,
-        (s) => tokenizer.encode(s, { add_special_tokens: false }).length,
-      )
-    : "";
+  const count = (s: string): number => tokenizer.encode(s, { add_special_tokens: false }).length;
+  const prompt = !usesMedicinePrompt(model)
+    ? ""
+    : words.length > 0
+      ? buildWordsPrompt(words, count)
+      : buildMedicinePrompt(medicines, count);
   const language = isMultilingual(model) ? [token("<|en|>"), token("<|transcribe|>")] : [];
   const start = [token("<|startoftranscript|>"), ...language, token("<|notimestamps|>")];
   const init =
@@ -89,12 +99,12 @@ async function loadOn(model: string, device: AsrDevice, medicines: string[]): Pr
   };
 }
 
-async function load(model: string, devices: AsrDevice[], medicines: string[]): Promise<AsrDevice> {
+async function load(model: string, devices: AsrDevice[], prompt: PromptSource): Promise<AsrDevice> {
   let lastError: unknown;
   for (const device of devices) {
     if (device === "webgpu" && !(await hasWebGpuAdapter())) continue;
     try {
-      transcriber = await loadOn(model, device, medicines);
+      transcriber = await loadOn(model, device, prompt);
       return device;
     } catch (e) {
       lastError = e;
@@ -111,7 +121,10 @@ scope.onmessage = (event) => {
   void (async () => {
     try {
       if (req.type === "load") {
-        const device = await load(req.model, req.devices, req.medicines ?? []);
+        const device = await load(req.model, req.devices, {
+          medicines: req.medicines ?? [],
+          words: req.words ?? [],
+        });
         scope.postMessage({ type: "loaded", id: req.id, device });
         return;
       }

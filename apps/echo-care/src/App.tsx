@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactElement } from "react";
-import { CONSENT_WORDING_VERSION, applyMark, compareLabel, medicineNameNote } from "@echo/engine";
+import {
+  CONSENT_WORDING_VERSION,
+  applyMark,
+  compareLabel,
+  dictionaryWith,
+  medicineNameNote,
+  normaliseText,
+  unclearCounts,
+} from "@echo/engine";
 import type {
   Anchor,
   LabelFields,
@@ -27,6 +35,7 @@ import {
   StatusMessage,
   TrustPanel,
   clock,
+  doseNoteText,
   medicineNoteText,
   createPlayer,
   useDeviceServices,
@@ -42,11 +51,13 @@ import { SharePanel } from "./SharePanel";
 import { HomePage } from "./HomePage";
 import { SavedVisits } from "./SavedVisits";
 import type { SavedVisit } from "./SavedVisits";
+import { MedicinesPage } from "./MedicinesPage";
 
 const PAGE_TITLES: Record<Route, string> = {
   "/home": "Echo Care — a receipt for what was said",
   "/visits": "Saved visits — Echo Care",
   "/consent": "Before we start — Echo Care",
+  "/medicines": "Your medicines — Echo Care",
   "/doctor-card": "Show the doctor — Echo Care",
   "/pharmacy": "Show the pharmacist — Echo Care",
   "/record": "Recording — Echo Care",
@@ -72,13 +83,19 @@ function stageFor(receipt: Receipt): Stage | undefined {
 const fieldsFor = (stage: Stage) =>
   Object.fromEntries(SCHEMAS[stage].facts.map((f) => [f.key, f.fields]));
 
-/** Why a medicine line needs checking, in plain words; nothing for other lines. */
-function medicineNote(fact: VerifiedFact): string | undefined {
+/**
+ * Why a medicine line needs checking, in plain words; nothing for other lines.
+ * `medicines` is the user's own list, so the note matches what the captions showed.
+ */
+function medicineNote(fact: VerifiedFact, medicines: readonly string[]): string | undefined {
   const name = fact.fields["name"];
-  if (fact.key !== "medicine" || fact.stamp !== "check_this" || name === undefined)
-    return undefined;
-  const note = medicineNameNote(name);
-  return note ? medicineNoteText(name, note) : undefined;
+  if (fact.key !== "medicine" || fact.stamp !== "check_this") return undefined;
+  const notes: string[] = [];
+  const note = name === undefined ? undefined : medicineNameNote(name, dictionaryWith(medicines));
+  if (name !== undefined && note) notes.push(medicineNoteText(name, note));
+  for (const u of unclearCounts(normaliseText(fact.anchor.quote)))
+    notes.push(doseNoteText(u.heard, u.suggestion));
+  return notes.length > 0 ? notes.join(" ") : undefined;
 }
 
 export function App(): ReactElement {
@@ -103,8 +120,28 @@ export function App(): ReactElement {
   const [playing, setPlaying] = useState<{ anchor: Anchor; text: string }>();
   const [deleted, setDeleted] = useState(false);
   const [labelFlags, setLabelFlags] = useState<LabelFlag[]>();
+  const [medicines, setMedicines] = useState<string[]>([]);
+  const [medicinesStatus, setMedicinesStatus] = useState<ViewStatus>("loading");
   const player = useRef(createPlayer());
   const rec = useRecording(controller);
+
+  // The user's own medicines list, from this phone (samples use none).
+  useEffect(() => {
+    if (!services) return;
+    if (launch.demo) {
+      setMedicinesStatus("ready");
+      return;
+    }
+    let active = true;
+    void services.store.getMedicines().then((result) => {
+      if (!active) return;
+      if (result.ok) setMedicines(result.value);
+      setMedicinesStatus(result.ok ? "ready" : "error");
+    });
+    return () => {
+      active = false;
+    };
+  }, [launch.demo, services]);
 
   useEffect(() => {
     if (!services) return;
@@ -193,6 +230,7 @@ export function App(): ReactElement {
       schema: SCHEMAS[next],
       ledger,
       store,
+      medicines,
       source: sample
         ? { kind: "scripted", consult: sample, speed: launch.speed }
         : { kind: "live" },
@@ -305,10 +343,26 @@ export function App(): ReactElement {
     controller !== undefined &&
     ["starting", "loading-model", "recording", "paused", "stopping"].includes(rec?.status ?? "");
 
+  const saveMedicines = async (next: string[]): Promise<boolean> => {
+    if (launch.demo) {
+      setMedicines(next);
+      return true;
+    }
+    const saved = await store.saveMedicines(next);
+    if (saved.ok) setMedicines(next);
+    return saved.ok;
+  };
+
   let screen: ReactElement;
   switch (route) {
     case "/visits":
       screen = <SavedVisits visits={visits} status={visitsStatus} onOpen={openVisit} />;
+      break;
+
+    case "/medicines":
+      screen = (
+        <MedicinesPage medicines={medicines} status={medicinesStatus} onChange={saveMedicines} />
+      );
       break;
 
     case "/consent":
@@ -337,6 +391,13 @@ export function App(): ReactElement {
             status={services.persistent ? "ready" : "error"}
             statusText={{ error: CARE.storageFallback }}
           />
+          <section className="echo-card care-sample">
+            <h2>{CARE.consentMedicinesTitle}</h2>
+            <p>{CARE.consentMedicinesText(medicines.length)}</p>
+            <a className="echo-button echo-button--secondary" href="#/medicines">
+              {CARE.consentMedicinesButton(medicines.length)}
+            </a>
+          </section>
           <section className="echo-card care-sample">
             <h2>{CARE.sampleTitle}</h2>
             <p>{CARE.sampleIntro}</p>
@@ -443,7 +504,9 @@ export function App(): ReactElement {
                   ? CARE.promptMissingName
                   : prompt.kind === "unknown-medicine-name"
                     ? CARE.promptUnknownName(prompt.heard ?? "")
-                    : CARE.promptUnclearName(prompt.heard ?? "", prompt.suggestion ?? "")}
+                    : prompt.kind === "unclear-dose"
+                      ? CARE.promptUnclearDose(prompt.heard ?? "", prompt.suggestion ?? "")
+                      : CARE.promptUnclearName(prompt.heard ?? "", prompt.suggestion ?? "")}
               </p>
               <p className="care-prompt__ask">{CARE.promptAsk}</p>
             </div>
@@ -559,7 +622,7 @@ export function App(): ReactElement {
             facts={receipt.facts}
             fieldsByKey={fieldsFor(current.stage)}
             {...(current.controller?.hasAudio ? { onPlay: play } : {})}
-            noteFor={medicineNote}
+            noteFor={(fact) => medicineNote(fact, medicines)}
           />
           <ChecklistView
             results={receipt.checklist}
@@ -722,6 +785,7 @@ export function App(): ReactElement {
           {visits.length > 0 && route !== "/visits" && (
             <a href="#/visits">{CARE.savedVisitsTitle}</a>
           )}
+          {route !== "/medicines" && <a href="#/medicines">{CARE.medicinesLink}</a>}
           {route !== "/trust" && <a href="#/trust">{ADDED.trustLink}</a>}
         </nav>
       </footer>

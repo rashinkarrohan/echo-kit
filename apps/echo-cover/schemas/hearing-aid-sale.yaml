@@ -1,6 +1,12 @@
 id: hearing-aid-sale
 skin: cover
 detectors: [money, percent, duration, commission]
+# Words the speech engine is prompted with instead of medicine names. On the owner's five
+# recordings this kept 18 of 18 facts (15 with the medicine prompt): "for the bear" and
+# "for the pay" became "for the pair", "on every cell" became "on every sale".
+# A list, not a sentence: see docs/SPIKES.md (Nov 21, 2026).
+speechWords:
+  [hearing aids, pair, per aid, fitting, follow-up, warranty, trial, refund, finance, interest, monthly, commission, salary, sale]
 disclaimer: "Echo compares what sellers said. It is not legal or financial advice and it does not recommend a purchase."
 facts:
   - key: price
