@@ -18,6 +18,18 @@ import { join } from "node:path";
 const root = new URL("..", import.meta.url).pathname;
 const product = readFileSync(join(root, "private/fda/product.txt"), "latin1");
 
+// Everyday English (engine/data/common-english.json). An ingredient word that is an -ed,
+// -ing or plural form of an everyday word ("treated", "purified", "dehydrated" from
+// "dehydrated alcohol") is not a medicine name: real speech in PriMock57 flagged
+// "you're dehydrated" as naming a medicine (Nov 22, 2026).
+const everyday = new Set(
+  JSON.parse(readFileSync(join(root, "engine/data/common-english.json"), "utf8")).words.split(" "),
+);
+const isEverydayForm = (w) =>
+  [w, w.replace(/ied$/, "y"), w.replace(/ed$/, ""), w.replace(/d$/, ""), w.replace(/ing$/, ""), w.replace(/ing$/, "e"), w.replace(/s$/, "")].some(
+    (s) => s !== "" && everyday.has(s),
+  );
+
 const SALT_AND_FORM = new Set(
   `hydrochloride hcl sodium potassium calcium magnesium sulfate sulphate maleate besylate mesylate tartrate
   bitartrate citrate acetate phosphate succinate fumarate bromide hydrobromide chloride nitrate mononitrate
@@ -74,7 +86,10 @@ for (const line of product.split("\n").slice(1)) {
       .toLowerCase()
       .replace(/[^a-z ]/g, " ")
       .split(/\s+/)
-      .filter((w) => w.length >= 5 && !SALT_AND_FORM.has(w) && !NOT_A_MEDICINE_NAME.has(w));
+      .filter(
+        (w) =>
+          w.length >= 5 && !SALT_AND_FORM.has(w) && !NOT_A_MEDICINE_NAME.has(w) && !isEverydayForm(w),
+      );
     for (const w of words) counts.set(w, (counts.get(w) ?? 0) + 1);
   }
 }

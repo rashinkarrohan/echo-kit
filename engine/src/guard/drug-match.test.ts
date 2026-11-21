@@ -206,3 +206,22 @@ describe("property: a personal list only adds suggestions", () => {
     );
   });
 });
+
+describe("the medicine list itself", () => {
+  // Real-speech check on PriMock57 (Nov 22, 2026): "treated" and "dehydrated" were in the
+  // list (from FDA substance names such as "dehydrated alcohol"), so a doctor saying
+  // "you're dehydrated" was flagged as naming a medicine.
+  it("has no everyday English word, or an -ed / -ing / -s form of one", async () => {
+    const common = new Set((await import("../../data/common-english.json")).words.split(" "));
+    const stems = (w: string): string[] => [
+      w,
+      w.replace(/ied$/, "y"),
+      w.replace(/ed$/, ""),
+      w.replace(/d$/, ""),
+      w.replace(/ing$/, ""),
+      w.replace(/ing$/, "e"),
+      w.replace(/s$/, ""),
+    ];
+    expect(list.filter((name) => stems(name).some((s) => s !== "" && common.has(s)))).toEqual([]);
+  });
+});
