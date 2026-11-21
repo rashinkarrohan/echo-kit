@@ -8,14 +8,19 @@ Record the licence and the date opened for every item. Anything not written duri
 - WHO deafness and hearing loss: https://www.who.int/health-topics/hearing-loss
 - Global Burden of Disease 2019, hearing loss (Lancet): https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(21)00516-X/fulltext
 - RNID evidence review: https://rnid.org.uk/what-we-do/evidence-hub/access-to-healthcare-evidence-pack/evidence-review/consequences-for-healthcare/
-- Physician-patient communication failure and medication errors: https://pubmed.ncbi.nlm.nih.gov/22904014
+- Physician-patient communication failure and medication errors: https://pubmed.ncbi.nlm.nih.gov/22904014 (opened Nov 21, 2026: Mira et al., Fam Pract 2013, patients over 65. This is **not** the Age and Ageing 2020 study cited in CLAIMS.md; see the next line)
+- Hearing loss and medication errors, clinician survey (Age and Ageing 2020;49(5):873): https://pubmed.ncbi.nlm.nih.gov/32253433 (opened Nov 21, 2026; source of the "about 10%" figure)
 - Hearing loss at the pharmacy (Hearing Journal): https://www.ovid.com/jnls/thehearingjournal/fulltext/10.1097/01.hj.0000935968.26392.01~hearing-loss-at-the-pharmacy-a-qualitative-study-of
 - Pharmacy Times, deaf patients: https://www.pharmacytimes.com/view/how-pharmacists-can-better-assist-deaf-patients (opened)
 - E-prescription discrepancies (AHRQ PSNet): https://psnet.ahrq.gov/issue/physician-intent-pharmacy-label-prevalence-and-description-discrepancies-cross-sectional
 - Sig quality (JMCP): https://www.jmcp.org/doi/10.18553/jmcp.2018.17404
 - Consultation recording for patients 50+: https://www.tandfonline.com/doi/full/10.1080/10410236.2019.1669270
 - ACCC hearing-aid sales (ABC): https://www.abc.net.au/news/2017-03-02/consumer-watchdog-puts-hearing-aid-industry-on-notice/8319738 ; CHOICE: https://www.choice.com.au/health-and-body/optical-and-hearing/hearing/articles/profit-hungry-hearing-clinics-put-on-notice-by-the-accc-030317
-- AI scribe error study: https://www.researchgate.net/publication/395991766_Clinical_AI_Scribes_in_primary_care_accuracy_error_severity_and_implications_for_clinical_practice ; Abridge feedback: https://arxiv.org/pdf/2512.04118
+- ACCC report, primary source for the ABC and CHOICE articles (3 March 2017, opened Nov 21, 2026): https://www.accc.gov.au/system/files/Issues%20around%20the%20sale%20of%20hearing%20aids%20-%20Consumer%20and%20clinical%20perspectives.pdf
+- AI scribe error study: https://www.researchgate.net/publication/395991766_Clinical_AI_Scribes_in_primary_care_accuracy_error_severity_and_implications_for_clinical_practice (also at https://pmc.ncbi.nlm.nih.gov/articles/PMC13528381/) ; Abridge feedback: https://arxiv.org/pdf/2512.04118 (opened Nov 21, 2026)
+- LLM clinical summary hallucination and omission rates, source of the 1.47% and 3.45% figures (Asgari et al., npj Digit Med 2025): https://pubmed.ncbi.nlm.nih.gov/40360677/ (opened Nov 21, 2026)
+- GBD 2019 abstract, read through Europe PMC because the Lancet page returned 403 (opened Nov 21, 2026): https://europepmc.org/article/MED/33714390
+- Questions to ask an audiologist (Boys Town National Research Hospital, US), candidate replacement source for the Echo Cover checklist, not adopted yet: https://www.boystownhospital.org/knowledge-center/questions-to-ask-audiologist
 - US one-party and all-party recording states (AHCJ): https://healthjournalism.org/blog/2026/07/dear-doctor-your-patient-may-be-recording-this-visit/
 - DOJ Trinity Health settlement: https://www.justice.gov/opa/pr/justice-department-reaches-americans-disabilities-act-settlement-trinity-health-systems-iowa
 
