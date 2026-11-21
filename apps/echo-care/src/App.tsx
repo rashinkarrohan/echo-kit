@@ -96,6 +96,8 @@ export function App(): ReactElement {
   const [visitsStatus, setVisitsStatus] = useState<ViewStatus>("loading");
   const [selectedVisitId, setSelectedVisitId] = useState<string>();
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [discardConfirm, setDiscardConfirm] = useState(false);
+  const [consentMissing, setConsentMissing] = useState(false);
   const [repeatOpen, setRepeatOpen] = useState(false);
   const [speakerFacing, setSpeakerFacing] = useState(false);
   const [playing, setPlaying] = useState<{ anchor: Anchor; text: string }>();
@@ -183,8 +185,10 @@ export function App(): ReactElement {
     setDeleteConfirm(false);
     setSelectedVisitId(undefined);
     setLabelFlags(undefined);
+    setConsentMissing(false);
+    setDiscardConfirm(false);
     const sample = launch.sample?.[next];
-    void c.start({
+    c.start({
       sessionId: `${next}-${Date.now()}`,
       schema: SCHEMAS[next],
       ledger,
@@ -192,8 +196,19 @@ export function App(): ReactElement {
       source: sample
         ? { kind: "scripted", consult: sample, speed: launch.speed }
         : { kind: "live" },
+    }).catch(() => {
+      // The session's consent gate refused to start: say why instead of a blank screen.
+      setController(undefined);
+      setConsentMissing(true);
     });
     go("/record");
+  };
+
+  const discardRecording = async (): Promise<void> => {
+    await controller?.discard();
+    setController(undefined);
+    setDiscardConfirm(false);
+    go("/home");
   };
 
   const stopAndReview = async (): Promise<void> => {
@@ -284,6 +299,12 @@ export function App(): ReactElement {
   const canShare = ledger.has("share");
   const hasMedicine = visits.some((v) => v.receipt.facts.some((f) => f.key === "medicine"));
 
+  // While audio may be captured, no link leads away from the recording (it would keep running).
+  const capturing =
+    route === "/record" &&
+    controller !== undefined &&
+    ["starting", "loading-model", "recording", "paused", "stopping"].includes(rec?.status ?? "");
+
   let screen: ReactElement;
   switch (route) {
     case "/visits":
@@ -358,6 +379,7 @@ export function App(): ReactElement {
               : "ready";
       const prompt = rec?.prompts[rec.prompts.length - 1];
       const live = status === "recording" || status === "paused";
+      const failed = status === "error" || status === "permission-denied";
       screen = (
         <>
           <h1 className="echo-visually-hidden">{CARE.appName}: recording</h1>
@@ -371,10 +393,47 @@ export function App(): ReactElement {
                   ? CARE.recording
                   : ""}
           </p>
-          {!controller ? (
-            <StatusMessage status="empty" text={{ empty: CARE.noReceipt }} />
+          {consentMissing ? (
+            <div className="care-recover">
+              <StatusMessage status="error" text={{ error: CARE.consentNeeded }} />
+              <div className="echo-actions">
+                <a className="echo-button" href="#/consent">
+                  {CARE.goToConsent}
+                </a>
+              </div>
+            </div>
+          ) : !controller ? (
+            <div className="care-recover">
+              <StatusMessage status="empty" text={{ empty: CARE.noReceipt }} />
+              <div className="echo-actions">
+                <a className="echo-button" href="#/consent">
+                  {CARE.homeStart}
+                </a>
+              </div>
+            </div>
           ) : (
             <CaptionView lines={rec?.lines ?? []} status={viewStatus} />
+          )}
+          {failed && (
+            <div className="echo-actions care-recover">
+              <button
+                type="button"
+                className="echo-button"
+                onClick={() => {
+                  void controller?.discard();
+                  startRecording(stage);
+                }}
+              >
+                {CARE.tryAgain}
+              </button>
+              <a
+                className="echo-button echo-button--secondary"
+                href="#/home"
+                onClick={() => void controller?.discard()}
+              >
+                {CARE.startupBack}
+              </a>
+            </div>
           )}
           {prompt && (
             <div className="echo-card care-prompt" role="status">
@@ -389,27 +448,59 @@ export function App(): ReactElement {
               <p className="care-prompt__ask">{CARE.promptAsk}</p>
             </div>
           )}
-          <div className="care-bar">
-            <button type="button" className="echo-button" onClick={() => setRepeatOpen(true)}>
-              {FINAL.pleaseRepeat}
-            </button>
-            <button
-              type="button"
-              className="echo-button echo-button--secondary"
-              disabled={!live}
-              onClick={() => (status === "paused" ? controller?.resume() : controller?.pause())}
-            >
-              {status === "paused" ? CARE.resume : FINAL.pause}
-            </button>
-            <button
-              type="button"
-              className="echo-button echo-button--secondary"
-              disabled={!live}
-              onClick={() => void stopAndReview()}
-            >
-              {FINAL.stopAndReview}
-            </button>
-          </div>
+          {controller && !failed && (
+            <div className="care-bar">
+              <button type="button" className="echo-button" onClick={() => setRepeatOpen(true)}>
+                {FINAL.pleaseRepeat}
+              </button>
+              <button
+                type="button"
+                className="echo-button echo-button--secondary"
+                disabled={!live}
+                onClick={() => (status === "paused" ? controller.resume() : controller.pause())}
+              >
+                {status === "paused" ? CARE.resume : FINAL.pause}
+              </button>
+              <button
+                type="button"
+                className="echo-button echo-button--secondary"
+                disabled={!live}
+                onClick={() => void stopAndReview()}
+              >
+                {FINAL.stopAndReview}
+              </button>
+              <button
+                type="button"
+                className="echo-button echo-button--secondary care-bar__discard"
+                disabled={status === "stopping"}
+                onClick={() => setDiscardConfirm(true)}
+              >
+                {CARE.discardRecording}
+              </button>
+            </div>
+          )}
+          {discardConfirm && (
+            <div className="echo-card care-delete" role="group" aria-label={CARE.discardTitle}>
+              <h2>{CARE.discardTitle}</h2>
+              <p>{CARE.discardText}</p>
+              <div className="echo-actions">
+                <button
+                  type="button"
+                  className="echo-button echo-button--secondary"
+                  onClick={() => setDiscardConfirm(false)}
+                >
+                  {CARE.cancel}
+                </button>
+                <button
+                  type="button"
+                  className="echo-button care-delete__confirm"
+                  onClick={() => void discardRecording()}
+                >
+                  {CARE.discardPermanently}
+                </button>
+              </div>
+            </div>
+          )}
           {disclaimer}
           {repeatOpen && (
             <SpeakerCard
@@ -625,7 +716,7 @@ export function App(): ReactElement {
   return (
     <Skin skin="care" className="care-page">
       <main className="care-main">{screen}</main>
-      <footer className="care-footer">
+      <footer className="care-footer" hidden={capturing}>
         <nav aria-label={CARE.footerNavigation}>
           <a href="#/home">{CARE.homeLink}</a>
           {visits.length > 0 && route !== "/visits" && (

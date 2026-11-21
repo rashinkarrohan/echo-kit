@@ -101,6 +101,13 @@ export const CARE = {
   promptUnknownName: (heard: string) =>
     `Echo heard “${heard}” before a dose. It is not a medicine name Echo knows.`,
   promptAsk: "Tap Please repeat to ask them to say the name and dose again.",
+  tryAgain: "Try again",
+  consentNeeded: "Echo needs your consent before it can record.",
+  goToConsent: "Go to Before we start",
+  discardRecording: "Discard recording",
+  discardTitle: "Discard this recording?",
+  discardText: "Nothing from this recording will be kept. This cannot be undone.",
+  discardPermanently: "Discard permanently",
   playing: (range: string) => `Playing ${range}`,
   playFailed: "This part could not be played.",
   sampleBadge: "Sample consult (actors, no microphone)",

@@ -422,3 +422,15 @@ body {
     width: 100%;
   }
 }
+
+/* Recording screen recovery: an error or missing consent always has a next step */
+.care-recover {
+  margin-top: var(--space-4);
+}
+.care-recover a.echo-button {
+  text-decoration: none;
+}
+.care-bar .care-bar__discard {
+  color: var(--check);
+  border-color: var(--check);
+}
