@@ -4,7 +4,7 @@ The rules require answers to eight prompts. Fill one dated note, one commit link
 
 | Prompt | What to record | Date | Commit or file | Impact in one sentence |
 |---|---|---|---|---|
-| Kiro IDE, CLI, Web, Crew: how did they differ? | What each was best at; where each limited you | | | |
+| Kiro IDE, CLI, Web, Crew: how did they differ? | What each was best at; where each limited you | | | *To fill in by the owner: only the Kiro IDE has been used so far; Crew is Step 28.* |
 | Custom agents | Agents created (schema writer, red-team); which Kiro app; effect on the build | Nov 13, 2026 | `.kiro/agents/red-team.md`, `.kiro/agents/schema-writer.md`, `evals/redteam/NOTES.md`, `evals/consults/redteam-01.json` | The red-team pass found 15 of 21 scripted attacks where Echo accepted a fact nobody said (none unanchored); the worst gave metformin the aspirin dose from the same sentence. The extractor fix took that to 7 of 21, and the best attack now runs in every eval. |
 | Agent hooks | Each hook, its trigger, the workflow it automated, time saved | Nov 13, 2026 | `.kiro/hooks/` (4 files), `scripts/check-copy.mjs`, `scripts/scaffold-evals.mjs`, `evals/src/validate-schemas.ts` | Four hooks: schema YAML saved, then validate all schemas; spec task completed, then `pnpm test && pnpm evals`; copy file saved, then flag advice or ranking wording; new schema created, then draft an eval case. Commands checked by hand (see S24 note below); the IDE triggers themselves have not been seen firing yet. |
 | Spec-driven development | How the specs were structured; compare one module built spec-first and one vibe-coded | | | |
@@ -42,3 +42,19 @@ Two workspace agents in `.kiro/agents/` (format checked against kiro.dev the sam
 **After.** `pnpm evals` with redteam-01: 18 consults, 58/58 kept, 0 invented, 0 unanchored. Replaying all 21 attacks: invented facts down from 15 to 7.
 **Still open (not fixed):** ranges ("between two and three tablets" keeps 3), "one and a half tablets" read as 0.5, an "if you" sentence about parking taken as a warning sign, "aspiring" matched to aspirin, and three seller-price traps (single-aid vs pair price, "per aid, so ... for the pair", "do we get a commission? We do not"). The harness also misses one class: it counted "0.5 tablets" for "one and a half" as a match (see NOTES.md).
 **Schema writer:** not yet run as its own agent; the physio-visit type (S26) was written by following the same skill it loads.
+
+### S27 follow-up: the last red-team findings, Nov 21, 2026 (Kiro IDE)
+The six attacks that still produced an invented fact were fixed, then moved from `evals/redteam/attacks/` into `evals/consults/`, so every `pnpm evals` now runs them:
+- **12:** a spoken range is kept as one dose.
+- **11 and 21:** "one and a half" now reads as 1.5.
+- **15:** "questions about parking, call the clinic reception" is no longer a warning sign.
+- **18 and 19:** a price takes its "per pair" or "per aid" from right after the amount.
+- **20:** a statement about commission keeps the seller's answer, not the question.
+
+Each fix has a unit test written first (`engine/src/text/normalise.test.ts`, `engine/src/guard/care-detectors.test.ts`, `evals/src/harness.test.ts`).
+
+Results:
+- `pnpm evals`: 25 consults, 79/79 kept, 0 invented, 0 unanchored.
+- Replaying all 21 attacks plus the regular consults (39 in total): 0 invented. The only dropped fact is attack 17, which is dropped by design.
+
+Commit `011ba92`; details in `evals/redteam/NOTES.md`.
