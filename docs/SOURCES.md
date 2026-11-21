@@ -20,7 +20,9 @@ Record the licence and the date opened for every item. Anything not written duri
 - AI scribe error study: https://www.researchgate.net/publication/395991766_Clinical_AI_Scribes_in_primary_care_accuracy_error_severity_and_implications_for_clinical_practice (also at https://pmc.ncbi.nlm.nih.gov/articles/PMC13528381/) ; Abridge feedback: https://arxiv.org/pdf/2512.04118 (opened Nov 21, 2026)
 - LLM clinical summary hallucination and omission rates, source of the 1.47% and 3.45% figures (Asgari et al., npj Digit Med 2025): https://pubmed.ncbi.nlm.nih.gov/40360677/ (opened Nov 21, 2026)
 - GBD 2019 abstract, read through Europe PMC because the Lancet page returned 403 (opened Nov 21, 2026): https://europepmc.org/article/MED/33714390
-- Questions to ask an audiologist (Boys Town National Research Hospital, US), candidate replacement source for the Echo Cover checklist, not adopted yet: https://www.boystownhospital.org/knowledge-center/questions-to-ask-audiologist
+- Questions to ask an audiologist (Boys Town National Research Hospital, US), candidate replacement source for the Echo Cover checklist, not adopted (NIDCD used instead): https://www.boystownhospital.org/knowledge-center/questions-to-ask-audiologist
+- NIDCD, Hearing aids (US National Institutes of Health; US government work), opened Nov 22, 2026: https://www.nidcd.nih.gov/health/hearing-aids. Source for Echo Cover q-total-price, q-inclusions and q-trial-returns, and for "about 1 in 5 who would benefit use a hearing aid".
+- CFPB, Medical Credit Cards and Financing Plans (May 2023; US government work), opened Nov 22, 2026: https://files.consumerfinance.gov/f/documents/cfpb_medical-credit-cards-and-financing-plans_2023-05.pdf. Source for Echo Cover q-financing.
 - US one-party and all-party recording states (AHCJ): https://healthjournalism.org/blog/2026/07/dear-doctor-your-patient-may-be-recording-this-visit/
 - DOJ Trinity Health settlement: https://www.justice.gov/opa/pr/justice-department-reaches-americans-disabilities-act-settlement-trinity-health-systems-iowa
 

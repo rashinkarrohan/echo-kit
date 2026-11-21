@@ -38,34 +38,38 @@ facts:
       any: ["@commission"]
       windowWords: 20
 checklist:
+  # Sources opened Nov 22, 2026 and recorded in docs/CLAIMS.md; swap approved by the owner.
+  # NIDCD (US National Institutes of Health) lists the questions to ask before buying.
   - id: q-total-price
-    text: "What is the total price per pair, and is this model sold elsewhere?"
-    sourceUrl: "https://www.abc.net.au/news/2017-03-02/consumer-watchdog-puts-hearing-aid-industry-on-notice/8319738"
-    verified: false
+    text: "What is the total price for the pair?"
+    sourceUrl: "https://www.nidcd.nih.gov/health/hearing-aids"
+    verified: true
     cues:
       all: [["@money"], ["pair|each|total|price"]]
   - id: q-inclusions
     text: "What is included: fitting, follow-up visits, warranty?"
-    sourceUrl: "https://www.choice.com.au/health-and-body/optical-and-hearing/hearing/articles/profit-hungry-hearing-clinics-put-on-notice-by-the-accc-030317"
-    verified: false
+    sourceUrl: "https://www.nidcd.nih.gov/health/hearing-aids"
+    verified: true
     cues:
       any: ["includes?", "included", "fitting", "follow[- ]up", "warranty"]
   - id: q-trial-returns
     text: "How long is the trial and what are the return terms?"
-    sourceUrl: "https://www.choice.com.au/health-and-body/optical-and-hearing/hearing/articles/profit-hungry-hearing-clinics-put-on-notice-by-the-accc-030317"
-    verified: false
+    sourceUrl: "https://www.nidcd.nih.gov/health/hearing-aids"
+    verified: true
     cues:
       all: [["trial|try them"], ["@duration"]]
+  # US Consumer Financial Protection Bureau, "Medical Credit Cards and Financing Plans" (May 2023).
   - id: q-financing
     text: "If I finance it, what is the interest rate and the total repayment?"
-    sourceUrl: "https://www.abc.net.au/news/2017-03-02/consumer-watchdog-puts-hearing-aid-industry-on-notice/8319738"
-    verified: false
+    sourceUrl: "https://files.consumerfinance.gov/f/documents/cfpb_medical-credit-cards-and-financing-plans_2023-05.pdf"
+    verified: true
     cues:
       all: [["finance|financing|pay monthly|interest"], ["@percent"]]
+  # No US source found on sales commission; the Australian regulator's primary report (2017).
   - id: q-commission
     text: "Do staff earn commission on this sale?"
-    sourceUrl: "https://www.abc.net.au/news/2017-03-02/consumer-watchdog-puts-hearing-aid-industry-on-notice/8319738"
-    verified: false
+    sourceUrl: "https://www.accc.gov.au/system/files/Issues%20around%20the%20sale%20of%20hearing%20aids%20-%20Consumer%20and%20clinical%20perspectives.pdf"
+    verified: true
     cues:
       any: ["@commission"]
 nextSteps:
