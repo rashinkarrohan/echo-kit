@@ -109,3 +109,46 @@ The owner said "paracetamol" and the captions showed "paramet" / "baramet". Two 
 - **Prompt:** paracetamol ranked 64th, so it was not in base.en's 40-name prompt. UK/INN names now rank with their US name when that is higher (paracetamol with acetaminophen, 3rd), never lower than before (`scripts/build-drug-list.mjs`). Same 1,755 names; the 850 near-match names are unchanged. Bench, base.en + prompt, 48 clips: name heard exactly 30 → **34**, found 38 → **41**, dose 47 → 47; both paracetamol clips now heard exactly. One clip lost an exact name (prednisolone heard as prednisone, still shown as Check this with "Could also be"). No clip echoed the prompt. Four extra synthetic paracetamol clips (Daniel, Aman, Rishi, Samantha): 4/4 exact with the prompt, up from 2/4.
 - **Unknown name before a dose:** "paramet" is too far from paracetamol to match by sound, and a looser match guessed wrong more often than right (bench misses: 15 right, 21 wrong, such as lidocaine for amlodipine), so Echo does not guess. Instead, when a segment has no medicine name, a word right before a dose ("paramet 500 mg", "calpol 5 ml") that is not everyday English is kept as heard and marked as a medicine name Echo does not know. It becomes a medicine line stamped Check this, with the dose kept. Everyday words come from SCOWL size 35 (docs/SOURCES.md) plus a short list of words said before doses ("sorry", "maybe", "breakfast"). Across all 329 eval, red-team and bench segments it flagged 21 words, all misheard medicine names, and no ordinary words. The red-team replay is unchanged (same 6 known invented facts).
 - **UI:** captions show a boxed hint after the heard name ("Sounds like metformin?", "Could also be prednisolone?", "Not a medicine name Echo knows"); the recording screen shows a Check this card that says what was heard and to tap Please repeat; each Check this medicine on the receipt says why in plain words and to check the name on the label or with the pharmacist. Sample: `?sample=misheard&demo=1#/doctor-card` (care-11, actors).
+
+## Accuracy work, Nov 21, 2026
+Measured before deciding what to keep. All on the M4 laptop, Node CPU, whisper-base.en at 8 bits (the app's WebAssembly setting). Raw outputs are in `private/` (not committed).
+
+### 1. The user's own medicines list (kept)
+The user can type the medicines they take (Echo Care, "Your medicines"). Those names go first in Whisper's prompt, and a misheard word can match a listed name more loosely: any first sound, and about a third of the sound key may differ. It is only ever a "Sounds like" suggestion, stamped Check this; the heard word is kept.
+
+**Bench** (`PERSONAL=with|without pnpm --filter @echo/evals exec vite-node src/asr-bench.ts ../private/asr-bench Xenova/whisper-base.en 40`; the 48 synthetic clips, list of 5 names):
+
+| List | Name heard exactly | Name found | Wrong medicine named |
+|---|---|---|---|
+| No list (as before) | 34/48 | 41/48 | 0/48 |
+| Prompt only, medicine on the list | 41/48 | 45/48 | 0/48 |
+| Prompt and matching, medicine on the list | 41/48 | **47/48** | 0/48 |
+| Prompt and matching, medicine **not** on the list | 34/48 | 41/48 | 1/48 |
+
+The one wrong name when the medicine was not listed is prednisolone heard as "Prednisone": a real medicine, so it is still marked Check this with "Could also be prednisolone?". The only miss left with the list is "Drinepiride" (glimepiride).
+
+**Text replay** (`private/asr-bench/personal-check.ts`): on 238 saved speech-engine transcripts from earlier runs, names found went from 182 to 205 with the medicine listed. Wrong names stayed at 3. One new wrong name appeared when the medicine was not listed: chlorpheniramine suggested for "Lichlorfenamine" (chlorphenamine). Across 145 eval segments, a 54-name list added no medicine name anywhere. The first version matched "dove sat in" to atorvastatin; joined words may no longer start with an everyday English word, and a unit test keeps it.
+
+### 2. Different first sound against the whole list (rejected)
+Allowing a different first sound for the full common-medicine list would recover 7 to 10 names in the replay but suggest 6 wrong real medicines, for example felodipine for "lodipine" (amlodipine) and lovastatin for "dovastatin" (atorvastatin). A wrong real medicine is worse than "Not a medicine name Echo knows", so this stays off. The personal list recovers those same names safely.
+
+### 3. Other ways of saying how often (kept)
+"When you need it", "if needed", "as required", "as and when", "every morning", "in the evening", "at bedtime" and "daily" on its own are now read as frequencies; the live captions and the label check share one "as needed" list. This fixed the only missed field in the evals (care-04, "two puffs, when you need it"). It also exposed a hazard, which was fixed in the same change: once "in the evening" was read, red-team attack 13 ("warfarin five milligrams every other day, in the evening") would have become a daily evening dose. "Every other day", "every N days", "once a week" and "N times a week" are now counted first, and attack 13 runs in every `pnpm evals`.
+
+### 4. "Two" heard as "to" (kept)
+The bench clip "two puffs when needed" came back as "to puffs". After take, use, inhaler, puffer or spray, "to" or "too" before tablets, capsules, puffs, drops or sprays is now flagged as an unclear dose: the caption says "Sounds like 2 puffs?", Echo asks for a repeat, and the medicine line is Check this. The dose is never filled in from it, and "switch you to tablets" is left alone.
+
+### 5. Real voice, and a prompt per conversation type (kept)
+`pnpm --filter @echo/evals exec vite-node src/real-voice.ts` runs the owner's five recordings of the sample scripts (23 segments, 296 words, one speaker, a quiet room) through the app's speech set-up and the same scoring as `pnpm evals`. The scorer now treats "$3,800" and "3800 dollars", "12%" and "12 percent", "500mg" and "500 milligrams" as the same value (unit tests in `evals/src/harness.test.ts`; different amounts or units still disagree).
+
+| Prompt | Word error rate | Facts kept | Invented |
+|---|---|---|---|
+| Medicine names for every recording (before) | 14.5% | 15/18 | 2 |
+| Medicine names for Echo Care, sales words for Echo Cover (now) | **13.2%** | **18/18** | **0** |
+| Same, plus the Care recordings' medicines on a personal list | 12.8% | 18/18 | 0 |
+
+With the medicine prompt, "for the pair" was heard as "for the bear" and "for the pay", and "every sale" as "every cell", so two prices lost their "per pair" and two commission sentences were garbled. Echo Cover's schema now names its own `speechWords` (hearing aids, pair, per aid, fitting, follow-up, warranty, trial, refund, finance, interest, monthly, commission, salary, sale), which replace the medicine prompt for that conversation type.
+
+**Prompt echo check** (`private/actor-audio/prompt-echo.ts`): each prompt was run on near-silence (the five recordings' lead-ins, three noise levels, digital silence). The first sales prompt was a phrase ("the price for the pair, ...") and on one lead-in Whisper wrote "The price for the pair is $100,000.", which would have become a price nobody said. As a plain word list ("Words: hearing aids, pair, ...") it wrote no sales words on any of the 9 clips, and the medicine prompt wrote no medicine names. So `speechWords` must be a list of plain terms; the schema loader rejects punctuation and any entry longer than three words.
+
+**Limits:** one speaker, a quiet room, scripts the speaker wrote, 5 recordings. This is a regression check, not an accuracy claim for real visits.

@@ -1,17 +1,17 @@
 {
-  "date": "2026-11-21T15:06:27.134Z",
-  "runs": 49,
+  "date": "2026-11-21T17:53:40.060Z",
+  "runs": 51,
   "extractor": "rules",
   "passed": true,
   "totals": {
-    "consults": 26,
-    "plantedFacts": 82,
-    "kept": 82,
+    "consults": 27,
+    "plantedFacts": 83,
+    "kept": 83,
     "dropped": 0,
     "invented": 0,
     "unanchored": 0,
     "rejectedByValidator": 0,
-    "fieldRecall": 0.993103448275862,
+    "fieldRecall": 1,
     "flaggedTokenRecall": 1,
     "checklistAccuracy": 1,
     "labelChecks": 7,
@@ -189,7 +189,7 @@
       "unanchored": 0,
       "rejectedByValidator": 0,
       "fieldsPlanted": 9,
-      "fieldsKept": 8,
+      "fieldsKept": 9,
       "tokensExpected": 6,
       "tokensFound": 6,
       "checklistTotal": 5,
@@ -1059,6 +1059,55 @@
             "id": "q-medicine-purpose",
             "expected": "Answered",
             "actual": "Answered"
+          },
+          {
+            "id": "q-how-to-take",
+            "expected": "Answered",
+            "actual": "Answered"
+          },
+          {
+            "id": "q-side-effects",
+            "expected": "Not discussed",
+            "actual": "Not discussed"
+          },
+          {
+            "id": "q-warning-signs",
+            "expected": "Not discussed",
+            "actual": "Not discussed"
+          },
+          {
+            "id": "q-follow-up",
+            "expected": "Not discussed",
+            "actual": "Not discussed"
+          }
+        ]
+      }
+    },
+    {
+      "id": "redteam-13",
+      "schemaId": "doctor-visit",
+      "failures": [],
+      "planted": 1,
+      "kept": 1,
+      "dropped": 0,
+      "invented": 0,
+      "unanchored": 0,
+      "rejectedByValidator": 0,
+      "fieldsPlanted": 3,
+      "fieldsKept": 3,
+      "tokensExpected": 2,
+      "tokensFound": 2,
+      "checklistTotal": 5,
+      "checklistCorrect": 5,
+      "details": {
+        "droppedFacts": [],
+        "inventedFacts": [],
+        "missedTokens": [],
+        "checklist": [
+          {
+            "id": "q-medicine-purpose",
+            "expected": "Unclear",
+            "actual": "Unclear"
           },
           {
             "id": "q-how-to-take",

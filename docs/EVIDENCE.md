@@ -5,15 +5,15 @@ Status on Nov 21, 2026: sections 1 and 2 have measured results; sections 3 and 4
 ## 1. Eval harness (every build)
 Facts kept, dropped, invented, unanchored; flagged-token recall; checklist accuracy; number of runs. Gate: invented = 0 and unanchored = 0.
 
-**Latest run (Nov 21, 2026, `pnpm evals`, run 49 recorded in `evals/results.json`):**
+**Latest run (Nov 21, 2026, `pnpm evals`, recorded in `evals/results.json`):**
 
 | Measure | Result |
 |---|---|
-| Scripted conversations | 26: 12 Echo Care doctor and pharmacy, 2 physiotherapy, 5 Echo Cover, 7 kept from the red-team attacks |
-| Planted facts kept | 82 of 82 (0 dropped) |
+| Scripted conversations | 27: 12 Echo Care doctor and pharmacy, 2 physiotherapy, 5 Echo Cover, 8 kept from the red-team attacks |
+| Planted facts kept | 83 of 83 (0 dropped) |
 | Invented facts | 0 |
 | Facts without a verbatim quote | 0 |
-| Field recall | 99.3% (the one miss is in care-04) |
+| Field recall | 100% (was 99.3% before "when you need it" was read as a frequency) |
 | Flagged-token recall (doses, medicine names, money, percentages, durations) | 100% |
 | Checklist accuracy (asked / not discussed) | 100% |
 | Label-check and quote-comparison cases checked | 7 and 3, all passed |
@@ -27,6 +27,7 @@ The gate is checked in the other direction too: `pnpm evals --break` swaps in a 
 | Nov 13, 2026, before fixes | 15 of 21 | 0 |
 | Nov 13, 2026, after the clause fix | 7 of 21 | 0 |
 | Nov 21, 2026, after the last six fixes | 0 of 21 | 0 |
+| Nov 21, 2026, after the frequency changes (attack 13 caught and fixed in the same change) | 0 of 21 | 0 |
 
 **Limits:** all conversations are scripted and read by actors (the project owner for the sample audio). The harness runs on transcript text, so speech-recognition errors are measured separately (section 2). The same people wrote the scripts and the extractor, so the cases may share blind spots; the red-team attacks are the only adversarial part, and they were also written with Kiro.
 
@@ -41,9 +42,13 @@ Spoken drug names in quiet, in noise, with accents. Report measured rates. No ta
 | whisper-large-v3-turbo, no prompt (opt-in `?model=turbo`), Nov 13, 2026 | 37/48 | 46/48 | 48/48 |
 | whisper-tiny.en with prompt, Nov 13, 2026 | 23/48 | 38/48 | 46/48 |
 
+**With the user's own medicines list** (Nov 21, 2026; a 5-name list per clip): when the clip's medicine was on the list, names found rose from 41 to 47 of 48 and exact names from 34 to 41, with no wrong medicine named. When it was not on the list, results were unchanged (41 of 48), with one wrong but flagged name (prednisone, shown as "Could also be prednisolone?").
+
 When a name is not recognised, Echo does not guess. A word heard right before a dose that is not everyday English is shown as "Not a medicine name Echo knows" and marked Check this. Across 329 eval, red-team and bench segments this flagged 21 words, all of them misheard medicine names, and no ordinary words.
 
-**Not measured yet:** real human voices (beyond the owner's own sample recordings, which were only used to check the splits), background noise, older speakers, and US accents. Synthetic voices are cleaner than real speech, so real-world rates will be lower. Names that Whisper turns into ordinary words ("water in" for warfarin) are not recovered by any model tried.
+**Real voice** (Nov 21, 2026, `evals/src/real-voice.ts`): the owner's five recordings of the sample scripts (one speaker, quiet room, 23 segments, 296 words) through the app's speech set-up and the eval scoring. Word error rate 13.2%; 18 of 18 planted facts kept; 0 invented; 0 without a quote. Before Echo Cover got its own prompt words it was 14.5%, 15 of 18 and 2 invented (details in docs/SPIKES.md).
+
+**Not measured yet:** other speakers, background noise, older speakers, and US accents. Synthetic voices are cleaner than real speech, so real-world rates will be lower. Names that Whisper turns into ordinary words ("water in" for warfarin) are not recovered by any model tried.
 
 ## 3. Recall comparison (audio alone vs Echo receipt)
 **Status: not run.** Planned design:

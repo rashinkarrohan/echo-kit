@@ -16,6 +16,15 @@ The rules require answers to eight prompts. Fill one dated note, one commit link
 ## Experiment log
 List what you tried, what failed and why (the judging criteria name experimentation).
 
+- **Nov 21, 2026, accuracy pass (Kiro IDE; details in docs/SPIKES.md):**
+  - Kept: the user's own medicines list (names found 41 to 47 of 48 when listed).
+  - Kept: more ways of saying how often, and "to puffs" flagged as an unclear dose.
+  - Kept: a sales word list as Echo Cover's speech prompt (real voice: 15 to 18 of 18 facts kept).
+  - Rejected: matching a different first sound against the whole medicine list (7 right, 6 wrong real medicines).
+  - Rejected: a sentence-like prompt, which Whisper wrote out as a $100,000 price on near-silence.
+  - Caught: the red-team replay found that reading "in the evening" turned "every other day" into a daily dose; fixed before commit.
+  - A new fast-check property says a personal list only adds suggestions: heard words stay as heard and exact names are never dropped (`engine/src/guard/drug-match.test.ts`).
+
 ## Kiro-only statement
 All development of this project used Kiro only (IDE, CLI, Web and Crew). Note which Kiro app was used for which task.
 
