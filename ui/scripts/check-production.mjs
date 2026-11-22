@@ -87,6 +87,7 @@ const servers = [];
 const targets = careUrl
   ? [["care", careUrl], ["cover", coverUrl]]
   : [["care", "http://localhost:5191"], ["cover", "http://localhost:5192"]];
+for (const t of targets) t[1] = t[1].replace(/\/+$/, ""); // "https://x.vercel.app/" works too
 if (!careUrl) {
   servers.push(await serve(join(root, "apps/echo-care/dist"), 5191));
   servers.push(await serve(join(root, "apps/echo-cover/dist"), 5192));
