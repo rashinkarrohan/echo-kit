@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import fc from "fast-check";
-import { matchDrugs, soundKey, soundAlikes } from "./drug-match";
+import { confirmsName, matchDrugs, soundKey, soundAlikes } from "./drug-match";
+import { normaliseText } from "../text/normalise";
 import drugs from "../../data/drugs.json";
 
 const list = drugs.drugs;
@@ -223,5 +224,60 @@ describe("the medicine list itself", () => {
       w.replace(/s$/, ""),
     ];
     expect(list.filter((name) => stems(name).some((s) => s !== "" && common.has(s)))).toEqual([]);
+  });
+});
+
+describe("real doctor speech (PriMock57, Nov 22, 2026): ordinary words are not medicines", () => {
+  // Each of these, as heard by the speech engine, was shown as "Sounds like <medicine>?".
+  it.each([
+    ["Look at other possibilities, but we'll try that in the first instance.", "tretinoin"],
+    [
+      "Have you noticed your heartbeat racing at fault, so palpitations or skipped heartbeat?",
+      "riociguat",
+    ],
+    [
+      "Given that you otherwise were at the moment and having salmon dew, your chest and your saturations and blood pressure all okay",
+      "memantine",
+    ],
+    ["It's not pretty, as is a lot, it's not real, we always recommend.", "protease"],
+    [
+      "I wish you all the best in your journey to quit. I would highly recommend it if you can.",
+      "recombinant",
+    ],
+    ["Alright, let me just take a few notes on as well. Fine, and you mentioned it.", "nitisinone"],
+  ])("%s (was %s)", (text) => {
+    const words = normaliseText(text).split(" ");
+    expect(matchDrugs(words, list).filter((m) => !m.unknown)).toEqual([]);
+  });
+
+  it("still joins a split medicine name when part of it is not an everyday word", () => {
+    expect(found("use the cell butimal inhaler")).toMatchObject([{ suggestion: "salbutamol" }]);
+    expect(found("take merform in 500 milligrams")).toMatchObject([{ suggestion: "metformin" }]);
+  });
+});
+
+describe("confirmsName: does a second, unprompted hearing back up a medicine name?", () => {
+  // Pairs from PriMock57 (Nov 22, 2026): the name the prompted pass wrote, and what the
+  // same audio gave without the medicine prompt.
+  it.each([
+    ["ibuprofen", "that the doses of i-rofen can be a bit more than the normal doses"],
+    ["salbutamol", "and your cell-beautiful inhalers up to every two"],
+    ["lisinopril", "Listen up real, yeah. Sounds like..."],
+    ["amoxicillin", "a course of antibiotics, something like a moxacillin."],
+    ["cetirizine", "Okay, so like set resinia."],
+    ["paracetamol", "Okay, you can try just regular penchiness, paracysmal."],
+    ["naproxen", "something stronger like naproxen"],
+  ])("%s is backed up by: %s", (name, plain) => {
+    expect(confirmsName(name, plain)).toBe(true);
+  });
+
+  it.each([
+    // The doctor said "cetirizine"; the prompted pass wrote a common prompted name instead.
+    ["acetaminophen", "No. Okay, right. And so do you use anti-stemins like set?"],
+    ["metformin", "take it twice a day after food"],
+    ["warfarin", "drink plenty of water in the morning"],
+    ["amlodipine", "come back in two weeks"],
+  ])("%s is not backed up by: %s", (name, plain) => {
+    expect(confirmsName(name, plain)).toBe(false);
   });
 });

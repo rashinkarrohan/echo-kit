@@ -64,3 +64,13 @@ describe("repeatPrompts: unclear doses", () => {
     ]);
   });
 });
+
+describe("repeatPrompts: names only the prompted hearing wrote", () => {
+  it("asks to repeat an exact name the second hearing did not back up", () => {
+    const current = flagged(0, "Do you use antihistamines like acetaminophen?");
+    const tokens = current.tokens.map((t) => (t.kind === "drug" ? { ...t, unconfirmed: true } : t));
+    expect(repeatPrompts({ ...current, tokens })).toEqual([
+      { kind: "unconfirmed-medicine-name", segmentId: "seg-0001", heard: "acetaminophen" },
+    ]);
+  });
+});

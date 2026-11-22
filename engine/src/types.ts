@@ -30,6 +30,11 @@ export interface Segment {
   endMs: number;
   text: string;
   words?: WordConf[];
+  /**
+   * Medicine names the prompted speech engine wrote that the same audio, heard again
+   * without the medicine prompt, did not back up (the prompt may have put them there).
+   */
+  unconfirmedNames?: string[];
 }
 
 /** Token flagged by entity detector */
@@ -43,6 +48,8 @@ export interface FlaggedToken {
   soundsAlike?: string[];
   /** A word heard just before a dose that is not a medicine name Echo knows */
   unknownName?: boolean;
+  /** An exact medicine name only the prompted hearing wrote (see Segment.unconfirmedNames) */
+  unconfirmed?: boolean;
 }
 
 /** Anchor: quote location in transcript */
@@ -69,6 +76,8 @@ export type FactStamp = "heard_clearly" | "check_this";
 /** A validated fact with its verification stamp */
 export interface VerifiedFact extends Fact {
   stamp: FactStamp;
+  /** Why it is Check this, when the reason is not in the fact itself */
+  checkReason?: "unconfirmed-name";
 }
 
 /** Checklist item definition */
@@ -221,6 +230,8 @@ export interface EntityDetector {
 export interface AsrTranscript {
   text: string;
   words?: WordConf[];
+  /** Medicine names a second, unprompted hearing did not back up */
+  unconfirmed?: string[];
 }
 
 /**

@@ -20,7 +20,12 @@ import {
 import type { Tensor } from "@huggingface/transformers";
 // The same onnxruntime-web build transformers.js loads (one runtime, one set of wasm files).
 import * as ort from "onnxruntime-web/webgpu";
-import { buildMedicinePrompt, buildWordsPrompt } from "@echo/engine";
+import {
+  buildMedicinePrompt,
+  buildWordsPrompt,
+  exactMedicineNames,
+  promptOnlyNames,
+} from "@echo/engine";
 import type { AsrDevice, WorkerReply, WorkerRequest } from "@echo/engine";
 import { dtypeFor, isMultilingual, usesMedicinePrompt } from "./whisper-models";
 import { SileroVad } from "./silero-vad";
@@ -48,7 +53,7 @@ async function hasWebGpuAdapter(): Promise<boolean> {
   }
 }
 
-type Transcriber = (audio: Float32Array) => Promise<string>;
+type Transcriber = (audio: Float32Array) => Promise<{ text: string; unconfirmed?: string[] }>;
 let transcriber: Transcriber | undefined;
 
 /** Silero VAD (about 2 MB, cached with the speech runtime). Without it, every segment the
@@ -113,15 +118,26 @@ async function loadOn(
         ]
       : start;
 
-  return async (audio) => {
-    const { input_features } = (await processor(audio)) as { input_features: Tensor };
+  const decode = async (features: Tensor, ids0: number[]): Promise<string> => {
     const out = (await whisper.generate({
-      inputs: input_features,
-      decoder_input_ids: init,
+      inputs: features,
+      decoder_input_ids: ids0,
       max_new_tokens: 120,
     })) as Tensor;
-    const ids = (out.tolist() as Array<Array<number | bigint>>)[0].map(Number).slice(init.length);
+    const ids = (out.tolist() as Array<Array<number | bigint>>)[0].map(Number).slice(ids0.length);
     return tokenizer.decode(ids, { skip_special_tokens: true });
+  };
+  const medicinePrompt = prompt.length > 0 && words.length === 0;
+
+  return async (audio) => {
+    const { input_features } = (await processor(audio)) as { input_features: Tensor };
+    const text = await decode(input_features, init);
+    // Second hearing, only when the medicine prompt was used and an exact name was written:
+    // the same audio without the prompt must back each name up (engine/src/guard/confirm.ts).
+    if (!medicinePrompt || exactMedicineNames(text).length === 0) return { text };
+    const unprompted = await decode(input_features, start);
+    const unconfirmed = promptOnlyNames(text, unprompted);
+    return unconfirmed.length > 0 ? { text, unconfirmed } : { text };
   };
 }
 
@@ -173,12 +189,13 @@ scope.onmessage = (event) => {
         });
         return;
       }
-      const text = await transcriber(req.samples);
+      const { text, unconfirmed } = await transcriber(req.samples);
       scope.postMessage({
         type: "result",
         id: req.id,
         text,
         ms: Math.round(performance.now() - t0),
+        ...(unconfirmed ? { unconfirmed } : {}),
       });
     } catch (e) {
       scope.postMessage({ type: "error", id: req.id, error: message(e) });

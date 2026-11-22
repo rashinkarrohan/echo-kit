@@ -100,6 +100,8 @@ export const CARE = {
     `Echo heard “${heard}”. It sounds like ${suggestion}, but it may have been misheard.`,
   promptUnknownName: (heard: string) =>
     `Echo heard “${heard}” before a dose. It is not a medicine name Echo knows.`,
+  promptUnconfirmedName: (heard: string) =>
+    `Echo heard “${heard}”, but a second listen did not hear it clearly.`,
   promptUnclearDose: (heard: string, suggestion: string) =>
     `Echo heard “${heard}”. It may have been ${suggestion}, but it may have been misheard.`,
   promptAsk: "Tap Please repeat to ask them to say the name and dose again.",

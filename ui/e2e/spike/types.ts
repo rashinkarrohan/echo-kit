@@ -5,6 +5,8 @@ export interface SpikeSegment {
   endMs: number;
   hasSpeech: boolean;
   text?: string;
+  /** Medicine names the unprompted second hearing did not back up */
+  unconfirmed?: string[];
   ms?: number;
   msPer5sAudio?: number;
   error?: string;

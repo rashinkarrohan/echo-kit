@@ -177,11 +177,13 @@ export class ConversationSession {
   ): Promise<Result<Segment>> {
     let text = "";
     let words: Segment["words"];
+    let unconfirmed: string[] | undefined;
     if (transcription) {
       const heard = await transcription;
       if (heard.ok) {
         text = heard.value.text;
         words = heard.value.words;
+        unconfirmed = heard.value.unconfirmed;
       } else {
         this.fail("transcription-failed", heard.error, audio.id);
       }
@@ -194,6 +196,7 @@ export class ConversationSession {
       endMs: audio.endMs,
       text,
       ...(words !== undefined ? { words } : {}),
+      ...(unconfirmed && unconfirmed.length > 0 ? { unconfirmedNames: [...unconfirmed] } : {}),
     };
     this.segments.push(segment);
     this.audio.set(audio.id, audio.samples);

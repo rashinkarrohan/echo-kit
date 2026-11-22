@@ -321,3 +321,29 @@ describe("verifyFacts: unclear dose words", () => {
     expect(verifyFacts([fact], segments)[0].stamp).toBe("check_this");
   });
 });
+
+describe("verifyFacts: names the unprompted hearing did not back up", () => {
+  it("stamps Check this and says why", () => {
+    const segment = {
+      ...makeSegment(0, 0, 5000, "Do you use antihistamines like acetaminophen?"),
+      unconfirmedNames: ["acetaminophen"],
+    };
+    const fact: Fact = {
+      key: "medicine",
+      fields: { name: "acetaminophen" },
+      anchor: {
+        segmentIds: ["seg-0001"],
+        startMs: 0,
+        endMs: 5000,
+        quote: "Do you use antihistamines like acetaminophen?",
+      },
+    };
+    expect(verifyFacts([fact], [segment])[0]).toMatchObject({
+      stamp: "check_this",
+      checkReason: "unconfirmed-name",
+    });
+    expect(verifyFacts([fact], [{ ...segment, unconfirmedNames: [] }])[0].stamp).toBe(
+      "heard_clearly",
+    );
+  });
+});

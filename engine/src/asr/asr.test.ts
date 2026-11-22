@@ -106,6 +106,25 @@ describe("WhisperAdapter", () => {
     expect(sent[0]).not.toHaveProperty("medicines");
   });
 
+  it("passes on medicine names the unprompted second hearing did not back up", async () => {
+    const { transport } = fakeWorker((req) =>
+      req.type === "load"
+        ? { type: "loaded", id: req.id, device: "wasm" }
+        : {
+            type: "result",
+            id: req.id,
+            text: " Like acetaminophen? ",
+            ms: 1,
+            unconfirmed: ["acetaminophen"],
+          },
+    );
+    const r = await new WhisperAdapter(transport).transcribe(silence(3000), 16000);
+    expect(r).toEqual({
+      ok: true,
+      value: { text: "Like acetaminophen?", unconfirmed: ["acetaminophen"] },
+    });
+  });
+
   it("never claims word confidence (Whisper in transformers.js does not give it)", async () => {
     const { transport } = fakeWorker((req) =>
       req.type === "load"

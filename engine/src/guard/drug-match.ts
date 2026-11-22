@@ -398,6 +398,12 @@ export function matchDrugs(
         break;
       const joined = parts.join("");
       if (ENGLISH.has(joined)) continue;
+      // Ordinary words never join into a medicine: in real doctor speech "try that in",
+      // "racing at", "moment and", "recommend it" and "notes on" were shown as medicines
+      // (PriMock57, Nov 22, 2026). A split name has at least one part that is not everyday
+      // English ("merform in", "cell butimal").
+      // (The everyday-word list starts at 4 letters, so short words such as "try" count too.)
+      if (parts.every((p) => p.length <= 3 || FUNCTION_WORDS.has(p) || isEverydayWord(p))) continue;
       const m = closest(joined, index);
       if (m) options.push({ length: n, m });
     }
@@ -418,6 +424,35 @@ export function matchDrugs(
     i += best.length - 1;
   }
   return out.length > 0 ? out : unknownNamesBeforeDoses(words);
+}
+
+/**
+ * Does `text` (the same audio heard again without the medicine prompt) back up `name`?
+ * True when one to three words in it sound like the name: their sound key is within about
+ * a third of the name's. Only this one name is compared, so the match can be loose
+ * ("i-rofen" backs up ibuprofen, "set resinia" cetirizine). A name only the prompted pass
+ * heard may be the prompt talking: on PriMock57 the doctor said "cetirizine" and the
+ * prompted pass wrote "acetaminophen", a common name from the prompt (Nov 22, 2026).
+ */
+export function confirmsName(name: string, text: string): boolean {
+  const target = soundKey(name);
+  if (target.length === 0) return false;
+  const maxKey = Math.max(1, Math.floor(target.length * 0.34));
+  const words = text
+    .toLowerCase()
+    .replace(/[^a-z\s-]/g, " ")
+    .replace(/-/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length > 0);
+  for (let i = 0; i < words.length; i++) {
+    for (const n of [1, 2, 3]) {
+      if (i + n > words.length) break;
+      const key = soundKey(words.slice(i, i + n).join(""));
+      if (key.length < 3 || Math.abs(key.length - target.length) > maxKey) continue;
+      if (levenshtein(key, target, maxKey) <= maxKey) return true;
+    }
+  }
+  return false;
 }
 
 /** Other medicines in the list that sound like this one (sound key within 1 edit). */

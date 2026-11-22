@@ -90,6 +90,8 @@ export const ADDED = {
   hintSoundsLike: (name: string) => `Sounds like ${name}?`,
   hintCouldAlsoBe: (names: readonly string[]) => `Could also be ${names.join(" or ")}?`,
   hintUnknown: "Not a medicine name Echo knows",
+  /** Hint after a medicine name a second listen did not back up */
+  hintUnconfirmed: "Check this name",
   /** Hint after a dose heard as "to puffs" (speech engines write "two" as "to") */
   hintUnclearDose: (suggestion: string) => `Sounds like ${suggestion}?`,
   flagged: "flagged",
@@ -180,6 +182,7 @@ export function clock(ms: number): string {
 export function medicineHintText(note: MedicineNameNote): string {
   if (note.kind === "sounds-like") return ADDED.hintSoundsLike(note.name);
   if (note.kind === "could-also-be") return ADDED.hintCouldAlsoBe(note.names.slice(0, 2));
+  if (note.kind === "unconfirmed") return ADDED.hintUnconfirmed;
   return ADDED.hintUnknown;
 }
 
@@ -193,6 +196,8 @@ export function medicineNoteText(heard: string, note: MedicineNameNote): string 
     return `Echo heard “${heard}”. It sounds like ${note.name}. ${check}`;
   if (note.kind === "unknown")
     return `Echo heard “${heard}”. This is not a medicine name Echo knows. ${check}`;
+  if (note.kind === "unconfirmed")
+    return `Echo heard “${heard}”, but a second listen did not hear it clearly. ${check}`;
   const name = heard.charAt(0).toUpperCase() + heard.slice(1);
   return `${name} sounds like ${note.names.slice(0, 2).join(" or ")}. Check which one is on the label.`;
 }

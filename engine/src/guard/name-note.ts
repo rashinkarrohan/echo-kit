@@ -13,7 +13,9 @@ export type MedicineNameNote =
   /** An exact name that sounds like other real medicines */
   | { kind: "could-also-be"; names: string[] }
   /** Not a medicine name Echo knows */
-  | { kind: "unknown" };
+  | { kind: "unknown" }
+  /** An exact name that a second hearing, without the medicine list, did not back up */
+  | { kind: "unconfirmed" };
 
 /** The note for a heard name, or undefined when it is an exact name with no sound-alikes. */
 export function medicineNameNote(

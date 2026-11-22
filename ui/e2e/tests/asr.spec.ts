@@ -31,6 +31,9 @@ test("transcribes the bundled 10-second actor clip on the device", async ({ page
   // With base.en and the medicine-name prompt (the defaults), the drug name in the actor
   // clip is heard correctly. Without the prompt it was "meriforming" (docs/SPIKES.md).
   expect(heard).toContain(" metformin ");
+  // The second hearing, without the prompt, backs the name up ("meriforming"), so it is not
+  // marked as a name only the prompt produced.
+  expect(result.segments.flatMap((s) => s.unconfirmed ?? [])).toEqual([]);
 });
 
 // large-v3-turbo is about 760 MB, so it runs only when asked: ASR_TURBO=1 npx playwright test asr

@@ -91,7 +91,12 @@ function medicineNote(fact: VerifiedFact, medicines: readonly string[]): string 
   const name = fact.fields["name"];
   if (fact.key !== "medicine" || fact.stamp !== "check_this") return undefined;
   const notes: string[] = [];
-  const note = name === undefined ? undefined : medicineNameNote(name, dictionaryWith(medicines));
+  const note =
+    name === undefined
+      ? undefined
+      : fact.checkReason === "unconfirmed-name"
+        ? ({ kind: "unconfirmed" } as const)
+        : medicineNameNote(name, dictionaryWith(medicines));
   if (name !== undefined && note) notes.push(medicineNoteText(name, note));
   for (const u of unclearCounts(normaliseText(fact.anchor.quote)))
     notes.push(doseNoteText(u.heard, u.suggestion));
@@ -506,7 +511,9 @@ export function App(): ReactElement {
                     ? CARE.promptUnknownName(prompt.heard ?? "")
                     : prompt.kind === "unclear-dose"
                       ? CARE.promptUnclearDose(prompt.heard ?? "", prompt.suggestion ?? "")
-                      : CARE.promptUnclearName(prompt.heard ?? "", prompt.suggestion ?? "")}
+                      : prompt.kind === "unconfirmed-medicine-name"
+                        ? CARE.promptUnconfirmedName(prompt.heard ?? "")
+                        : CARE.promptUnclearName(prompt.heard ?? "", prompt.suggestion ?? "")}
               </p>
               <p className="care-prompt__ask">{CARE.promptAsk}</p>
             </div>

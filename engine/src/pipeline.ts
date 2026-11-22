@@ -20,6 +20,7 @@ import { verifyFacts } from "./verify/verify";
 import { runGapCheck } from "./gap/gap-check";
 import { flagTokens } from "./guard/index";
 import { DRUG_DICTIONARY, detectorsFor } from "./guard/registry";
+import { normaliseText } from "./text/normalise";
 
 export interface PipelineOutput {
   raw: RawFact[];
@@ -51,5 +52,11 @@ export function flagSegment(
   schema: ConversationSchema,
   dictionary: DrugDictionary = DRUG_DICTIONARY,
 ): FlaggedToken[] {
-  return flagTokens(segment, detectorsFor(schema.detectors), dictionary);
+  const tokens = flagTokens(segment, detectorsFor(schema.detectors), dictionary);
+  const unconfirmed = new Set((segment.unconfirmedNames ?? []).map((n) => normaliseText(n)));
+  if (unconfirmed.size === 0) return tokens;
+  // A name only the prompted hearing wrote: shown as Check this, with a repeat prompt.
+  return tokens.map((t) =>
+    t.kind === "drug" && unconfirmed.has(normaliseText(t.value)) ? { ...t, unconfirmed: true } : t,
+  );
 }

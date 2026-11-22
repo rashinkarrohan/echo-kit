@@ -10,6 +10,8 @@
  * - unknown-medicine-name: a word just before a dose is not a medicine name Echo knows
  *   ("paramet 500 mg"). Echo does not guess what it is.
  * - unclear-dose: a count heard as "to puffs" or "too tablets"; it may have been 2.
+ * - unconfirmed-medicine-name: an exact name that only the prompted hearing wrote; the
+ *   same audio heard without the medicine prompt did not back it up.
  *
  * Prompts only ask; they never say what the medicine is.
  */
@@ -20,6 +22,7 @@ export type RepeatPromptKind =
   | "missing-medicine-name"
   | "unclear-medicine-name"
   | "unknown-medicine-name"
+  | "unconfirmed-medicine-name"
   | "unclear-dose";
 
 export interface RepeatPrompt {
@@ -51,6 +54,8 @@ export function repeatPrompts(current: FlaggedSegment, previous?: FlaggedSegment
       });
     } else if (t.kind === "drug" && t.unknownName === true) {
       prompts.push({ kind: "unknown-medicine-name", segmentId, heard: t.value });
+    } else if (t.kind === "drug" && t.unconfirmed === true) {
+      prompts.push({ kind: "unconfirmed-medicine-name", segmentId, heard: t.value });
     } else if (t.kind === "number" && t.suggestion !== undefined) {
       prompts.push({ kind: "unclear-dose", segmentId, heard: t.value, suggestion: t.suggestion });
     }

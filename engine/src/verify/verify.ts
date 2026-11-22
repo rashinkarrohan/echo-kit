@@ -110,9 +110,22 @@ export function verifyFacts(
       }
     }
 
+    // Check 4: a medicine name only the prompted hearing wrote (the prompt may have put it
+    // there; the same audio heard without the prompt did not back it up). Applies even when
+    // another check already said Check this, so the receipt can say why.
+    const name = fact.fields["name"];
+    const unconfirmed =
+      name !== undefined &&
+      fact.anchor.segmentIds.some((id) =>
+        (segments.find((s) => s.id === id)?.unconfirmedNames ?? []).some(
+          (n) => normaliseText(n) === normaliseText(name),
+        ),
+      );
+
     verified.push({
       ...fact,
-      stamp,
+      stamp: unconfirmed ? "check_this" : stamp,
+      ...(unconfirmed ? { checkReason: "unconfirmed-name" as const } : {}),
     });
   }
 

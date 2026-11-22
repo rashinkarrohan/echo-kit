@@ -42,6 +42,8 @@ export type WorkerReply =
       ms: number;
       /** The speech check found no speech, so Whisper was not asked (text is empty) */
       noSpeech?: boolean;
+      /** Exact medicine names the unprompted second hearing did not back up */
+      unconfirmed?: string[];
     }
   | { type: "error"; id: number; error: string };
 
@@ -162,7 +164,15 @@ export class WhisperAdapter implements AsrAdapter {
     const reply = await this.request((id) => ({ type: "transcribe", id, samples }));
     if (reply.type === "result") {
       this.lastLatencyMs = reply.ms;
-      return { ok: true, value: { text: cleanWhisperText(reply.text) } };
+      return {
+        ok: true,
+        value: {
+          text: cleanWhisperText(reply.text),
+          ...(reply.unconfirmed && reply.unconfirmed.length > 0
+            ? { unconfirmed: reply.unconfirmed }
+            : {}),
+        },
+      };
     }
     return {
       ok: false,

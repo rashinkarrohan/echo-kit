@@ -105,4 +105,6 @@ export { matchDrugs, soundKey, soundAlikes } from "./guard/drug-match";
 export type { DrugMatch } from "./guard/drug-match";
 export { medicineNameNote } from "./guard/name-note";
 export { unclearCounts, AS_NEEDED } from "./guard/care-detectors";
+export { exactMedicineNames, promptOnlyNames } from "./guard/confirm";
+export { confirmsName } from "./guard/drug-match";
 export type { MedicineNameNote } from "./guard/name-note";

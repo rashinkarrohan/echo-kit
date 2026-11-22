@@ -69,6 +69,7 @@ async function run(): Promise<SpikeResult> {
       const heard = await asr.transcribe(piece.samples, 16000);
       if (heard.ok) {
         seg.text = heard.value.text;
+        if (heard.value.unconfirmed) seg.unconfirmed = heard.value.unconfirmed;
         if (asr.lastLatencyMs !== undefined) {
           seg.ms = asr.lastLatencyMs;
           seg.msPer5sAudio = Math.round((asr.lastLatencyMs / (piece.endMs - piece.startMs)) * 5000);

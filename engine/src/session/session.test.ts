@@ -204,6 +204,35 @@ describe("ConversationSession events", () => {
     expect(medicine(a.value)?.fields["name"]).toBe("blamepiride");
   });
 
+  it("a medicine name only the prompted hearing wrote is Check this, in captions and the receipt", async () => {
+    const asr = new MockAdapter([
+      {
+        text: "Do you use antihistamines like acetaminophen, ten milligrams?",
+        unconfirmed: ["acetaminophen"],
+      },
+    ]);
+    const { s } = session({ asr });
+    const flags = record(s, "flags");
+    const prompts = record(s, "prompt");
+    s.start();
+    await s.addAudio(audio(0));
+    expect(flags[0].tokens.find((t) => t.kind === "drug")).toMatchObject({
+      value: "acetaminophen",
+      unconfirmed: true,
+    });
+    expect(prompts).toEqual([
+      { kind: "unconfirmed-medicine-name", segmentId: "seg-0001", heard: "acetaminophen" },
+    ]);
+    const r = await s.stop();
+    if (!r.ok) throw new Error(r.error);
+    expect(r.value.facts.find((f) => f.key === "medicine")).toMatchObject({
+      fields: { name: "acetaminophen" },
+      stamp: "check_this",
+      checkReason: "unconfirmed-name",
+    });
+    expect(s.transcript()[0].unconfirmedNames).toEqual(["acetaminophen"]);
+  });
+
   it("raises no medicine prompts for a schema without the drug detector", async () => {
     const cover: ConversationSchema = {
       ...schema,

@@ -7,6 +7,7 @@ import { Icon } from "./common";
 /** Why a flagged medicine name needs checking, from the detector's token. */
 function noteFor(t: FlaggedToken): MedicineNameNote | undefined {
   if (t.kind !== "drug") return undefined;
+  if (t.unconfirmed === true) return { kind: "unconfirmed" };
   if (t.suggestion !== undefined) return { kind: "sounds-like", name: t.suggestion };
   if (t.unknownName === true) return { kind: "unknown" };
   if (t.soundsAlike !== undefined && t.soundsAlike.length > 0)
