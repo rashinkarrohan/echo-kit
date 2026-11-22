@@ -83,6 +83,8 @@ export const COVER = {
   oneMoreSeller: "Record one more seller to compare them side by side.",
   readyToCompare: "You can compare these sellers now, or record another.",
   noSellers: "No sellers recorded yet.",
+  reviewEmptyTitle: "What a seller said",
+  confirmEmptyTitle: "Confirm in writing",
   playing: (range: string) => `Playing ${range}`,
   playFailed: "This part could not be played.",
   sampleBadge: "Sample sales (actors, fictional prices, no microphone)",

@@ -629,6 +629,7 @@ export function App(): ReactElement {
         </>
       ) : (
         <div className="cover-recovery">
+          <h1 className="echo-visually-hidden">{COVER.reviewEmptyTitle}</h1>
           <StatusMessage status="empty" text={{ empty: COVER.noSellers }} />
           <div className="echo-actions">
             <a className="echo-button" href="#/record">
@@ -724,6 +725,7 @@ export function App(): ReactElement {
         </>
       ) : (
         <div className="cover-recovery">
+          <h1 className="echo-visually-hidden">{COVER.confirmEmptyTitle}</h1>
           <StatusMessage status="empty" text={{ empty: COVER.noSellers }} />
           <div className="echo-actions">
             <a className="echo-button" href="#/record">

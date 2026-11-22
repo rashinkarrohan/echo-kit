@@ -601,13 +601,17 @@ export function App(): ReactElement {
           {disclaimer}
         </>
       ) : (
-        <StatusMessage status="empty" text={{ empty: CARE.noReceipt }} />
+        <>
+          <h1 className="echo-visually-hidden">{CARE.readBackTitle}</h1>
+          <StatusMessage status="empty" text={{ empty: CARE.noReceipt }} />
+        </>
       );
       break;
 
     case "/receipt":
       screen = deleted ? (
         <>
+          <h1 className="echo-visually-hidden">{ADDED.receiptTitle}</h1>
           <StatusMessage status="empty" text={{ empty: CARE.deleted }} />
           <div className="echo-actions">
             <button type="button" className="echo-button" onClick={() => go("/doctor-card")}>
@@ -700,6 +704,7 @@ export function App(): ReactElement {
         </>
       ) : (
         <>
+          <h1 className="echo-visually-hidden">{ADDED.receiptTitle}</h1>
           <StatusMessage
             status={visitsStatus === "loading" ? "loading" : "empty"}
             text={{ loading: CARE.savedVisitsLoading, empty: CARE.noReceipt }}
@@ -736,7 +741,10 @@ export function App(): ReactElement {
             </div>
           </>
         ) : (
-          <StatusMessage status="empty" text={{ empty: CARE.noReceipt }} />
+          <>
+            <h1 className="echo-visually-hidden">{CARE.shareTitle}</h1>
+            <StatusMessage status="empty" text={{ empty: CARE.noReceipt }} />
+          </>
         );
       break;
 
