@@ -48,7 +48,15 @@ When a name is not recognised, Echo does not guess. A word heard right before a 
 
 **Real voice** (Nov 21, 2026, `evals/src/real-voice.ts`): the owner's five recordings of the sample scripts (one speaker, quiet room, 23 segments, 296 words) through the app's speech set-up and the eval scoring. Word error rate 13.2%; 18 of 18 planted facts kept; 0 invented; 0 without a quote. Before Echo Cover got its own prompt words it was 14.5%, 15 of 18 and 2 invented (details in docs/SPIKES.md).
 
-**Not measured yet:** other speakers, background noise, older speakers, and US accents. Synthetic voices are cleaner than real speech, so real-world rates will be lower. Names that Whisper turns into ordinary words ("water in" for warfarin) are not recovered by any model tried.
+**Real doctor speech** (Nov 22, 2026, PriMock57, CC BY 4.0, `evals/src/primock.ts`, numbers in `evals/primock-results.json`): 12 mock UK GP consultations, 114 minutes of doctor audio through the app's full speech path.
+- Word error rate: 36.5%.
+- Medicine names: 27 of 37 said names shown.
+- Medicine facts: 30 of 46 reference facts rebuilt from speech.
+- 6 extra medicine facts, all stamped Check this, and **no wrong medicine stamped Heard clearly**.
+
+Three problems found here were fixed: ordinary words in the medicine list, ordinary words joined into medicine names, and a prompt-induced wrong name. Details are in docs/SPIKES.md.
+
+**Not measured yet:** background noise in a real clinic, older speakers, and US accents. Synthetic voices are cleaner than real speech, so real-world rates will be lower. Names that Whisper turns into ordinary words ("water in" for warfarin) are not recovered by any model tried.
 
 ## 3. Recall comparison (audio alone vs Echo receipt)
 **Status: not run.** Planned design:

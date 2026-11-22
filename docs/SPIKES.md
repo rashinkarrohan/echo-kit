@@ -152,3 +152,84 @@ With the medicine prompt, "for the pair" was heard as "for the bear" and "for th
 **Prompt echo check** (`private/actor-audio/prompt-echo.ts`): each prompt was run on near-silence (the five recordings' lead-ins, three noise levels, digital silence). The first sales prompt was a phrase ("the price for the pair, ...") and on one lead-in Whisper wrote "The price for the pair is $100,000.", which would have become a price nobody said. As a plain word list ("Words: hearing aids, pair, ...") it wrote no sales words on any of the 9 clips, and the medicine prompt wrote no medicine names. So `speechWords` must be a list of plain terms; the schema loader rejects punctuation and any entry longer than three words.
 
 **Limits:** one speaker, a quiet room, scripts the speaker wrote, 5 recordings. This is a regression check, not an accuracy claim for real visits.
+
+## Word timestamps and per-word confidence, Nov 22, 2026 (spike closed: not adopted)
+**Question:** can transformers.js give word times and word confidence, and does low confidence mark misheard medicine names?
+
+**Method:** `private/asr-bench/confidence.ts` used `onnx-community/whisper-base.en_timestamped` (q8, Node CPU) on the 48 bench clips with the medicine prompt. A custom logits processor records the probability of each token greedy decoding picks; a word's confidence is the lowest of its tokens. `return_token_timestamps` gives start times.
+
+**What works:** both signals come out of the existing `generate()` call with the prompt, so the plumbing is possible.
+
+**Why it is not used:**
+- **Medicine names are always uncertain.** A correctly heard name usually scores low: furosemide 0.12, clopidogrel 0.13, warfarin 0.22, pantoprazole 0.18, against misheard names at 0.03 to 0.10.
+  - Splitting at 0.11 would have separated this sample, but the margin is 0.02 on 48 clips.
+  - Some misheard names score higher than correct ones ("Blamepyride" 0.37, "Chlorphenyramine" 0.25).
+- **Low scores often mean a choice of spelling, not a mishearing.** "milligrams" scores 0.35 to 0.6 because Whisper hesitates between "mg" and "milligrams". "three" scores 0.50 for the same reason ("3" or "three").
+- **Over all words, the trade-off is poor.** At a 0.3 cut-off, 14 of 37 misheard words and 9 of 249 correct words are flagged. At 0.5, the counts are 28 of 37 and 39 of 249.
+
+Flagging that many words, mostly medicine names that were heard correctly, would work against the research on deaf and hard-of-hearing users. They benefited from highlighting a few key words, and reacted poorly to confidence markup across the whole caption (see the research report).
+
+**Decision:** keep the current safety signals. These are sound-alike and unknown-name checks, the two-value conflict rule, and "Please repeat". Word-level confidence stays undefined, and Echo never guesses it. Revisit if a calibrated method appears, for example comparing two models on flagged segments.
+
+## Speech check with Silero VAD, Nov 22, 2026 (adopted)
+`private/actor-audio/vad-check.ts` ran the inputs below through the engine's Segmenter, then Silero VAD v6 (MIT, 2.3 MB, onnxruntime):
+- the owner's five recordings, with their lead-ins;
+- synthetic non-speech: cough-like bursts at three levels, a clap, door knocks, and a fan hum at two levels.
+
+| | Non-speech segments sent to Whisper | Speech segments held back |
+|---|---|---|
+| Energy gate (before) | 11 (all 5 lead-ins, 3 bursts, clap, knocks, the louder hum) | 0 of 24 |
+| Energy gate, then Silero (now) | **0** | **0 of 24** |
+
+Speech segments scored 48% to 91% speech frames; non-speech scored 0%. The rule is at least 5 speech frames (160 ms). This matters because Whisper wrote words on exactly these sounds: "Thank you." on lead-ins and, with a sentence-like prompt, a made-up price.
+
+The check runs in the speech worker before Whisper, so non-speech also saves Whisper time on the phone. The model is cached with the speech runtime. If the model cannot load, the worker falls back to the energy gate, and the real-worker browser test asserts that it did load.
+
+**Limits:** the non-speech sounds are synthetic, and real clinic noise (other voices, a television) is not tested. A second person talking is speech, so it still goes to Whisper.
+
+## Real doctor speech: PriMock57, Nov 22, 2026
+**Data:** [PriMock57](https://github.com/babylonhealth/primock57) (Babylon Health, CC BY 4.0). These are mock UK primary-care consultations with separate doctor and patient audio and human transcripts. I used 12 of them: the ones where the doctor names medicines from Echo's list (`evals/src/primock-pick.ts`). That is 114 minutes of doctor-channel audio from several clinicians. The data stays in `private/primock57/` and is used for evaluation only, never in the demo.
+
+**Method:** `pnpm --filter @echo/evals exec vite-node src/primock.ts` runs the app's live path on the laptop CPU:
+- Segmenter, 3 to 8 s.
+- Silero speech check.
+- whisper-base.en at 8 bits with the medicine prompt.
+- The second hearing (below).
+- The doctor-visit pipeline.
+
+The human transcript goes through the same pipeline. Echo's facts from the human transcript are the reference, so this measures what real speech recognition costs Echo, with no hand-made answers. Numbers only are kept in `evals/primock-results.json`.
+
+**Results, as shipped:**
+
+| Measure | Result |
+|---|---|
+| Word error rate, doctor channel | 36.5% (38.0% without the speech check). Published figures for this data are about 31% for Google and Azure, with a different normalisation |
+| Medicine names said (exact, per consultation) that Echo showed | 27 of 37 |
+| Names Echo showed that the doctor never said | 6, all shown as "Sounds like …?" or as a sound-alike |
+| Medicine facts from the human transcript also built from speech | 30 of 46; 27 of those with every field agreeing |
+| Extra medicine facts (no counterpart) | 6, **all stamped Check this** |
+| Wrong medicine stamped Heard clearly | **0** |
+| Speech check | 161 of 1,223 energy-gate segments skipped. At most 27 of 11,123 transcript words fell in skipped segments |
+
+**What the real speech found, and what changed:**
+1. **Ordinary words in the medicine list.**
+   - Found: "treated", "dehydrated", "purified", "depleted", "aggregated" and "engineered" came from FDA substance names, so "you're dehydrated" counted as naming a medicine.
+   - Fix: the list builder drops forms of everyday words, and a test checks the list (1,755 to 1,749 names).
+2. **Ordinary words joined into medicines.**
+   - Found: "try that in" became tretinoin. "Racing at", "moment and", "pretty as", "recommend it" and "notes on" also became medicines; "notes on" even became a medicine fact.
+   - Fix: a join of words that are all everyday English is never matched. Names shown that the doctor never said dropped from 12 to 6 (one more was a scoring artifact).
+   - Cost: three saved bench transcripts that were only recovered through such joins ("Listen April" for lisinopril, "Setter is in" for cetirizine). With no name heard, these now get the "dose heard without a medicine name" repeat prompt.
+3. **The prompt wrote a different medicine.**
+   - Found: the doctor said "antihistamines like cetirizine", and the segment ended mid-word. The prompted pass wrote "antistamins like acetaminophen", an exact, common name from the prompt, stamped Heard clearly.
+   - Fix, a second hearing: when the prompted text has an exact medicine name, the worker hears the same audio again without the prompt. Each name must sound like something in that second hearing (`confirmsName`: one to three words, sound key within about a third).
+   - Results: on PriMock57, 20 of 20 correct names were backed up and the substitution was caught, so the fact is Check this with "a second listen did not hear it clearly". On the 48-clip bench, 33 of 34 correct names were backed up.
+   - Cost: one extra decode only on segments with a medicine name (18 in 114 minutes). On the 10-second browser clip, the medicine segment took 1.8 s against 1.0 s for the other.
+
+**Still open:**
+- **The 8 s cut splits words.** "cetirizine" was cut across two segments.
+- **Garbled names give wrong "Sounds like" suggestions:**
+  - "hydrochlorothiazone" suggested hydrochlorothiazide when the doctor said hydrocortisone;
+  - "Metorizin" suggested metolazone for cetirizine.
+  - These are Check this, but the suggested name is wrong.
+- **Missed names:** clindamycin, nitrofurantoin and trimethoprim were missed in one noisy consultation (48% WER).
+- **Limits:** UK accents, mostly younger speakers and telemedicine audio. This is one dataset, not a clinic.

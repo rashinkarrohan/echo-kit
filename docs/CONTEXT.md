@@ -1,7 +1,7 @@
 # Context and decisions (public-safe)
 
 ## Problem (from the validation doc v2, Nov 11, 2026; originals opened Nov 21, 2026, see the source check in docs/CLAIMS.md)
-Older adults with unaided hearing loss leave clinics and pharmacies without the content of what they were told, and nobody keeps a record. About 1.57 billion people have some hearing loss (20.3%), 62.1% of them over 50, and only 17% of those who could benefit use a hearing aid (17% not yet found in a WHO primary source; CLAIMS.md S2). England 2025 survey (n=1,114): 10.6% of deaf and hard-of-hearing people understood all information in NHS appointments; 18.3% understood none.
+Older adults with unaided hearing loss leave clinics and pharmacies without the content of what they were told, and nobody keeps a record. About 1.57 billion people have some hearing loss (20.3%), 62.1% of them over 50, and only about one in five people who would benefit from a hearing aid uses one (NIDCD; the WHO "17%" figure was not found in a primary source, CLAIMS.md S2). England 2025 survey (n=1,114): 10.6% of deaf and hard-of-hearing people understood all information in NHS appointments; 18.3% understood none.
 Unproven: that doctor and pharmacist spoken advice contradicts often; that hearing loss drives health-insurance mis-selling; that recordings help hearing-impaired patients' recall.
 
 ## Segments and markets
