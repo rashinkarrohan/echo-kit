@@ -233,3 +233,18 @@ The human transcript goes through the same pipeline. Echo's facts from the human
   - These are Check this, but the suggested name is wrong.
 - **Missed names:** clindamycin, nitrofurantoin and trimethoprim were missed in one noisy consultation (48% WER).
 - **Limits:** UK accents, mostly younger speakers and telemedicine audio. This is one dataset, not a clinic.
+
+## S30 deployment, Nov 22, 2026
+Both apps are on Vercel (Hobby), one project per app, built from `apps/<app>/vercel.json`:
+- Echo Care: https://echo-kit-17lm.vercel.app
+- Echo Cover: https://echo-kit-omega.vercel.app
+
+**Checked on the live sites the same day:**
+- **Headers:** COOP, COEP, nosniff, no-referrer and microphone/camera for the site only are all present. The page, service worker and manifest are not cached.
+- **Production check** (`node ui/scripts/check-production.mjs <care> <cover>`): passed. Every page of both apps loaded with no console errors and no failed requests. Cross-origin isolation is on, and the service worker and manifest are present.
+- **Sample consult:** Echo Care's sample reaches the receipt (medicine line, stamps), and Echo Cover's sample opens.
+- **Live recording on the deployed Echo Care** (Chromium, phone viewport, the 10-second actor clip fed through Chrome's fake microphone):
+  - The speech model downloaded from Hugging Face, and the first caption appeared after 11 s with 0 page errors.
+  - Audio through the fake microphone is degraded: "metformin" came out as "my reforming". That is not matched as a medicine, because both words are everyday English, so the dose without a medicine name raises the "Please repeat" prompt.
+
+**Still to do:** real phones (S16/S29), on Android Chrome and iPhone Safari.

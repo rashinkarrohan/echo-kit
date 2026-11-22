@@ -15,8 +15,8 @@ Built for Kiroween 2026, Skeleton Crew category. The skeleton is `engine/` plus 
 ## Try it
 Each app has a **Play sample consult** button on its home screen. It runs a fictional visit, read by an actor, with real audio behind every "Hear it" button. It needs no microphone and no model download, and it works offline after the first load.
 
-- Echo Care: *public link added at deployment (build guide Step 30)*
-- Echo Cover: *public link added at deployment (build guide Step 30)*
+- **Echo Care:** https://echo-kit-17lm.vercel.app
+- **Echo Cover:** https://echo-kit-omega.vercel.app
 - Demo video (under 3 minutes): *YouTube link added before submission*
 
 All docs are indexed in [docs/README.md](docs/README.md), grouped by the five judging criteria.
