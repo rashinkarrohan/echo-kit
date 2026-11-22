@@ -53,15 +53,15 @@ const ROUTES: readonly Route[] = [
 const fieldOrder = Object.fromEntries(SALE.facts.map((f) => [f.key, f.fields]));
 
 const PAGE_TITLES: Record<Route, string> = {
-  "/home": "Echo Cover — compare what sellers said",
-  "/saved": "Saved seller conversations — Echo Cover",
-  "/consent": "Before we start — Echo Cover",
-  "/questions": "Questions to ask — Echo Cover",
-  "/record": "Record a seller — Echo Cover",
-  "/review": "Seller receipt — Echo Cover",
-  "/compare": "Compare sellers — Echo Cover",
-  "/confirm": "Confirm in writing — Echo Cover",
-  "/trust": "Test results — Echo Cover",
+  "/home": "Echo Cover: compare what sellers said",
+  "/saved": "Saved seller conversations | Echo Cover",
+  "/consent": "Before we start | Echo Cover",
+  "/questions": "Questions to ask | Echo Cover",
+  "/record": "Record a seller | Echo Cover",
+  "/review": "Seller receipt | Echo Cover",
+  "/compare": "Compare sellers | Echo Cover",
+  "/confirm": "Confirm in writing | Echo Cover",
+  "/trust": "Test results | Echo Cover",
 };
 
 /** One recorded seller conversation, with its in-memory audio. */

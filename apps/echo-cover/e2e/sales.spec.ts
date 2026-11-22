@@ -40,7 +40,7 @@ test("two sellers: financing differs with both anchors, a missing field is Not d
   });
   await expect(homeHeading).toBeVisible();
   await expect(homeHeading).toBeFocused();
-  await expect(page).toHaveTitle("Echo Cover — compare what sellers said");
+  await expect(page).toHaveTitle("Echo Cover: compare what sellers said");
   await expect(page.getByText(/never ranks sellers or recommends a purchase/i)).toBeVisible();
   await expect(page.getByRole("heading", { name: "Private by default" })).toHaveCSS(
     "color",

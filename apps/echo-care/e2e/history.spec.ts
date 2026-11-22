@@ -64,7 +64,7 @@ test("a saved visit can be reopened after reload and deleted deliberately", asyn
   const savedHeading = page.getByRole("heading", { name: "Saved visits" });
   await expect(savedHeading).toBeVisible();
   await expect(savedHeading).toBeFocused();
-  await expect(page).toHaveTitle("Saved visits — Echo Care");
+  await expect(page).toHaveTitle("Saved visits | Echo Care");
   const saved = page.getByRole("listitem").filter({ hasText: "Doctor visit" });
   await expect(saved).toContainText("1 fact");
   await saved.getByRole("button", { name: "Open receipt" }).click();

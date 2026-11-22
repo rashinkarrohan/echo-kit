@@ -49,7 +49,7 @@ test("doctor visit: home, consent, doctor card, record, read-back, receipt with 
   const consentHeading = page.getByRole("heading", { name: "Before we start" });
   await expect(consentHeading).toBeVisible();
   await expect(consentHeading).toBeFocused();
-  await expect(page).toHaveTitle("Before we start — Echo Care");
+  await expect(page).toHaveTitle("Before we start | Echo Care");
   await expect(page.getByText("Step 1 of 2")).toBeVisible();
   const agree = page.getByRole("button", { name: "I agree and continue" });
   await expect(agree).toBeDisabled();
@@ -61,7 +61,7 @@ test("doctor visit: home, consent, doctor card, record, read-back, receipt with 
 
   // Doctor card.
   await expect(page.getByRole("dialog", { name: /I have hearing loss/ })).toBeVisible();
-  await expect(page).toHaveTitle("Show the doctor — Echo Care");
+  await expect(page).toHaveTitle("Show the doctor | Echo Care");
   await expect(page.getByText("Step 2 of 2 · Show this screen to the doctor")).toBeVisible();
   await axe(page, "doctor card");
   await page.getByRole("button", { name: "They agreed, start" }).click();

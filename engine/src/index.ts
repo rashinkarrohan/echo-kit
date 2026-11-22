@@ -1,4 +1,4 @@
-// @echo/engine — pure TypeScript, no DOM, no network
+// @echo/engine: pure TypeScript, no DOM, no network
 
 // Types
 export type * from "./types";

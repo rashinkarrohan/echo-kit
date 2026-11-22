@@ -54,18 +54,18 @@ import type { SavedVisit } from "./SavedVisits";
 import { MedicinesPage } from "./MedicinesPage";
 
 const PAGE_TITLES: Record<Route, string> = {
-  "/home": "Echo Care — a receipt for what was said",
-  "/visits": "Saved visits — Echo Care",
-  "/consent": "Before we start — Echo Care",
-  "/medicines": "Your medicines — Echo Care",
-  "/doctor-card": "Show the doctor — Echo Care",
-  "/pharmacy": "Show the pharmacist — Echo Care",
-  "/record": "Recording — Echo Care",
-  "/read-back": "Read back — Echo Care",
-  "/receipt": "Visit receipt — Echo Care",
-  "/label": "Check the label — Echo Care",
-  "/share": "Share a summary — Echo Care",
-  "/trust": "Test results — Echo Care",
+  "/home": "Echo Care: a receipt for what was said",
+  "/visits": "Saved visits | Echo Care",
+  "/consent": "Before we start | Echo Care",
+  "/medicines": "Your medicines | Echo Care",
+  "/doctor-card": "Show the doctor | Echo Care",
+  "/pharmacy": "Show the pharmacist | Echo Care",
+  "/record": "Recording | Echo Care",
+  "/read-back": "Read back | Echo Care",
+  "/receipt": "Visit receipt | Echo Care",
+  "/label": "Check the label | Echo Care",
+  "/share": "Share a summary | Echo Care",
+  "/trust": "Test results | Echo Care",
 };
 
 /** One finished recording (doctor or pharmacy), with its in-memory audio. */
