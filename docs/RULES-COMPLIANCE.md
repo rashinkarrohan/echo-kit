@@ -13,7 +13,7 @@ Dates: submission period Oct 30, 2026 9:00 AM PT to Dec 4, 2026 2:00 PM PT (no e
 | 7 | Free testing | Free, unrestricted until Jan 29, 2027 | On-device default; capped proxy; free-tier hosting kept up; Judge Quick Start | T15 and after |
 | 8 | Video | Under 3 min; public YouTube; on the device built for; no third-party trademarks or copyrighted music | Record on a phone; own or licensed audio only | Dec 1 to 3 |
 | 9 | Language | English or English translation | English-first everything | Throughout |
-| 10 | Description, category | Text description; category and bonuses identified | Skeleton Crew; bonus choices in docs/submission/bonus-choices.md | Dec 3 |
+| 10 | Description, category | Text description; category and bonuses identified | Skeleton Crew; bonus choices noted outside the repo (private/submission/); entered in the Devpost form | Dec 3 |
 | 11 | Write-up | Eight prompts | docs/KIRO.md | Nov 12 to Dec 3 |
 | 12 | Ownership, IP | Original, solely owned, no third-party rights; open-source licences complied with; third-party APIs and data authorised | Licence of every model, dataset, dictionary recorded; written confirmation that no third party has a claim | Before building |
 | 13 | People in video | No privacy or publicity violations; sponsor may use names, likeness and voice for 3 years | Team members or consenting actors with written releases; no real patient or customer data | Before recording |

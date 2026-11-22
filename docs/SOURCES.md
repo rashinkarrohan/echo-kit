@@ -38,8 +38,8 @@ Record the licence and the date opened for every item. Anything not written duri
 - App icons: `apps/*/public/icons/icon.svg`, original artwork drawn for this project on Nov 21, 2026 (a receipt with a tick for Echo Care, a two-column ledger for Echo Cover). PNG sizes are rendered from the SVG by `ui/scripts/build-icons.mjs` with Playwright's Chromium. No third-party marks or icon sets.
 - Speech check: Silero VAD v6 model, `ui/src/platform/models/silero-vad-v6.onnx` (2.3 MB, SHA-256 1a153a22…8788e3), MIT, Copyright (c) 2020-present Silero Team; licence copied next to the file (`SILERO-VAD-LICENSE`, from https://github.com/snakers4/silero-vad, checked Nov 21, 2026). The file was taken unmodified from the `@ricky0123/vad-web` 0.0.31 npm package (ISC), which is not itself a dependency. Framing follows that package's `silero.js` (64-sample context per 512-sample frame).
 - `onnxruntime-web` 1.31.0-dev.20260914-8d85527a0 (runs the speech check in the speech worker): MIT, already installed as a dependency of `@huggingface/transformers`; now a direct dependency of `@echo/ui` at the same version, so only one copy is bundled.
-- Label OCR approach (spike): licence ____
-- Hosted model for extraction (capped proxy): terms ____
+- Label reading (OCR): not used. The user types the three label fields while their photo is shown on screen; the photo is never stored or sent.
+- Hosted model for extraction (capped proxy): not used. This version makes no cloud model calls: there is no proxy, no API key and no server; extraction is the on-device rules extractor.
 - Hindi/Hinglish model Shruti (stretch only): https://huggingface.co/udgamlabs/Shruti , Apache-2.0 per its card
 
 ## Development and test tools (not shipped to users; licences checked on npm Nov 13, 2026)
@@ -50,4 +50,6 @@ Record the licence and the date opened for every item. Anything not written duri
 - `vite-node` 2.1.8 (runs the eval harness): MIT.
 
 ## Pre-existing work disclosed
-None, unless listed here: ____
+None. No code was written before the submission period. The first commit (`523680d`, Nov 12, 2026) holds the project scaffold plus the planning material the build started from: steering, specs, the docs in this folder, and the `seed/` starter files, since removed.
+
+**Owner to confirm** that this planning material was also written after Oct 30, 2026.

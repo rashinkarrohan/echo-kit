@@ -1,6 +1,6 @@
 # Requirements: Echo Engine (the skeleton)
 
-Introduction: the engine turns a consented spoken conversation into a checkable receipt. It is pure TypeScript with no DOM and no network. Source of truth: docs/PRD.md and docs/BUILD-GUIDE.md.
+Introduction: the engine turns a consented spoken conversation into a checkable receipt. It is pure TypeScript with no DOM and no network. Source of truth: these specs, `engine/src/types.ts` and docs/BUILD-GUIDE.md (the planning PRD is not in the repo).
 
 ### Requirement 1: Consent
 **User story:** As a user, I want to give or withdraw consent per purpose, so that nothing is recorded or shared without my agreement.

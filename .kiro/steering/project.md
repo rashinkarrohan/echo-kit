@@ -39,4 +39,4 @@ Kiroween 2026, **Skeleton Crew** category. Deadline: **Dec 4, 2026, 2:00 PM PT**
 One feature per spec task. Write tests first from the acceptance criteria and properties (PB1 to PB11), then implement. Run the eval harness before reporting done. Small commits naming the feature ID. Ask when a requirement is ambiguous or an open decision blocks the work.
 
 ## Where to look
-docs/BUILD-GUIDE.md (the step-by-step order to build in) | .kiro/specs/ (requirements, design and tasks per spec) | docs/PRD.md (features F1 to F15, data model, tests, build order, compliance) | docs/SPEC-SEED.md | docs/CONTEXT.md | docs/PLAN.md | docs/RULES-COMPLIANCE.md | docs/CLAIMS.md | docs/SOURCES.md. `private/` is local only (gitignored); never commit it.
+docs/BUILD-GUIDE.md (the step-by-step order to build in) | .kiro/specs/ (requirements, design and tasks per spec) | engine/src/types.ts (the data model) | docs/README.md (index of all docs) | docs/SPEC-SEED.md (features F1 to F15) | docs/CONTEXT.md | docs/PLAN.md | docs/RULES-COMPLIANCE.md | docs/CLAIMS.md | docs/SOURCES.md. `private/` is local only (gitignored); never commit it.

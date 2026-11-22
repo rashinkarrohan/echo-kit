@@ -1,5 +1,9 @@
 # Echo Kit: step-by-step build guide for Kiro
 
+> **History note (Nov 22, 2026).** This is the plan the project was built from, kept as a record of the spec-driven process. The steps reference two planning items that are not in the repo:
+> - **The planning PRD.** Its data model lives in `engine/src/types.ts`, and its features in `.kiro/specs/` and docs/SPEC-SEED.md.
+> - **The `seed/` starter files.** These were schemas, a sample drug list and four test conversations, all in the first commit (`523680d`). They were copied into place in Steps 1 and 14, and the superseded copies were removed.
+
 All development uses Kiro only. This guide turns the PRD into ordered steps. Kiro must do **one step at a time**, in order, and must not start the next step until the current step's **Verify** command passes and the work is committed.
 
 ## How to run this guide in Kiro

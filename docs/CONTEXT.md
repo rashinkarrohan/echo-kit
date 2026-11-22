@@ -12,7 +12,7 @@ Lead segment: adults 65+ with age-related loss, unaided, with a smartphone, plus
 - Care thread demoted: compare the doctor's spoken instruction with the printed label (photo), not spoken vs spoken.
 - Cover differentiators: pre-purchase question card, quote comparison across sellers, money/percent/duration/commission detectors.
 - English-first; Whisper on-device by default; Hindi/Hinglish (Shruti) is a stretch goal.
-- Dropped ideas (history): Entitlement Engine (2026 repos already include rules/case and document-check engines), scam checker, Poltergeist (motion sensing; conflicts with the builder's employer domain, see private/), Ghost Ears (phones already have sound alerts), Machine Ear, Witness Kit, Batch Check, Awaaz Kit.
+- Dropped ideas (history): Entitlement Engine (2026 repos already include rules/case and document-check engines), scam checker, Poltergeist (motion sensing; out of scope), Ghost Ears (phones already have sound alerts), Machine Ear, Witness Kit, Batch Check, Awaaz Kit.
 
 ## Competitors (as found; absence is not proof)
 Live captioning apps marketed for doctor visits; AI scribes with patient summaries (Abridge, Heidi) sold mainly to clinicians; consumer visit recorders (Abridge for Patients, Medcorder, Hedy, Kiri, AI Doctor Notes about US$4.99/month; vendor sources, weak); free phone captioning in the US. Echo's gap: structured medicine facts, gap checks, quote comparison and family sharing after the visit.

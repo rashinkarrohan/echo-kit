@@ -61,7 +61,7 @@ evals/         scripted consults, eval harness, red-team notes
 mcp-eval/      MCP server so Kiro can run the evals and inspect a failing case
 powers/        the echo-kit Kiro power (add a conversation type)
 .kiro/         steering, specs, hooks and custom agents
-docs/          build guide, Kiro write-up, sources, claims, privacy, releases, spikes
+docs/          start at docs/README.md: an index by judging criterion
 ```
 
 ## Checks
