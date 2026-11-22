@@ -30,18 +30,18 @@ interface SkinTokens {
 
 export const SKINS: Record<SkinName, SkinTokens> = {
   care: {
-    bg: "#F5F8F7",
+    bg: "#F6F4EF",
     surface: "#FFFFFF",
-    ink: "#14211E",
-    inkSoft: "#3F4F4B",
-    accent: "#0B6B5D",
+    ink: "#101C1A",
+    inkSoft: "#44524E",
+    accent: "#0A5C51",
     onAccent: "#FFFFFF",
-    heard: "#0A6B3A",
-    check: "#8A4B00",
-    notSaid: "#4A4F57",
-    missing: "#4A4F57",
+    heard: "#0A5C51",
+    check: "#6B3800",
+    notSaid: "#2B3A36",
+    missing: "#2B3A36",
     line: "#C9D3CF",
-    flagBg: "#FFF1C2",
+    flagBg: "#FFE08A",
   },
   cover: {
     bg: "#F3F4F8",

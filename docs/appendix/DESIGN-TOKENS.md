@@ -7,19 +7,20 @@ All text pairs below were calculated at WCAG contrast of at least 4.5:1 (most fa
 - Motion: only the receipt "prints" line by line (200 ms per line) and stamps appear; everything respects `prefers-reduced-motion` (no animation).
 - Never use colour alone for meaning: every stamp has an icon and a word.
 
-## Skin `care` (calm, card-based, single column)
+## Skin `care` (calm, card-based, single column; from the Echo Care design pack)
 | Token | Value | Use | Contrast |
 | --- | --- | --- | --- |
-| bg | #F5F8F7 | page | ink on bg 15.5 |
-| surface | #FFFFFF | cards | |
-| ink | #14211E | text | |
-| inkSoft | #3F4F4B | secondary text | 8.6 on surface |
-| accent | #0B6B5D | buttons, links | white on accent 6.4 |
-| heard | #0A6B3A | Heard clearly stamp | 6.6 on white |
-| check | #8A4B00 | Check this stamp | 6.8 on white |
-| notSaid | #4A4F57 | Not said stamp | 8.2 on white |
-| line | #C9D3CF | borders | |
-
+| bg | #F6F4EF | page | ink on bg 15.9 |
+| surface | #FFFFFF | cards |  |
+| ink | #101C1A | text |  |
+| inkSoft | #44524E | secondary text | 8.2 on surface, 7.5 on bg |
+| accent | #0A5C51 | buttons, links, active nav | white on accent 7.9 |
+| heard | #0A5C51 | Heard clearly stamp | 7.9 on white |
+| check | #6B3800 | Check this stamp | 9.6 on white |
+| notSaid | #2B3A36 | Not said stamp | 11.9 on white |
+| flagBg | #FFE08A | highlight behind flagged words | ink on flagBg 13.5 |
+| line | #C9D3CF | borders |  |
+Echo Care also uses these design-pack colours (see `apps/echo-care/src/design/`, all contrast-tested in `palette.test.ts`): teal 900 `#063F37` for the dark Please repeat screen and outline button text, border `#4F6B64` for small controls (5.3 on the page), danger `#8A1C1C` on `#FBE9E7` (7.9), amber `#6B3800` on `#FCEFD2` (8.4).
 ## Skin `cover` (ledger, table layout)
 | Token | Value | Use | Contrast |
 | --- | --- | --- | --- |
@@ -32,7 +33,7 @@ All text pairs below were calculated at WCAG contrast of at least 4.5:1 (most fa
 | line | #CBD0DC | table rules | |
 
 ## Typography
-System font stack (no web-font download so it works offline): `system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`. Care uses weight 500 for body and 700 for headings. Cover uses tabular numbers (`font-variant-numeric: tabular-nums`) in tables.
 
+Cover uses the system font stack (no web-font download so it works offline): `system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`. Care self-hosts Atkinson Hyperlegible Next (SIL OFL 1.1, from the `@fontsource-variable` package, no request to a third party) with the system stack as fallback; root weight 450 and 700 for headings. Cover uses weight 400 for body and 700 for headings. Cover uses tabular numbers (`font-variant-numeric: tabular-nums`) in tables.
 ## Distinctness rule
 Care = soft cards, one column, generous spacing, stamps as pill badges. Cover = ruled ledger, columns per seller, dense rows with large text, amber markers. A reviewer must be able to tell the two apps apart from a screenshot with the logo hidden.
