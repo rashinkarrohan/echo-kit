@@ -27,6 +27,9 @@ async function tabTo(page: Page, name: RegExp): Promise<void> {
 }
 
 async function recordSeller(page: Page, name: string, lastWords: RegExp): Promise<void> {
+  // The app moves focus to the page heading after each route change. Wait for it, as a
+  // keyboard user would, so typing does not race that focus move on a busy machine.
+  await expect(page.getByRole("heading", { name: "Start recording" })).toBeFocused();
   await tabTo(page, /^Seller or clinic name$/);
   await page.keyboard.type(name);
   await page.keyboard.press("Enter"); // submits the form
