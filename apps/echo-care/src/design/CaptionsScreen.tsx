@@ -5,9 +5,9 @@ import type { CaptionLine, RecordingStatus } from "@echo/ui";
 import { CD } from "./copy";
 import { CareIcon } from "./icons";
 import { Shell } from "./Shell";
-import { Chip, SizeSegments } from "./parts";
-import { useDesktop, useTextSize } from "./hooks";
-import { captionPx, earlierLinePx, lineHeightPx } from "./textSize";
+import { Chip } from "./parts";
+import { SizeSegments, useDesktop, useTextSize } from "@echo/ui";
+import { captionPx, earlierLinePx, lineHeightPx } from "./captionSize";
 
 export interface CaptionsProps {
   status: RecordingStatus;
@@ -275,7 +275,7 @@ export function CaptionsScreen(props: CaptionsProps): ReactElement {
         {!desktop && (
           <div className="cd-cap__top">
             {statusPill}
-            <SizeSegments size={size} onChange={setSize} desktop={false} />
+            <SizeSegments size={size} onChange={setSize} />
           </div>
         )}
         {body}
@@ -286,7 +286,7 @@ export function CaptionsScreen(props: CaptionsProps): ReactElement {
               <span className="cd-note" style={{ fontWeight: 600, fontSize: 20 }}>
                 {CD.textSize}
               </span>
-              <SizeSegments size={size} onChange={setSize} desktop />
+              <SizeSegments size={size} onChange={setSize} wide />
             </div>
             {controls}
           </aside>

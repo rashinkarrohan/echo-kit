@@ -1,8 +1,8 @@
 import type { ReactElement, ReactNode } from "react";
-import { Skin } from "@echo/ui";
+import { Skin, TextSizeButton } from "@echo/ui";
 import { CareIcon } from "./icons";
 import type { IconName } from "./icons";
-import { Logo, TextSizeButton } from "./parts";
+import { Logo } from "./parts";
 
 export type NavKey = "home" | "visits" | "medicines";
 

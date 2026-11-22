@@ -5,7 +5,7 @@ import { CD } from "./copy";
 import { CareIcon } from "./icons";
 import { Shell } from "./Shell";
 import { BackLink, Chip, StepBar, ToggleRow } from "./parts";
-import { useDesktop } from "./hooks";
+import { useDesktop } from "@echo/ui";
 import { readInterpreter, saveInterpreter } from "./prefs";
 
 /**

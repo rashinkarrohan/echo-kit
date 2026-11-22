@@ -4,7 +4,7 @@ import { CD } from "./copy";
 import { CareIcon } from "./icons";
 import { Hero } from "./Brand";
 import { Shell } from "./Shell";
-import { useDesktop } from "./hooks";
+import { useDesktop } from "@echo/ui";
 import { dayLabel, lastVisitTitle } from "./visitView";
 
 export type LastVisit = SavedVisit;

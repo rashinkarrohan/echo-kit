@@ -5,7 +5,7 @@ import { CD } from "./copy";
 import { CareIcon } from "./icons";
 import type { IconName } from "./icons";
 import { Shell } from "./Shell";
-import { useDesktop } from "./hooks";
+import { useDesktop } from "@echo/ui";
 import { REPEAT_PHRASES, REPEAT_TILES } from "./repeat";
 import type { RepeatTile } from "./repeat";
 

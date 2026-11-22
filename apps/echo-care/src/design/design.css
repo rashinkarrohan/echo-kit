@@ -20,6 +20,12 @@
   --cd-shadow-soft: 0 2px 4px rgba(16, 28, 26, 0.04), 0 12px 28px rgba(16, 28, 26, 0.07);
   --cd-hairline: #e4dfd3;
   --cd-focus: #1d4ed8;
+  --size-edge: #0a5c51;
+  --size-edge-wide: #4f6b64;
+  --size-ink: #063f37;
+  --seg-edge: #4f6b64;
+  --seg-on: #0a5c51;
+  --seg-glow: rgba(10, 92, 81, 0.35);
 
   display: flex;
   flex-direction: column;
@@ -299,105 +305,6 @@
   border: 2px solid var(--cd-border);
   background: #fff;
   color: var(--cd-ink);
-}
-
-/* Text size button (Aa) */
-.cd .cd-size {
-  position: relative;
-  flex: none;
-}
-.cd .cd-size__button {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  height: 52px;
-  padding: 0 10px;
-  border-radius: 18px;
-  border: 2px solid var(--cd-teal700);
-  background: #fff;
-  color: var(--cd-teal900);
-  font-family: inherit;
-  cursor: pointer;
-}
-.cd .cd-size__aa {
-  display: flex;
-  align-items: baseline;
-  font-weight: 700;
-}
-.cd .cd-size__aa span:first-child {
-  font-size: 18px;
-}
-.cd .cd-size__aa span:last-child {
-  font-size: 26px;
-}
-.cd .cd-size__label {
-  font-size: 18px;
-  line-height: 24px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-.cd .cd-size__pop {
-  position: absolute;
-  top: calc(100% + 10px);
-  right: 0;
-  z-index: 20;
-  width: 300px;
-  max-width: calc(100vw - 32px);
-  padding: 16px;
-  border-radius: 24px;
-  background: #fff;
-  box-shadow:
-    0 2px 6px rgba(16, 28, 26, 0.06),
-    0 18px 40px rgba(16, 28, 26, 0.2);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.cd .cd-size__pop-title {
-  font-size: 18px;
-  line-height: 24px;
-  font-weight: 600;
-  color: var(--cd-text2);
-}
-
-/* Segmented A A A control */
-.cd .cd-seg {
-  display: flex;
-  gap: 4px;
-  padding: 4px;
-  border-radius: 24px;
-  background: #fff;
-  border: 2px solid var(--cd-border);
-}
-.cd .cd-seg__button {
-  flex: 1;
-  min-width: 52px;
-  height: 48px;
-  padding: 0;
-  border: 0;
-  border-radius: 19px;
-  background: transparent;
-  color: var(--cd-teal900);
-  font-family: inherit;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-.cd .cd-seg__button[aria-pressed="true"] {
-  background: var(--cd-teal700);
-  color: #fff;
-  box-shadow: 0 6px 14px rgba(10, 92, 81, 0.35);
-}
-.cd .cd-seg__button:nth-child(1) {
-  font-size: 18px;
-}
-.cd .cd-seg__button:nth-child(2) {
-  font-size: 24px;
-}
-.cd .cd-seg__button:nth-child(3) {
-  font-size: 30px;
 }
 
 /* ---------- Cards, chips, tiles, toggles ---------- */
@@ -1111,7 +1018,7 @@
 .cd.cd-dark .cd-brand {
   color: #fff;
 }
-.cd.cd-dark .cd-size__button {
+.cd.cd-dark .echo-size__button {
   background: transparent;
   color: #fff;
   border-color: #ddefea;
@@ -1287,20 +1194,6 @@
   }
   .cd .cd-top + .cd-main {
     padding-top: 8px;
-  }
-  .cd .cd-size__button {
-    height: 56px;
-    padding: 0 20px;
-    border-color: var(--cd-border);
-  }
-  .cd .cd-size__aa span:first-child {
-    font-size: 20px;
-  }
-  .cd .cd-size__aa span:last-child {
-    font-size: 30px;
-  }
-  .cd .cd-size__label {
-    font-size: 20px;
   }
   .cd .cd-btn--cta {
     min-height: 80px;
@@ -1618,7 +1511,7 @@
   }
 
   /* Please repeat */
-  .cd.cd-dark .cd-size__button {
+  .cd.cd-dark .echo-size__button {
     border-color: #ddefea;
   }
   .cd .cd-repeat-screen {

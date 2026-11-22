@@ -9,7 +9,7 @@ import { CD } from "./copy";
 import { CareIcon } from "./icons";
 import { Shell } from "./Shell";
 import { Tile } from "./parts";
-import { useDesktop } from "./hooks";
+import { useDesktop } from "@echo/ui";
 
 /**
  * The user's own medicines list, kept on this device. Names only, no doses. Removing a name

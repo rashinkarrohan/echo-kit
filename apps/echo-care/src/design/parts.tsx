@@ -1,11 +1,8 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useId } from "react";
 import type { ReactElement, ReactNode } from "react";
 import { CareIcon } from "./icons";
 import type { IconName } from "./icons";
 import { Logo } from "./Brand";
-import { TEXT_SIZES, TEXT_SIZE_LABELS } from "./textSize";
-import type { TextSize } from "./textSize";
-import { useTextSize } from "./hooks";
 
 /** Back pill (design pack: chevron and the word "Back", 52 px high). */
 export function BackLink({
@@ -104,103 +101,6 @@ export function ToggleRow({
         onChange={(e) => onChange(e.target.checked)}
       />
     </label>
-  );
-}
-
-/** Segmented A / A / A control for the caption text size. */
-export function SizeSegments({
-  size,
-  onChange,
-  desktop,
-}: {
-  size: TextSize;
-  onChange: (next: TextSize) => void;
-  desktop: boolean;
-}): ReactElement {
-  return (
-    <div
-      className="cd-seg"
-      role="group"
-      aria-label="Text size"
-      style={desktop ? { padding: 5, borderRadius: 26 } : undefined}
-    >
-      {TEXT_SIZES.map((s) => (
-        <button
-          key={s}
-          type="button"
-          className="cd-seg__button"
-          aria-label={TEXT_SIZE_LABELS[s]}
-          aria-pressed={size === s}
-          style={desktop ? { height: 64, borderRadius: 20 } : undefined}
-          onClick={() => onChange(s)}
-        >
-          A
-        </button>
-      ))}
-    </div>
-  );
-}
-
-/** "Aa Text size" button; opens the three sizes. The choice is kept on this device. */
-export function TextSizeButton(): ReactElement {
-  const [size, setSize] = useTextSize();
-  const [open, setOpen] = useState(false);
-  const wrap = useRef<HTMLDivElement>(null);
-  const trigger = useRef<HTMLButtonElement>(null);
-  const popId = useId();
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent): void => {
-      if (e.key === "Escape") {
-        setOpen(false);
-        trigger.current?.focus();
-      }
-    };
-    const onDown = (e: MouseEvent | TouchEvent): void => {
-      if (wrap.current && e.target instanceof Node && !wrap.current.contains(e.target))
-        setOpen(false);
-    };
-    document.addEventListener("keydown", onKey);
-    document.addEventListener("mousedown", onDown);
-    document.addEventListener("touchstart", onDown);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("touchstart", onDown);
-    };
-  }, [open]);
-
-  return (
-    <div className="cd-size" ref={wrap}>
-      <button
-        ref={trigger}
-        type="button"
-        className="cd-size__button"
-        aria-label="Change text size"
-        aria-expanded={open}
-        aria-controls={open ? popId : undefined}
-        onClick={() => setOpen((v) => !v)}
-      >
-        <span className="cd-size__aa" aria-hidden="true">
-          <span>A</span>
-          <span>a</span>
-        </span>
-        <span className="cd-size__label">Text size</span>
-      </button>
-      {open && (
-        <div className="cd-size__pop" id={popId}>
-          <span className="cd-size__pop-title">Caption text size</span>
-          <SizeSegments
-            size={size}
-            desktop={false}
-            onChange={(next) => {
-              setSize(next);
-            }}
-          />
-        </div>
-      )}
-    </div>
   );
 }
 

@@ -82,3 +82,8 @@ export type { HashLocation, DeviceServices } from "./app-kit";
 export { TrustPanel } from "./components/TrustPanel";
 export type { EvalSummary } from "./components/TrustPanel";
 export { sampleServices, SAMPLE_WORDING_VERSION } from "./app-kit";
+
+export { useDesktop, useTextSize, DESKTOP_QUERY } from "./design/hooks";
+export { SizeSegments, TextSizeButton } from "./design/SizeControls";
+export { TEXT_SIZES, TEXT_SIZE_LABELS, readTextSize, saveTextSize } from "./design/textSize";
+export type { TextSize } from "./design/textSize";
