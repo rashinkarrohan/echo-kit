@@ -40,6 +40,7 @@ import {
   createPlayer,
   useDeviceServices,
   useRecording,
+  focusMainHeading,
 } from "@echo/ui";
 import type { ConsentChoices, ViewStatus } from "@echo/ui";
 import { CARE } from "./copy";
@@ -181,12 +182,7 @@ export function App(): ReactElement {
   useEffect(() => {
     if (!routeReady) return;
     document.title = PAGE_TITLES[route];
-    const id = window.requestAnimationFrame(() => {
-      const heading = document.querySelector<HTMLElement>("main h1");
-      if (!heading) return;
-      heading.tabIndex = -1;
-      heading.focus();
-    });
+    const id = window.requestAnimationFrame(() => focusMainHeading());
     return () => window.cancelAnimationFrame(id);
   }, [route, routeReady]);
 

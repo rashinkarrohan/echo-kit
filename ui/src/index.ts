@@ -2,7 +2,14 @@
 // Styles: import "@echo/ui/styles.css" once in each app.
 
 // Components
-export { Skin, StatusMessage, StampBadge, ChecklistStamp, Icon } from "./components/common";
+export {
+  Skin,
+  StatusMessage,
+  StampBadge,
+  ChecklistStamp,
+  Icon,
+  focusMainHeading,
+} from "./components/common";
 export type {
   ViewStatus,
   StatusText,

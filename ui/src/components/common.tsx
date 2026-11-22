@@ -145,6 +145,22 @@ export function ChecklistStamp({ stamp }: { stamp: ChecklistStampName }): ReactE
 }
 
 /** Move focus to an element when it mounts (dialogs, new screens). */
+/**
+ * After a route change, move focus to the page's main heading, so screen-reader and
+ * keyboard users start at the top of the new page. It does not take focus away from a
+ * field or button the user has already moved to on the new page: on a slow phone the
+ * page can finish loading after they have started typing.
+ */
+export function focusMainHeading(doc: Document = document): void {
+  const heading = doc.querySelector<HTMLElement>("main h1");
+  if (!heading) return;
+  const active = doc.activeElement;
+  const main = doc.querySelector("main");
+  if (active && active !== doc.body && active !== heading && main?.contains(active)) return;
+  heading.tabIndex = -1;
+  heading.focus();
+}
+
 export function useFocusOnMount<T extends HTMLElement>(): React.RefObject<T> {
   const ref = useRef<T>(null);
   useEffect(() => {

@@ -15,6 +15,7 @@ import {
   SpeakerCard,
   StampBadge,
   FINAL,
+  focusMainHeading,
   medicineNoteText,
 } from "../index";
 
@@ -400,5 +401,33 @@ describe("Skin", () => {
       </Skin>,
     );
     expect(container.firstElementChild?.getAttribute("data-skin")).toBe("cover");
+  });
+});
+
+describe("focusMainHeading (after a route change)", () => {
+  afterEach(() => {
+    document.body.innerHTML = "";
+  });
+
+  it("moves focus to the page heading", () => {
+    document.body.innerHTML = "<main><h1>Start recording</h1><input id='name' /></main>";
+    focusMainHeading();
+    expect(document.activeElement?.textContent).toBe("Start recording");
+  });
+
+  it("does not take focus from a field the user already moved to (slow page load)", () => {
+    document.body.innerHTML = "<main><h1>Start recording</h1><input id='name' /></main>";
+    const field = document.getElementById("name") as HTMLInputElement;
+    field.focus();
+    focusMainHeading();
+    expect(document.activeElement).toBe(field);
+  });
+
+  it("still moves focus when it was left on a link outside the page content", () => {
+    document.body.innerHTML =
+      "<nav><a href='#/x' id='nav'>Home</a></nav><main><h1>Saved</h1></main>";
+    (document.getElementById("nav") as HTMLAnchorElement).focus();
+    focusMainHeading();
+    expect(document.activeElement?.textContent).toBe("Saved");
   });
 });
