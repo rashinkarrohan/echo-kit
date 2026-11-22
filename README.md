@@ -17,6 +17,9 @@ Each app has a **Play sample consult** button on its home screen. It runs a fict
 
 - Echo Care: *public link added at deployment (build guide Step 30)*
 - Echo Cover: *public link added at deployment (build guide Step 30)*
+- Demo video (under 3 minutes): *YouTube link added before submission*
+
+All docs are indexed in [docs/README.md](docs/README.md), grouped by the five judging criteria.
 
 To run them locally:
 
