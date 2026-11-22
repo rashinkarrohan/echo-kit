@@ -24,6 +24,11 @@ List what you tried, what failed and why (the judging criteria name experimentat
   - Rejected: a sentence-like prompt, which Whisper wrote out as a $100,000 price on near-silence.
   - Caught: the red-team replay found that reading "in the evening" turned "every other day" into a daily dose; fixed before commit.
   - A new fast-check property says a personal list only adds suggestions: heard words stay as heard and exact names are never dropped (`engine/src/guard/drug-match.test.ts`).
+- **Nov 22, 2026, research then build (Kiro IDE; parallel research sub-agents, then measurement before each change):**
+  - Kept: the Silero speech check (non-speech sent to Whisper: 11 to 0).
+  - Kept: US sources for Echo Cover's questions.
+  - Kept: a real-speech test on PriMock57. It found ordinary words in the medicine list, ordinary words joined into medicines, and a prompt-induced wrong name stamped Heard clearly. All three are fixed, the last with a second, unprompted hearing.
+  - Rejected: per-word confidence. Medicine names heard correctly scored as low as misheard ones (docs/SPIKES.md).
 
 ## Kiro-only statement
 All development of this project used Kiro only (IDE, CLI, Web and Crew). Note which Kiro app was used for which task.
