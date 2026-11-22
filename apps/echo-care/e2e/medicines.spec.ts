@@ -1,65 +1,61 @@
 /**
  * Your medicines (optional): the user types the medicines they take so Echo can listen
- * for those names. Names only, kept on this phone, removable one by one or all at once.
+ * for those names. Names only, kept on this phone, removable one by one with Undo.
  */
 import { test, expect } from "@playwright/test";
-import AxeBuilder from "@axe-core/playwright";
+import { axe } from "./helpers";
 
-test("add, check, keep and delete the medicines list", async ({ page }) => {
-  await page.goto("/#/consent");
-  await expect(
-    page.getByRole("heading", { name: "Help Echo hear your medicines (optional)" }),
-  ).toBeVisible();
-  await page.getByRole("link", { name: "Add your medicines" }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "Your medicines" })).toBeVisible();
+const capitalised = (name: string): string => name.charAt(0).toUpperCase() + name.slice(1);
+
+test("add, check, keep, remove and undo the medicines list", async ({ page }) => {
+  await page.goto("/#/medicines");
+  const heading = page.getByRole("heading", { level: 1, name: "Your medicines" });
+  await expect(heading).toBeVisible();
+  await expect(heading).toBeFocused();
+  await expect(page).toHaveTitle("Your medicines | Echo Care");
   await expect(page.getByText("No medicines added yet.")).toBeVisible();
-
+  await expect(page.getByText("Saved on this phone only")).toBeVisible();
   const name = page.getByRole("textbox", { name: "Medicine name" });
   // A dose is refused, with the reason next to the field.
   await name.fill("metformin 500mg");
-  await page.getByRole("button", { name: "Add" }).click();
+  await page.getByRole("button", { name: "Add medicine" }).click();
   await expect(page.getByRole("alert")).toHaveText(
     "Type the name only, using letters. Leave out the dose.",
   );
   await expect(name).toHaveAttribute("aria-invalid", "true");
-
-  for (const medicine of ["Glimepiride", "co-codamol"]) {
+  // Names are capitalised, as in the design, and the field clears.
+  for (const medicine of ["glimepiride", "co-codamol"]) {
     await name.fill(medicine);
-    await page.getByRole("button", { name: "Add" }).click();
-    await expect(page.getByRole("listitem").filter({ hasText: medicine })).toBeVisible();
+    await page.getByRole("button", { name: "Add medicine" }).click();
+    await expect(
+      page.getByRole("listitem").filter({ hasText: capitalised(medicine) }),
+    ).toBeVisible();
   }
+  await expect(page.getByRole("listitem").filter({ hasText: "Glimepiride" })).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: "Co-codamol" })).toBeVisible();
   await expect(name).toHaveValue("");
-  await name.fill("glimepiride");
-  await page.getByRole("button", { name: "Add" }).click();
+  await expect(page.getByRole("heading", { name: /Your list/ })).toContainText("(2)");
+  await name.fill("GLIMEPIRIDE");
+  await page.getByRole("button", { name: "Add medicine" }).click();
   await expect(page.getByRole("alert")).toHaveText("That medicine is already on the list.");
-
-  const axe = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
-  expect(
-    axe.violations
-      .filter((v) => v.impact === "serious" || v.impact === "critical")
-      .map((v) => v.id),
-  ).toEqual([]);
-
+  await axe(page, "medicines");
   // Kept on this phone across a reload.
   await page.reload();
-  await expect(page.getByRole("listitem").filter({ hasText: "co-codamol" })).toBeVisible();
-  await page.getByRole("button", { name: "Remove co-codamol" }).click();
-  await expect(page.getByRole("listitem").filter({ hasText: "co-codamol" })).toHaveCount(0);
-
-  await page.getByRole("link", { name: "Done" }).click();
-  await expect(page.getByText("1 medicine on your list. They stay on this phone.")).toBeVisible();
-  await page.getByRole("link", { name: "Edit your medicines" }).click();
-
-  await page.getByRole("button", { name: "Delete the whole list" }).click();
-  const confirm = page.getByRole("group", { name: "Delete the whole list from this phone?" });
-  await confirm.getByRole("button", { name: "Cancel" }).click();
-  await expect(page.getByRole("listitem").filter({ hasText: "Glimepiride" })).toBeVisible();
-  await page.getByRole("button", { name: "Delete the whole list" }).click();
-  await confirm.getByRole("button", { name: "Delete the list" }).click();
-  await expect(page.getByText("Your list was deleted from this phone.")).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: "Co-codamol" })).toBeVisible();
+  // Remove shows an Undo bar; Undo puts the name back where it was.
+  await page.getByRole("button", { name: "Remove Glimepiride" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Removed Glimepiride" })).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: "Glimepiride" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(page.getByRole("listitem").nth(0)).toContainText("Glimepiride");
+  // Remove for good, and the empty state returns.
+  await page.getByRole("button", { name: "Remove Glimepiride" }).click();
+  await page.getByRole("button", { name: "Remove Co-codamol" }).click();
   await expect(page.getByText("No medicines added yet.")).toBeVisible();
   await page.reload();
   await expect(page.getByText("No medicines added yet.")).toBeVisible();
+  await page.getByRole("link", { name: "Done" }).click();
+  await expect(page.getByRole("heading", { name: /Read what your doctor says/ })).toBeVisible();
 });
 
 test("the medicines list works by keyboard alone", async ({ page }) => {
@@ -67,8 +63,11 @@ test("the medicines list works by keyboard alone", async ({ page }) => {
   await page.getByRole("textbox", { name: "Medicine name" }).focus();
   await page.keyboard.type("warfarin");
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("listitem").filter({ hasText: "warfarin" })).toBeVisible();
-  await page.getByRole("button", { name: "Remove warfarin" }).focus();
+  await expect(page.getByRole("listitem").filter({ hasText: "Warfarin" })).toBeVisible();
+  await page.getByRole("button", { name: "Remove Warfarin" }).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByText("No medicines added yet.")).toBeVisible();
+  await page.getByRole("button", { name: "Undo" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("listitem").filter({ hasText: "Warfarin" })).toBeVisible();
 });

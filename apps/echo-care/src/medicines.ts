@@ -30,3 +30,16 @@ export function addMedicine(list: readonly string[], input: string): AddMedicine
 export function removeMedicine(list: readonly string[], name: string): string[] {
   return list.filter((n) => n !== name);
 }
+
+/** Put a removed name back at its old place (Undo). Never adds a name twice or goes past the limit. */
+export function insertMedicine(list: readonly string[], name: string, index: number): string[] {
+  if (list.some((n) => key(n) === key(name)) || list.length >= MAX_MEDICINES) return [...list];
+  const at = Math.max(0, Math.min(index, list.length));
+  return [...list.slice(0, at), name, ...list.slice(at)];
+}
+
+/** First letter capital, the rest as typed (the design shows names this way). */
+export function capitaliseName(input: string): string {
+  const name = input.trim();
+  return name.length === 0 ? name : name.charAt(0).toUpperCase() + name.slice(1);
+}

@@ -5,6 +5,7 @@
 
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { playing } from "./helpers";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
@@ -75,10 +76,9 @@ test("sample consult works offline after the first load, without a microphone or
 }) => {
   const requests: string[] = [];
   page.on("request", (r) => requests.push(r.url()));
-
   await page.goto(`${PREVIEW}/`);
   await expect(
-    page.getByRole("heading", { name: "Turn what was said into a receipt you can check." }),
+    page.getByRole("heading", { name: "Read what your doctor says, as they say it." }),
   ).toBeVisible();
   // Wait until the service worker controls the page (first load done).
   await page.evaluate(async () => {
@@ -88,21 +88,30 @@ test("sample consult works offline after the first load, without a microphone or
   await expect
     .poll(() => page.evaluate(() => navigator.serviceWorker.controller !== null))
     .toBe(true);
-
   await context.setOffline(true);
-  await page.getByRole("link", { name: "Play sample consult" }).click();
-  await expect(page.getByRole("dialog", { name: /I have hearing loss/ })).toBeVisible();
-  await page.getByRole("button", { name: "They agreed, start" }).click();
+  // The font is self-hosted, so the text looks the same offline.
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { name: "Read what your doctor says, as they say it." }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(() =>
+      document.fonts.check("700 20px 'Atkinson Hyperlegible Next Variable'"),
+    ),
+  ).toBe(true);
+  await page.getByRole("link", { name: "Try a practice visit" }).click();
+  await expect(page.getByRole("heading", { name: "I am deaf or hard of hearing." })).toBeVisible();
+  await page.getByRole("button", { name: "They said yes. Start" }).click();
   await expect(page.getByText(/call the clinic straight away/)).toBeVisible({ timeout: 60_000 });
-  await page.getByRole("button", { name: "Stop and review" }).click();
-  await page.getByRole("button", { name: "See the receipt" }).click();
-  await expect(page.locator(".echo-receipt-line")).toHaveCount(3);
+  await page.getByRole("button", { name: "Finish visit" }).click();
+  await expect(page.locator(".echo-receipt-line")).toHaveCount(1);
   // The actor recording is cached: Hear it is offered and plays, even offline.
   const medicine = page.locator(".echo-receipt-line").first();
   await medicine.getByRole("button", { name: /^Hear it/ }).click();
-  await expect(page.locator(".care-playing")).toHaveText(/^Playing \d+:\d\d to \d+:\d\d$/);
+  await expect(playing(page)).toHaveText(/^Playing \d+:\d\d to \d+:\d\d$/);
   await context.setOffline(false);
-
   // No speech model or runtime was fetched, and the microphone was never asked for.
   expect(requests.filter((u) => /huggingface|\.onnx|\.wasm|asr-worker/.test(u))).toEqual([]);
+  // Nothing was requested from any other site, fonts included.
+  expect(requests.filter((u) => u.startsWith("http") && !u.startsWith(PREVIEW))).toEqual([]);
 });

@@ -58,45 +58,44 @@ test("a saved visit can be reopened after reload and deleted deliberately", asyn
   await page.goto("/");
   await seedReceipt(page);
   await page.reload();
-
-  await expect(page.getByText("1 saved visit on this phone")).toBeVisible();
-  await page.getByRole("link", { name: "View saved visits" }).click();
-  const savedHeading = page.getByRole("heading", { name: "Saved visits" });
+  // Home offers the last visit.
+  const last = page.getByRole("link", { name: /Metformin, 500 milligrams/ });
+  await expect(last).toBeVisible();
+  await expect(last).toContainText("Last visit");
+  // Visits lists every saved visit.
+  await page
+    .getByRole("navigation", { name: "Main" })
+    .getByRole("link", { name: "Visits" })
+    .click();
+  const savedHeading = page.getByRole("heading", { name: "Your visits" });
   await expect(savedHeading).toBeVisible();
   await expect(savedHeading).toBeFocused();
-  await expect(page).toHaveTitle("Saved visits | Echo Care");
-  const saved = page.getByRole("listitem").filter({ hasText: "Doctor visit" });
-  await expect(saved).toContainText("1 fact");
-  await saved.getByRole("button", { name: "Open receipt" }).click();
-
-  await expect(page.getByRole("heading", { name: /^Visit, / })).toBeVisible();
-  await expect(page.getByText("metformin", { exact: true })).toBeVisible();
-  await expect(page.getByText("Audio not kept")).toBeVisible();
+  await expect(page).toHaveTitle("Your visits | Echo Care");
+  const saved = page.getByRole("listitem").filter({ hasText: "Metformin, 500 milligrams" });
+  await expect(saved).toContainText("1 thing heard");
+  await saved.getByRole("button", { name: /^Open:/ }).click();
+  await expect(page.getByRole("heading", { name: "Your visit summary" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Metformin" })).toBeVisible();
+  await expect(page.getByText("Audio not kept").first()).toBeVisible();
   await expect(page.getByRole("button", { name: /^Hear it/ })).toHaveCount(0);
-
-  // Directly reloading the receipt route restores the latest saved visit too.
+  // Directly reloading the summary route restores the latest saved visit too.
   await page.reload();
-  await expect(page.getByText("metformin", { exact: true })).toBeVisible();
-  await expect(page.getByText("Audio not kept")).toBeVisible();
-
+  await expect(page.getByRole("heading", { name: "Metformin" })).toBeVisible();
+  await expect(page.getByText("Audio not kept").first()).toBeVisible();
+  // Delete asks first.
+  await page.getByRole("link", { name: /Questions & safety/ }).click();
   await page.getByRole("button", { name: "Delete this visit" }).click();
-  const confirm = page.getByRole("group", { name: "Delete this visit?" });
+  const confirm = page.getByRole("alertdialog", { name: "Delete this visit?" });
   await expect(confirm).toContainText("This cannot be undone");
-  await confirm.getByRole("button", { name: "Cancel" }).click();
-  await expect(page.getByText("metformin", { exact: true })).toBeVisible();
-
+  await confirm.getByRole("button", { name: "No, keep it" }).click();
+  await expect(page.getByRole("heading", { name: "Questions and safety" })).toBeVisible();
   await page.getByRole("button", { name: "Delete this visit" }).click();
-  await page
-    .getByRole("group", { name: "Delete this visit?" })
-    .getByRole("button", { name: "Delete permanently" })
-    .click();
-  await expect(page.getByText("This visit was deleted from this phone.")).toBeVisible();
-
-  await page.getByRole("link", { name: "Home" }).click();
-  await expect(page.getByText("1 saved visit on this phone")).toHaveCount(0);
+  await page.getByRole("button", { name: "Yes, delete it" }).click();
+  await expect(page.getByText("Visit deleted from this phone.")).toBeVisible();
+  await expect(page.getByRole("link", { name: /Metformin, 500 milligrams/ })).toHaveCount(0);
   await page.reload();
-  await expect(page.getByText("1 saved visit on this phone")).toHaveCount(0);
-
+  await expect(page.getByRole("link", { name: /Metformin, 500 milligrams/ })).toHaveCount(0);
+  await expect(page.getByText("Visit deleted from this phone.")).toHaveCount(0);
   const axe = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
   expect(
     axe.violations

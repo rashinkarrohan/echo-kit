@@ -13,7 +13,7 @@ It is built first for older adults with unaided hearing loss and their adult chi
 Built for Kiroween 2026, Skeleton Crew category. The skeleton is `engine/` plus `ui/`; the two apps are the creatures built on it.
 
 ## Try it
-Each app has a **Play sample consult** button on its home screen. It runs a fictional visit, read by an actor, with real audio behind every "Hear it" button. It needs no microphone and no model download, and it works offline after the first load.
+Echo Care has a **Try a practice visit** button and Echo Cover a **Play sample consult** button on their home screens. It runs a fictional visit, read by an actor, with real audio behind every "Hear it" button. It needs no microphone and no model download, and it works offline after the first load.
 
 - **Echo Care:** https://echo-kit-17lm.vercel.app
 - **Echo Cover:** https://echo-kit-omega.vercel.app

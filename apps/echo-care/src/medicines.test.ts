@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { addMedicine, MAX_MEDICINES, removeMedicine } from "./medicines";
+import {
+  addMedicine,
+  MAX_MEDICINES,
+  removeMedicine,
+  insertMedicine,
+  capitaliseName,
+} from "./medicines";
 
 describe("addMedicine (the user's own medicines list)", () => {
   it("adds a typed name, tidied, keeping how it was written", () => {
@@ -50,5 +56,34 @@ describe("removeMedicine", () => {
       "a1",
       "metformin",
     ]);
+  });
+});
+
+describe("insertMedicine (Undo)", () => {
+  it("puts a removed name back where it was", () => {
+    expect(insertMedicine(["a1", "metformin"], "warfarin", 1)).toEqual([
+      "a1",
+      "warfarin",
+      "metformin",
+    ]);
+  });
+  it("puts it at the end when the place no longer exists", () => {
+    expect(insertMedicine(["a1"], "warfarin", 9)).toEqual(["a1", "warfarin"]);
+    expect(insertMedicine(["a1"], "warfarin", -3)).toEqual(["warfarin", "a1"]);
+  });
+  it("does not add a name twice", () => {
+    expect(insertMedicine(["Warfarin"], "warfarin", 0)).toEqual(["Warfarin"]);
+  });
+  it("does not change the list it was given", () => {
+    const list = ["a1"];
+    insertMedicine(list, "warfarin", 0);
+    expect(list).toEqual(["a1"]);
+  });
+});
+describe("capitaliseName", () => {
+  it("capitalises the first letter, as the design does", () => {
+    expect(capitaliseName("  metformin ")).toBe("Metformin");
+    expect(capitaliseName("co-codamol")).toBe("Co-codamol");
+    expect(capitaliseName("")).toBe("");
   });
 });

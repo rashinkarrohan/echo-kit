@@ -33,8 +33,10 @@ const ALLOWED = [
 function copyFiles() {
   const files = [join(root, "ui/src/copy.ts")];
   for (const app of readdirSync(join(root, "apps"))) {
-    const f = join(root, "apps", app, "src/copy.ts");
-    if (existsSync(f)) files.push(f);
+    for (const rel of ["src/copy.ts", "src/design/copy.ts"]) {
+      const f = join(root, "apps", app, rel);
+      if (existsSync(f)) files.push(f);
+    }
   }
   return files;
 }

@@ -1,49 +1,37 @@
 /**
- * S20 Verify: pharmacy stage and label check. With the scripted doctor visit (care-01)
- * and pharmacy visit (care-02), a label printed "once daily" differs from what was
- * said (twice a day): exactly one flag, with both anchors, and no verdict.
+ * Pharmacy visit and label check. With the scripted doctor visit (care-01) and pharmacy visit
+ * (care-02), a label printed "once daily" differs from what was said (twice a day): exactly one
+ * flag, with both anchors, and no verdict.
  */
-
 import { test, expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import AxeBuilder from "@axe-core/playwright";
-
-async function axe(page: Page, screen: string): Promise<void> {
-  await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
-  const r = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa", "best-practice"])
-    .analyze();
-  const bad = r.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
-  expect(bad.map((v) => `${screen}: ${v.id} ${v.nodes[0]?.target.join(" ")}`)).toEqual([]);
-}
-
-async function record(page: Page, lastWords: RegExp): Promise<void> {
-  await page.getByRole("button", { name: "They agreed, start" }).click();
-  await expect(page.getByText(lastWords)).toBeVisible({ timeout: 20_000 });
-  await page.getByRole("button", { name: "Stop and review" }).click();
-}
+import {
+  SAMPLE,
+  allowMicrophone,
+  axe,
+  finishVisit,
+  openLabel,
+  playing,
+  startVisit,
+} from "./helpers";
 
 async function doctorThenPharmacy(page: Page): Promise<void> {
-  await page.goto("/?sample=care-01&speed=40#/consent");
-  await page.getByRole("switch", { name: "Record this conversation" }).click();
-  await page.getByRole("switch", { name: "Turn speech into text on my phone" }).click();
-  await page.getByRole("button", { name: "I agree and continue" }).click();
-  await record(page, /any other questions/);
-  await page.getByRole("button", { name: "See the receipt" }).click();
-
-  await page.getByRole("button", { name: "At the pharmacy" }).click();
-  await expect(
-    page.getByRole("dialog", { name: /Please write down how to take each medicine/ }),
-  ).toBeVisible();
+  await startVisit(page, `${SAMPLE}#/doctor-card`);
+  await finishVisit(page, /any other questions/);
+  await openLabel(page);
+  await page.getByRole("link", { name: "Record the pharmacy conversation" }).click();
+  await expect(page.getByText("Message for the pharmacist")).toBeVisible();
+  await expect(page.getByText(/write down how to take each medicine/)).toBeVisible();
   await axe(page, "pharmacist card");
-  await record(page, /cool dry place/);
-  await page.getByRole("button", { name: "See the receipt" }).click();
-  await expect(page.getByRole("heading", { name: /^Pharmacy, / })).toBeVisible();
-  await axe(page, "pharmacy receipt");
+  await page.getByRole("button", { name: "They said yes. Start" }).click();
+  await allowMicrophone(page);
+  await finishVisit(page, /cool dry place/);
+  await expect(page.getByRole("heading", { name: "Your pharmacy summary" })).toBeVisible();
+  await axe(page, "pharmacy summary");
 }
 
 async function fillLabel(page: Page, medicine: string, dose: string, often: string): Promise<void> {
-  await page.getByRole("button", { name: "Check the label" }).click();
+  await openLabel(page);
   await axe(page, "label form");
   await page.getByLabel("Medicine").fill(medicine);
   await page.getByLabel("Dose").fill(dose);
@@ -56,7 +44,6 @@ test("a label mismatch shows exactly one flag with both anchors and no verdict",
 }) => {
   await doctorThenPharmacy(page);
   await fillLabel(page, "Metformin", "500 mg", "once daily");
-
   const flags = page.locator(".echo-label-flag");
   await expect(flags).toHaveCount(1);
   const flag = flags.first();
@@ -71,13 +58,12 @@ test("a label mismatch shows exactly one flag with both anchors and no verdict",
     /\b(wrong|correct|incorrect|mistake|error|should)\b/i,
   );
   await axe(page, "label flag");
-
   // Each anchor plays its own recording.
   await flag
     .getByRole("button", { name: /^Hear it/ })
     .first()
     .click();
-  await expect(page.locator(".care-playing")).toHaveText(/^Playing /);
+  await expect(playing(page)).toHaveText(/^Playing /);
 });
 
 test("a label that matches says so", async ({ page }) => {
@@ -89,7 +75,7 @@ test("a label that matches says so", async ({ page }) => {
 
 test("the label photo is shown but never stored", async ({ page }) => {
   await doctorThenPharmacy(page);
-  await page.getByRole("button", { name: "Check the label" }).click();
+  await openLabel(page);
   await page.locator('input[type="file"]').setInputFiles({
     name: "label.png",
     mimeType: "image/png",

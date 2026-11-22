@@ -15,7 +15,12 @@
   - large-print HTML built on the device, no audio, everything escaped; Web Share with download fallback; `apps/echo-care/e2e/share.spec.ts`
   - _Requirements: 6_
 - [x] 23. Sample consult and trust page (S23, Care part)
-  - sample mode (`?sample=...&demo=1`, "Play sample consult" link): in memory, no microphone, no model, works offline (tested); `/trust` reads evals/results.json at build time
+  - sample mode (`?sample=...&demo=1`, "Try a practice visit" link): in memory, no microphone, no model, works offline (tested); `/trust` reads evals/results.json at build time
   - [x] actor recordings of care-01 and care-02 (docs/RECORDING-SCRIPT.md) split into the script's segments; `public/samples/*.mp3`, cached offline; Hear it plays them (tested: speech in every segment, `ui/e2e/tests/sample-audio.spec.ts`)
   - [x] signed release recorded in docs/RELEASES.md (Nov 21, 2026); recordings committed
   - _Requirements: 7_
+- [x] 24. Echo Care design pack (S19 polish, Nov 23, 2026)
+  - phone (390 px) and desktop (1280 px) layouts from the owner's design pack, in `apps/echo-care/src/design/` (scoped `.cd` styles, so Echo Cover is untouched); self-hosted Atkinson Hyperlegible Next; care palette in `ui/src/tokens.ts` and `ui/src/styles.css`
+  - flow: Home, card for the doctor, microphone and per-purpose consent, live captions, Please repeat, summary, questions and safety, medicines with Undo, visits, ask card; share now asks its own consent first
+  - pure logic tested first (`textSize`, `visitView`, `repeat`, `prefs`, `medicines`, palette contrast); e2e rewritten for the new flow with axe at both sizes
+  - deviations from the pack, on purpose: "Heard" instead of "Doctor" (no speaker identification), "Check this" instead of "To check", the uncertainty line is always shown, "Delete whole list" dropped, Google Fonts link replaced by the self-hosted font

@@ -18,21 +18,11 @@ import type {
   VerifiedFact,
 } from "@echo/engine";
 import {
-  CaptionView,
-  ChecklistView,
-  ConsentSheet,
   FINAL,
   LabelFlagList,
   LabelForm,
   ReadBackPanel,
-  ReceiptList,
   RecordingController,
-  SPEAKER_CARDS,
-  Skin,
-  ADDED,
-  SpeakerCard,
-  StampBadge,
-  StatusMessage,
   TrustPanel,
   clock,
   doseNoteText,
@@ -43,29 +33,45 @@ import {
   focusMainHeading,
 } from "@echo/ui";
 import type { ConsentChoices, ViewStatus } from "@echo/ui";
+import { StatusMessage } from "@echo/ui";
 import { CARE } from "./copy";
 import { EVAL_SUMMARY, SCHEMAS, readLaunch } from "./env";
 import type { Stage } from "./env";
 import { go, useRoute } from "./router";
 import type { Route } from "./router";
 import { SharePanel } from "./SharePanel";
-import { HomePage } from "./HomePage";
-import { SavedVisits } from "./SavedVisits";
-import type { SavedVisit } from "./SavedVisits";
-import { MedicinesPage } from "./MedicinesPage";
+import type { SavedVisit } from "./visit";
+import { AskScreen } from "./design/AskScreen";
+import { CaptionsScreen } from "./design/CaptionsScreen";
+import { CD } from "./design/copy";
+import { DoctorScreen } from "./design/DoctorScreen";
+import { HomeScreen } from "./design/HomeScreen";
+import { MedicinesScreen } from "./design/MedicinesScreen";
+import { MicScreen } from "./design/MicScreen";
+import { NoticeScreen, SharedScreen } from "./design/NoticeScreen";
+import { QuestionsScreen } from "./design/QuestionsScreen";
+import { RepeatScreen } from "./design/RepeatScreen";
+import { tileForPrompt } from "./design/repeat";
+import { SummaryScreen } from "./design/SummaryScreen";
+import { VisitsScreen } from "./design/VisitsScreen";
+import { BackLink, ToggleRow } from "./design/parts";
+import { readInterpreter } from "./design/prefs";
 
 const PAGE_TITLES: Record<Route, string> = {
-  "/home": "Echo Care: a receipt for what was said",
-  "/visits": "Saved visits | Echo Care",
-  "/consent": "Before we start | Echo Care",
+  "/home": "Echo Care: read what your doctor says",
+  "/visits": "Your visits | Echo Care",
+  "/consent": "Your microphone | Echo Care",
   "/medicines": "Your medicines | Echo Care",
   "/doctor-card": "Show the doctor | Echo Care",
   "/pharmacy": "Show the pharmacist | Echo Care",
-  "/record": "Recording | Echo Care",
+  "/record": "Live captions | Echo Care",
+  "/repeat": "Please repeat | Echo Care",
+  "/ask": "Please help me | Echo Care",
+  "/questions": "Questions and safety | Echo Care",
   "/read-back": "Read back | Echo Care",
-  "/receipt": "Visit receipt | Echo Care",
+  "/receipt": "Visit summary | Echo Care",
   "/label": "Check the label | Echo Care",
-  "/share": "Share a summary | Echo Care",
+  "/share": "Share with family | Echo Care",
   "/trust": "Test results | Echo Care",
 };
 
@@ -80,9 +86,6 @@ function stageFor(receipt: Receipt): Stage | undefined {
   if (receipt.schemaId === SCHEMAS.pharmacy.id) return "pharmacy";
   return undefined;
 }
-
-const fieldsFor = (stage: Stage) =>
-  Object.fromEntries(SCHEMAS[stage].facts.map((f) => [f.key, f.fields]));
 
 /**
  * Why a medicine line needs checking, in plain words; nothing for other lines.
@@ -113,21 +116,21 @@ export function App(): ReactElement {
     transcribe: false,
     share: false,
   });
+  const [shareChoice, setShareChoice] = useState(false);
+  const [, setShareTick] = useState(0);
   const [stage, setStage] = useState<Stage>("doctor");
   const [controller, setController] = useState<RecordingController>();
   const [visits, setVisits] = useState<Visit[]>([]);
   const [visitsStatus, setVisitsStatus] = useState<ViewStatus>("loading");
   const [selectedVisitId, setSelectedVisitId] = useState<string>();
-  const [deleteConfirm, setDeleteConfirm] = useState(false);
-  const [discardConfirm, setDiscardConfirm] = useState(false);
   const [consentMissing, setConsentMissing] = useState(false);
-  const [repeatOpen, setRepeatOpen] = useState(false);
   const [speakerFacing, setSpeakerFacing] = useState(false);
   const [playing, setPlaying] = useState<{ anchor: Anchor; text: string }>();
-  const [deleted, setDeleted] = useState(false);
   const [labelFlags, setLabelFlags] = useState<LabelFlag[]>();
   const [medicines, setMedicines] = useState<string[]>([]);
   const [medicinesStatus, setMedicinesStatus] = useState<ViewStatus>("loading");
+  const [ask, setAsk] = useState<{ message: string; back: Route }>();
+  const [notice, setNotice] = useState<string>();
   const player = useRef(createPlayer());
   const rec = useRecording(controller);
 
@@ -186,54 +189,63 @@ export function App(): ReactElement {
     return () => window.cancelAnimationFrame(id);
   }, [route, routeReady]);
 
+  // A notice (a visit was deleted) shows on Home once, then goes.
+  useEffect(() => {
+    if (route !== "/home") setNotice(undefined);
+  }, [route]);
+
+  const latest = visits[visits.length - 1];
+
+  const openVisit = (visit: SavedVisit): void => {
+    setSelectedVisitId(visit.receipt.conversationId);
+    setStage(visit.stage);
+    setLabelFlags(visit.receipt.labelFlags);
+    go("/receipt");
+  };
+
   // The product home needs no permission and can render while on-device storage opens.
   if (route === "/home") {
+    const last = launch.demo ? undefined : latest;
     return (
-      <Skin skin="care" className="care-page">
-        <HomePage savedCount={launch.demo ? 0 : visits.length} />
-      </Skin>
+      <HomeScreen
+        {...(last ? { last: { stage: last.stage, receipt: last.receipt } } : {})}
+        {...(notice ? { notice } : {})}
+        onOpenLast={() => last && openVisit(last)}
+      />
     );
   }
 
   if (!services) {
-    return (
-      <Skin skin="care" className="care-page">
-        <StatusMessage status="loading" text={{ loading: CARE.loadingApp }} />
-      </Skin>
-    );
+    return <NoticeScreen title={CD.appName} status="loading" text={CARE.loadingApp} />;
   }
   const { store, ledger } = services;
-  const latest = visits[visits.length - 1];
   const current = visits.find((v) => v.receipt.conversationId === selectedVisitId) ?? latest;
   const receipt = current?.receipt;
+  const sample = launch.sample !== undefined;
 
   const agree = (): void => {
     ledger.grant("record", CONSENT_WORDING_VERSION);
     ledger.grant("transcribe", CONSENT_WORDING_VERSION);
-    if (choices.share) ledger.grant("share", CONSENT_WORDING_VERSION);
     void ledger.persist();
-    go("/doctor-card");
+    startRecording(stage);
   };
 
-  const startRecording = (next: Stage): void => {
+  function startRecording(next: Stage): void {
     const c = new RecordingController();
     setStage(next);
     setController(c);
-    setDeleted(false);
-    setDeleteConfirm(false);
     setSelectedVisitId(undefined);
     setLabelFlags(undefined);
     setConsentMissing(false);
-    setDiscardConfirm(false);
-    const sample = launch.sample?.[next];
+    const chosen = launch.sample?.[next];
     c.start({
       sessionId: `${next}-${Date.now()}`,
       schema: SCHEMAS[next],
       ledger,
       store,
       medicines,
-      source: sample
-        ? { kind: "scripted", consult: sample, speed: launch.speed }
+      source: chosen
+        ? { kind: "scripted", consult: chosen, speed: launch.speed }
         : { kind: "live" },
     }).catch(() => {
       // The session's consent gate refused to start: say why instead of a blank screen.
@@ -241,12 +253,11 @@ export function App(): ReactElement {
       setConsentMissing(true);
     });
     go("/record");
-  };
+  }
 
   const discardRecording = async (): Promise<void> => {
     await controller?.discard();
     setController(undefined);
-    setDiscardConfirm(false);
     go("/home");
   };
 
@@ -256,7 +267,7 @@ export function App(): ReactElement {
     if (result.ok) {
       setVisits((v) => [...v, { stage, receipt: result.value, controller }]);
       setSelectedVisitId(result.value.conversationId);
-      go(result.value.readBack.length > 0 ? "/read-back" : "/receipt");
+      go("/receipt");
     }
   };
 
@@ -291,6 +302,9 @@ export function App(): ReactElement {
       if (!r.ok) setPlaying({ anchor, text: CARE.playFailed });
     });
   };
+  const onPlay = current?.controller?.hasAudio ? play : undefined;
+  const playingText = playing?.text ?? "";
+  const playingId = playing?.anchor.segmentIds.join(",") ?? "";
 
   const checkLabel = (fields: LabelFields): void => {
     const flags = compareLabel(
@@ -308,41 +322,9 @@ export function App(): ReactElement {
     setVisits((v) => v.filter((visit) => visit.receipt.conversationId !== receipt.conversationId));
     setController(undefined);
     setSelectedVisitId(undefined);
-    setDeleteConfirm(false);
-    setDeleted(true);
+    setNotice(CD.deletedNotice);
+    go("/home");
   };
-
-  const openVisit = (visit: SavedVisit): void => {
-    setSelectedVisitId(visit.receipt.conversationId);
-    setStage(visit.stage);
-    setDeleted(false);
-    setDeleteConfirm(false);
-    setLabelFlags(visit.receipt.labelFlags);
-    go("/receipt");
-  };
-
-  const disclaimer = (
-    <p className="echo-disclaimer">{SCHEMAS[current?.stage ?? stage].disclaimer}</p>
-  );
-  const sampleBadge = launch.sample ? <p className="care-badge">{CARE.sampleBadge}</p> : null;
-  const playingLine = (
-    <p
-      className="care-playing"
-      role="status"
-      aria-live="polite"
-      data-playing={playing?.anchor.segmentIds.join(",") ?? ""}
-    >
-      {playing?.text ?? ""}
-    </p>
-  );
-  const canShare = ledger.has("share");
-  const hasMedicine = visits.some((v) => v.receipt.facts.some((f) => f.key === "medicine"));
-
-  // While audio may be captured, no link leads away from the recording (it would keep running).
-  const capturing =
-    route === "/record" &&
-    controller !== undefined &&
-    ["starting", "loading-model", "recording", "paused", "stopping"].includes(rec?.status ?? "");
 
   const saveMedicines = async (next: string[]): Promise<boolean> => {
     if (launch.demo) {
@@ -354,235 +336,137 @@ export function App(): ReactElement {
     return saved.ok;
   };
 
-  let screen: ReactElement;
+  const openAsk = (message: string, back: Route): void => {
+    setAsk({ message, back });
+    go("/ask");
+  };
+
+  const noReceipt = (title: string): ReactElement =>
+    visitsStatus === "loading" ? (
+      <NoticeScreen title={title} status="loading" text={CARE.savedVisitsLoading} active="visits" />
+    ) : (
+      <NoticeScreen title={title} status="empty" text={CD.noReceiptText} active="visits">
+        <a className="cd-btn cd-btn--primary" href="#/doctor-card">
+          {CD.startVisit}
+        </a>
+        {visits.length > 0 && (
+          <a className="cd-btn cd-btn--outline" href="#/visits">
+            {CARE.viewSavedVisits}
+          </a>
+        )}
+      </NoticeScreen>
+    );
+
+  const hasMedicine = visits.some((v) => v.receipt.facts.some((f) => f.key === "medicine"));
+
   switch (route) {
     case "/visits":
-      screen = <SavedVisits visits={visits} status={visitsStatus} onOpen={openVisit} />;
-      break;
+      return (
+        <VisitsScreen
+          visits={visits.map((v) => ({ stage: v.stage, receipt: v.receipt }))}
+          status={visitsStatus}
+          onOpen={openVisit}
+        />
+      );
 
     case "/medicines":
-      screen = (
-        <MedicinesPage medicines={medicines} status={medicinesStatus} onChange={saveMedicines} />
+      return (
+        <MedicinesScreen medicines={medicines} status={medicinesStatus} onChange={saveMedicines} />
       );
-      break;
-
-    case "/consent":
-      screen = launch.demo ? (
-        <section className="echo-card">
-          <h1>{CARE.appName}</h1>
-          <p>{CARE.sampleIntro}</p>
-          <div className="echo-actions">
-            <button type="button" className="echo-button" onClick={() => go("/doctor-card")}>
-              {FINAL.playSampleConsult}
-            </button>
-          </div>
-          <p className="echo-disclaimer">{FINAL.disclaimerCare}</p>
-        </section>
-      ) : (
-        <div className="care-startup">
-          <a className="care-back" href="#/home">
-            <span aria-hidden="true">←</span> {CARE.startupBack}
-          </a>
-          <p className="care-startup__step">{CARE.startupStepConsent}</p>
-          <ConsentSheet
-            choices={choices}
-            onChange={setChoices}
-            onAgree={agree}
-            disclaimer={FINAL.disclaimerCare}
-            status={services.persistent ? "ready" : "error"}
-            statusText={{ error: CARE.storageFallback }}
-          />
-          <section className="echo-card care-sample">
-            <h2>{CARE.consentMedicinesTitle}</h2>
-            <p>{CARE.consentMedicinesText(medicines.length)}</p>
-            <a className="echo-button echo-button--secondary" href="#/medicines">
-              {CARE.consentMedicinesButton(medicines.length)}
-            </a>
-          </section>
-          <section className="echo-card care-sample">
-            <h2>{CARE.sampleTitle}</h2>
-            <p>{CARE.sampleIntro}</p>
-            <a
-              className="echo-button echo-button--secondary"
-              href="?sample=care-01&demo=1#/doctor-card"
-            >
-              {FINAL.playSampleConsult}
-            </a>
-          </section>
-        </div>
-      );
-      break;
 
     case "/doctor-card":
     case "/pharmacy": {
       const next: Stage = route === "/doctor-card" ? "doctor" : "pharmacy";
-      screen = (
-        <SpeakerCard
-          eyebrow={next === "doctor" ? CARE.doctorCardStep : CARE.pharmacistCardStep}
-          message={next === "doctor" ? SPEAKER_CARDS.doctor : SPEAKER_CARDS.pharmacist}
-          actions={[
-            { label: FINAL.doctorCardStart, onClick: () => startRecording(next) },
-            { label: FINAL.skip, onClick: () => startRecording(next), primary: false },
-          ]}
+      return (
+        <DoctorScreen
+          stage={next}
+          onYes={() => {
+            setStage(next);
+            if (launch.demo) startRecording(next);
+            else go("/consent");
+          }}
         />
       );
-      break;
     }
+
+    case "/consent":
+      if (launch.demo) {
+        return (
+          <DoctorScreen
+            stage="doctor"
+            onYes={() => {
+              setStage("doctor");
+              startRecording("doctor");
+            }}
+          />
+        );
+      }
+      return (
+        <MicScreen
+          choices={choices}
+          onChange={setChoices}
+          onAllow={agree}
+          backHref={stage === "doctor" ? "#/doctor-card" : "#/pharmacy"}
+          storageOk={services.persistent}
+          storageText={CARE.storageFallback}
+        />
+      );
 
     case "/record": {
-      const status = rec?.status ?? "idle";
-      const viewStatus: ViewStatus =
-        status === "starting" || status === "loading-model"
-          ? "loading"
-          : status === "permission-denied"
-            ? "permission-denied"
-            : status === "error"
-              ? "error"
-              : "ready";
       const prompt = rec?.prompts[rec.prompts.length - 1];
-      const live = status === "recording" || status === "paused";
-      const failed = status === "error" || status === "permission-denied";
-      screen = (
-        <>
-          <h1 className="echo-visually-hidden">{CARE.appName}: recording</h1>
-          {sampleBadge}
-          <p className="care-recording" role="status">
-            {status === "paused"
-              ? CARE.paused
-              : status === "stopping"
-                ? CARE.stopping
-                : status === "recording"
-                  ? CARE.recording
-                  : ""}
-          </p>
-          {consentMissing ? (
-            <div className="care-recover">
-              <StatusMessage status="error" text={{ error: CARE.consentNeeded }} />
-              <div className="echo-actions">
-                <a className="echo-button" href="#/consent">
-                  {CARE.goToConsent}
-                </a>
-              </div>
-            </div>
-          ) : !controller ? (
-            <div className="care-recover">
-              <StatusMessage status="empty" text={{ empty: CARE.noReceipt }} />
-              <div className="echo-actions">
-                <a className="echo-button" href="#/consent">
-                  {CARE.homeStart}
-                </a>
-              </div>
-            </div>
-          ) : (
-            <CaptionView lines={rec?.lines ?? []} status={viewStatus} />
-          )}
-          {failed && (
-            <div className="echo-actions care-recover">
-              <button
-                type="button"
-                className="echo-button"
-                onClick={() => {
-                  void controller?.discard();
-                  startRecording(stage);
-                }}
-              >
-                {CARE.tryAgain}
-              </button>
-              <a
-                className="echo-button echo-button--secondary"
-                href="#/home"
-                onClick={() => void controller?.discard()}
-              >
-                {CARE.startupBack}
-              </a>
-            </div>
-          )}
-          {prompt && (
-            <div className="echo-card care-prompt" role="status">
-              <StampBadge stamp="check_this" />
-              <p className="care-prompt__text">
-                {prompt.kind === "missing-medicine-name"
-                  ? CARE.promptMissingName
-                  : prompt.kind === "unknown-medicine-name"
-                    ? CARE.promptUnknownName(prompt.heard ?? "")
-                    : prompt.kind === "unclear-dose"
-                      ? CARE.promptUnclearDose(prompt.heard ?? "", prompt.suggestion ?? "")
-                      : prompt.kind === "unconfirmed-medicine-name"
-                        ? CARE.promptUnconfirmedName(prompt.heard ?? "")
-                        : CARE.promptUnclearName(prompt.heard ?? "", prompt.suggestion ?? "")}
-              </p>
-              <p className="care-prompt__ask">{CARE.promptAsk}</p>
-            </div>
-          )}
-          {controller && !failed && (
-            <div className="care-bar">
-              <button type="button" className="echo-button" onClick={() => setRepeatOpen(true)}>
-                {FINAL.pleaseRepeat}
-              </button>
-              <button
-                type="button"
-                className="echo-button echo-button--secondary"
-                disabled={!live}
-                onClick={() => (status === "paused" ? controller.resume() : controller.pause())}
-              >
-                {status === "paused" ? CARE.resume : FINAL.pause}
-              </button>
-              <button
-                type="button"
-                className="echo-button echo-button--secondary"
-                disabled={!live}
-                onClick={() => void stopAndReview()}
-              >
-                {FINAL.stopAndReview}
-              </button>
-              <button
-                type="button"
-                className="echo-button echo-button--secondary care-bar__discard"
-                disabled={status === "stopping"}
-                onClick={() => setDiscardConfirm(true)}
-              >
-                {CARE.discardRecording}
-              </button>
-            </div>
-          )}
-          {discardConfirm && (
-            <div className="echo-card care-delete" role="group" aria-label={CARE.discardTitle}>
-              <h2>{CARE.discardTitle}</h2>
-              <p>{CARE.discardText}</p>
-              <div className="echo-actions">
-                <button
-                  type="button"
-                  className="echo-button echo-button--secondary"
-                  onClick={() => setDiscardConfirm(false)}
-                >
-                  {CARE.cancel}
-                </button>
-                <button
-                  type="button"
-                  className="echo-button care-delete__confirm"
-                  onClick={() => void discardRecording()}
-                >
-                  {CARE.discardPermanently}
-                </button>
-              </div>
-            </div>
-          )}
-          {disclaimer}
-          {repeatOpen && (
-            <SpeakerCard
-              message={SPEAKER_CARDS.pleaseRepeat}
-              actions={[{ label: FINAL.done, onClick: () => setRepeatOpen(false) }]}
-            />
-          )}
-        </>
+      const promptText = prompt
+        ? prompt.kind === "missing-medicine-name"
+          ? CARE.promptMissingName
+          : prompt.kind === "unknown-medicine-name"
+            ? CARE.promptUnknownName(prompt.heard ?? "")
+            : prompt.kind === "unclear-dose"
+              ? CARE.promptUnclearDose(prompt.heard ?? "", prompt.suggestion ?? "")
+              : prompt.kind === "unconfirmed-medicine-name"
+                ? CARE.promptUnconfirmedName(prompt.heard ?? "")
+                : CARE.promptUnclearName(prompt.heard ?? "", prompt.suggestion ?? "")
+        : undefined;
+      return (
+        <CaptionsScreen
+          status={rec?.status ?? "idle"}
+          lines={rec?.lines ?? []}
+          {...(promptText ? { promptText } : {})}
+          promptAsk={CARE.promptAsk}
+          missing={!controller && !consentMissing}
+          consentMissing={consentMissing}
+          sample={sample}
+          onPause={() => controller?.pause()}
+          onResume={() => controller?.resume()}
+          onFinish={() => void stopAndReview()}
+          onDiscard={() => void discardRecording()}
+          onRetry={() => {
+            void controller?.discard();
+            startRecording(stage);
+          }}
+        />
       );
-      break;
     }
 
+    case "/repeat": {
+      const prompt = rec?.prompts[rec.prompts.length - 1];
+      return <RepeatScreen initial={tileForPrompt(prompt?.kind)} stage={stage} />;
+    }
+
+    case "/ask":
+      return ask ? (
+        <AskScreen
+          message={ask.message}
+          interpreter={readInterpreter()}
+          backHref={`#${ask.back}`}
+        />
+      ) : (
+        noReceipt(CD.askTitle)
+      );
+
     case "/read-back":
-      screen = receipt ? (
-        <>
-          <h1>{CARE.readBackTitle}</h1>
+      return receipt ? (
+        <SharedScreen active="visits">
+          <BackLink href="#/receipt" ariaLabel="Back to visit summary" />
+          <h1 className="cd-title">{CARE.readBackTitle}</h1>
           <ReadBackPanel
             items={receipt.readBack}
             onMark={mark}
@@ -590,169 +474,97 @@ export function App(): ReactElement {
             onToggleSpeaker={setSpeakerFacing}
           />
           <div className="echo-actions">
-            <button type="button" className="echo-button" onClick={() => go("/receipt")}>
+            <a className="echo-button" href="#/receipt">
               {CARE.toReceipt}
-            </button>
+            </a>
           </div>
-          {disclaimer}
-        </>
+          <p className="echo-disclaimer">{CD.disclaimer}</p>
+        </SharedScreen>
       ) : (
-        <>
-          <h1 className="echo-visually-hidden">{CARE.readBackTitle}</h1>
-          <StatusMessage status="empty" text={{ empty: CARE.noReceipt }} />
-        </>
+        noReceipt(CARE.readBackTitle)
       );
-      break;
 
     case "/receipt":
-      screen = deleted ? (
-        <>
-          <h1 className="echo-visually-hidden">{ADDED.receiptTitle}</h1>
-          <StatusMessage status="empty" text={{ empty: CARE.deleted }} />
-          <div className="echo-actions">
-            <button type="button" className="echo-button" onClick={() => go("/doctor-card")}>
-              {CARE.startAgain}
-            </button>
-          </div>
-        </>
-      ) : receipt && current ? (
-        <>
-          <h1>
-            {CARE.receiptHeading(
-              current.stage,
-              new Date(receipt.timestamp).toLocaleDateString(undefined, { dateStyle: "long" }),
-            )}
-          </h1>
-          {sampleBadge}
-          {playingLine}
-          <ReceiptList
-            facts={receipt.facts}
-            fieldsByKey={fieldsFor(current.stage)}
-            {...(current.controller?.hasAudio ? { onPlay: play } : {})}
-            noteFor={(fact) => medicineNote(fact, medicines)}
-          />
-          <ChecklistView
-            results={receipt.checklist}
-            {...(current.controller?.hasAudio ? { onPlay: play } : {})}
-          />
-          {receipt.nextSteps.length > 0 && (
-            <ul className="care-next">
-              {receipt.nextSteps.map((s) => (
-                <li key={s.label}>{s.label}</li>
-              ))}
-            </ul>
-          )}
-          {disclaimer}
-          <div className="echo-actions">
-            <button type="button" className="echo-button" onClick={() => go("/pharmacy")}>
-              {CARE.toPharmacy}
-            </button>
-            <button
-              type="button"
-              className="echo-button echo-button--secondary"
-              onClick={() => go("/label")}
-            >
-              {CARE.checkLabel}
-            </button>
-            {canShare && (
-              <button
-                type="button"
-                className="echo-button echo-button--secondary"
-                onClick={() => go("/share")}
-              >
-                {FINAL.share}
-              </button>
-            )}
-            <button
-              type="button"
-              className="echo-button echo-button--secondary"
-              onClick={() => setDeleteConfirm(true)}
-            >
-              {CARE.deleteVisit}
-            </button>
-          </div>
-          {deleteConfirm && (
-            <div
-              className="echo-card care-delete"
-              role="group"
-              aria-label={CARE.deleteConfirmTitle}
-            >
-              <h2>{CARE.deleteConfirmTitle}</h2>
-              <p>{CARE.deleteConfirmText}</p>
-              <div className="echo-actions">
-                <button
-                  type="button"
-                  className="echo-button echo-button--secondary"
-                  onClick={() => setDeleteConfirm(false)}
-                >
-                  {CARE.cancel}
-                </button>
-                <button
-                  type="button"
-                  className="echo-button care-delete__confirm"
-                  onClick={() => void deleteVisit()}
-                >
-                  {CARE.deletePermanently}
-                </button>
-              </div>
-            </div>
-          )}
-        </>
+      return receipt && current ? (
+        <SummaryScreen
+          stage={current.stage}
+          receipt={receipt}
+          sample={sample}
+          {...(onPlay ? { onPlay } : {})}
+          playingText={playingText}
+          playingId={playingId}
+          noteFor={(fact) => medicineNote(fact, medicines)}
+          onAsk={(message) => openAsk(message, "/receipt")}
+        />
       ) : (
-        <>
-          <h1 className="echo-visually-hidden">{ADDED.receiptTitle}</h1>
-          <StatusMessage
-            status={visitsStatus === "loading" ? "loading" : "empty"}
-            text={{ loading: CARE.savedVisitsLoading, empty: CARE.noReceipt }}
-          />
-          {visitsStatus !== "loading" && (
-            <div className="echo-actions">
-              <a className="echo-button" href="#/consent">
-                {CARE.homeStart}
-              </a>
-              {visits.length > 0 && (
-                <a className="echo-button echo-button--secondary" href="#/visits">
-                  {CARE.viewSavedVisits}
-                </a>
-              )}
-            </div>
-          )}
-        </>
+        noReceipt(CD.noReceiptTitle)
       );
-      break;
 
-    case "/share":
-      screen =
-        canShare && visits.length > 0 ? (
-          <>
-            <SharePanel visits={visits} />
-            <div className="echo-actions">
-              <button
-                type="button"
-                className="echo-button echo-button--secondary"
-                onClick={() => go("/receipt")}
-              >
-                {CARE.backToReceipt}
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <h1 className="echo-visually-hidden">{CARE.shareTitle}</h1>
-            <StatusMessage status="empty" text={{ empty: CARE.noReceipt }} />
-          </>
+    case "/questions":
+      return receipt ? (
+        <QuestionsScreen
+          receipt={receipt}
+          sample={sample}
+          {...(onPlay ? { onPlay } : {})}
+          playingText={playingText}
+          playingId={playingId}
+          onAsk={(message) => openAsk(message, "/questions")}
+          onDelete={() => void deleteVisit()}
+        />
+      ) : (
+        noReceipt(CD.questionsTitle)
+      );
+
+    case "/share": {
+      if (visits.length === 0) return noReceipt(CARE.shareTitle);
+      if (!ledger.has("share")) {
+        return (
+          <SharedScreen active="visits">
+            <BackLink href="#/questions" ariaLabel="Back to questions and safety" />
+            <h1 className="cd-title">{CARE.shareTitle}</h1>
+            <p className="cd-lead cd-lead--soft">{CD.shareLead}</p>
+            <ToggleRow
+              icon="share"
+              label={CD.shareConsent}
+              description={CD.shareConsentWhy}
+              checked={shareChoice}
+              onChange={setShareChoice}
+            />
+            <button
+              type="button"
+              className="cd-btn cd-btn--primary"
+              disabled={!shareChoice}
+              onClick={() => {
+                ledger.grant("share", CONSENT_WORDING_VERSION);
+                void ledger.persist();
+                setShareTick((n) => n + 1);
+              }}
+            >
+              {CD.shareContinue}
+            </button>
+          </SharedScreen>
         );
-      break;
+      }
+      return (
+        <SharedScreen active="visits">
+          <BackLink href="#/questions" ariaLabel="Back to questions and safety" />
+          <SharePanel visits={visits} />
+        </SharedScreen>
+      );
+    }
 
     case "/label":
-      screen = (
-        <>
-          <h1>{CARE.labelTitle}</h1>
+      return (
+        <SharedScreen active="visits">
+          <BackLink href="#/questions" ariaLabel="Back to questions and safety" />
+          <h1 className="cd-title">{CARE.labelTitle}</h1>
           {!hasMedicine ? (
             <StatusMessage status="empty" text={{ empty: CARE.labelNoMedicine }} />
           ) : labelFlags ? (
             <>
-              {playingLine}
+              <p className="cd-note cd-playing" role="status" aria-live="polite">
+                {playingText}
+              </p>
               <LabelFlagList
                 flags={labelFlags}
                 {...(visits.some((v) => v.controller?.hasAudio) ? { onPlay: play } : {})}
@@ -765,41 +577,27 @@ export function App(): ReactElement {
                 >
                   {CARE.labelAgain}
                 </button>
-                <button
-                  type="button"
-                  className="echo-button echo-button--secondary"
-                  onClick={() => go("/receipt")}
-                >
+                <a className="echo-button echo-button--secondary" href="#/receipt">
                   {CARE.backToReceipt}
-                </button>
+                </a>
               </div>
             </>
           ) : (
             <LabelForm onConfirm={checkLabel} />
           )}
+          <a className="cd-btn cd-btn--outline" href="#/pharmacy">
+            {CD.recordPharmacy}
+          </a>
           <p className="echo-disclaimer">{FINAL.disclaimerCare}</p>
-        </>
+        </SharedScreen>
       );
-      break;
 
     case "/trust":
-      screen = <TrustPanel summary={EVAL_SUMMARY} />;
-      break;
+      return (
+        <SharedScreen>
+          <BackLink href="#/home" ariaLabel="Back to home" />
+          <TrustPanel summary={EVAL_SUMMARY} />
+        </SharedScreen>
+      );
   }
-
-  return (
-    <Skin skin="care" className="care-page">
-      <main className="care-main">{screen}</main>
-      <footer className="care-footer" hidden={capturing}>
-        <nav aria-label={CARE.footerNavigation}>
-          <a href="#/home">{CARE.homeLink}</a>
-          {visits.length > 0 && route !== "/visits" && (
-            <a href="#/visits">{CARE.savedVisitsTitle}</a>
-          )}
-          {route !== "/medicines" && <a href="#/medicines">{CARE.medicinesLink}</a>}
-          {route !== "/trust" && <a href="#/trust">{ADDED.trustLink}</a>}
-        </nav>
-      </footer>
-    </Skin>
-  );
 }

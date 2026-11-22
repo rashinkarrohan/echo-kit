@@ -10,6 +10,9 @@ export type Route =
   | "/doctor-card"
   | "/pharmacy"
   | "/record"
+  | "/repeat"
+  | "/ask"
+  | "/questions"
   | "/read-back"
   | "/receipt"
   | "/label"
@@ -24,6 +27,9 @@ const ROUTES: readonly Route[] = [
   "/doctor-card",
   "/pharmacy",
   "/record",
+  "/repeat",
+  "/ask",
+  "/questions",
   "/read-back",
   "/receipt",
   "/label",

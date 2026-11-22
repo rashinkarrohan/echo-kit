@@ -18,8 +18,8 @@ export default defineConfig({
         // The speech runtime (about 27 MB) is cached on first use, not at install,
         // so opening the app or the sample consult never downloads it.
         globIgnores: ["**/*.wasm"],
-        // The sample consult's actor recordings (about 330 KB) work offline after first load.
-        globPatterns: ["**/*.{js,css,html,mp3,png,svg}"],
+        // The sample consult's actor recordings (about 330 KB) and the self-hosted font work offline after first load.
+        globPatterns: ["**/*.{js,css,html,mp3,png,svg,woff2}"],
         runtimeCaching: [
           {
             // The speech runtime and the 2 MB speech-check model (Silero VAD), on first use.
@@ -33,8 +33,8 @@ export default defineConfig({
         name: "Echo Care",
         short_name: "Echo Care",
         description: "Doctor visit and pharmacy counter receipt tool",
-        theme_color: "#0B6B5D",
-        background_color: "#F5F8F7",
+        theme_color: "#0A5C51",
+        background_color: "#F6F4EF",
         display: "standalone",
         start_url: "/#/home",
         icons: [

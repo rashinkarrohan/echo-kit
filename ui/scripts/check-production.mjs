@@ -15,7 +15,7 @@ const root = new URL("../..", import.meta.url).pathname;
 const TYPES = {
   ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".css": "text/css",
   ".json": "application/json", ".webmanifest": "application/manifest+json", ".wasm": "application/wasm",
-  ".png": "image/png", ".svg": "image/svg+xml", ".mp3": "audio/mpeg", ".onnx": "application/octet-stream",
+  ".png": "image/png", ".woff2": "font/woff2", ".svg": "image/svg+xml", ".mp3": "audio/mpeg", ".onnx": "application/octet-stream",
 };
 const HEADERS = {
   "Cross-Origin-Opener-Policy": "same-origin",
@@ -42,7 +42,7 @@ function serve(dir, port) {
 }
 
 const PAGES = {
-  care: ["#/home", "#/consent", "#/medicines", "#/visits", "#/trust", "#/doctor-card", "#/record", "#/receipt", "#/label", "#/share"],
+  care: ["#/home", "#/consent", "#/medicines", "#/visits", "#/trust", "#/doctor-card", "#/pharmacy", "#/record", "#/repeat", "#/ask", "#/receipt", "#/questions", "#/read-back", "#/label", "#/share"],
   cover: ["#/home", "#/consent", "#/questions", "#/record", "#/review", "#/compare", "#/confirm", "#/saved", "#/trust"],
 };
 
