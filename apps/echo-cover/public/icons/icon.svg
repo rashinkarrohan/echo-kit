@@ -1,7 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- Echo Cover: a two-column ledger on navy. Full-bleed so it also works as a maskable icon. -->
-  <rect width="512" height="512" fill="#1F3A6E"/>
-  <rect x="120" y="128" width="272" height="256" fill="none" stroke="#FFFFFF" stroke-width="24"/>
-  <path d="M256 128 V384" stroke="#FFFFFF" stroke-width="16"/>
-  <path d="M120 200 H392 M120 264 H392 M120 328 H392" stroke="#FFFFFF" stroke-width="16"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 360">
+  <!-- Echo Cover logo from the Echo Cover design pack (supplied by the project owner), full-bleed so it also works as a maskable icon. -->
+  <rect width="360" height="360" fill="#1A4FBA"/>
+  <path d="M180 62L290 102V186C290 248 243 290 180 312C117 290 70 248 70 186V102Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="16" stroke-linejoin="round"/>
+  <path d="M132 166V194" stroke="#1A4FBA" stroke-width="20" stroke-linecap="round"/>
+  <path d="M156 140V220" stroke="#1A4FBA" stroke-width="20" stroke-linecap="round"/>
+  <path d="M180 118V242" stroke="#1A4FBA" stroke-width="20" stroke-linecap="round"/>
+  <path d="M204 140V220" stroke="#1A4FBA" stroke-width="20" stroke-linecap="round"/>
+  <path d="M228 166V194" stroke="#1A4FBA" stroke-width="20" stroke-linecap="round"/>
 </svg>

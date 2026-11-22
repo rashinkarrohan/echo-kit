@@ -13,10 +13,13 @@ async function tabTo(page: Page, name: RegExp): Promise<void> {
     const focused = await page.evaluate(() => {
       const el = document.activeElement as HTMLElement | null;
       if (!el) return "";
+      const by = el.getAttribute("aria-labelledby");
+      const named = by ? document.getElementById(by)?.textContent : null;
       const id = el.getAttribute("id");
       const forLabel = id ? document.querySelector(`label[for="${id}"]`)?.textContent : null;
       const label =
         el.getAttribute("aria-label") ??
+        named ??
         forLabel ??
         (el.closest("label")?.textContent || el.textContent || "");
       return label.trim();
@@ -29,14 +32,14 @@ async function tabTo(page: Page, name: RegExp): Promise<void> {
 async function recordSeller(page: Page, name: string, lastWords: RegExp): Promise<void> {
   // The app moves focus to the page heading after each route change. Wait for it, as a
   // keyboard user would, so typing does not race that focus move on a busy machine.
-  await expect(page.getByRole("heading", { name: "Start recording" })).toBeFocused();
+  await expect(page.getByRole("heading", { name: "Who are you talking to?" })).toBeFocused();
   await tabTo(page, /^Seller or clinic name$/);
   await page.keyboard.type(name);
   await page.keyboard.press("Enter"); // submits the form
   await expect(page.getByText(lastWords)).toBeVisible({ timeout: 20_000 });
   await tabTo(page, /^Stop and review$/);
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("heading", { name: `${name}: questions` })).toBeFocused();
+  await expect(page.getByRole("heading", { name: `${name}: what was said` })).toBeFocused();
 }
 
 test("keyboard only: home, consent, questions, two sellers, comparison", async ({ page }) => {
@@ -58,8 +61,8 @@ test("keyboard only: home, consent, questions, two sellers, comparison", async (
   await tabTo(page, /^Do staff earn commission on this sale\?$/);
   await page.keyboard.press("Space");
   await expect(
-    page.getByRole("checkbox", { name: "Do staff earn commission on this sale?" }),
-  ).toBeChecked();
+    page.getByRole("switch", { name: "Do staff earn commission on this sale?" }),
+  ).toHaveAttribute("aria-checked", "true");
   await tabTo(page, /^Start recording a seller$/);
   await page.keyboard.press("Enter");
 
@@ -70,9 +73,9 @@ test("keyboard only: home, consent, questions, two sellers, comparison", async (
 
   await tabTo(page, /^Compare sellers$/);
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("heading", { name: "Compare sellers" })).toBeFocused();
-  await expect(page.getByRole("columnheader")).toHaveText(["Seller A", "Seller B"]);
+  await expect(page.getByRole("heading", { name: "Seller ledger" })).toBeFocused();
+  await expect(page.getByRole("region", { name: "Price" })).toContainText("Seller B");
   await tabTo(page, /^Hear it/);
   await page.keyboard.press("Enter");
-  await expect(page.locator(".cover-playing")).toHaveText(/^Playing \d+:\d\d to \d+:\d\d$/);
+  await expect(page.locator(".cv-playing")).toHaveText(/^Playing \d+:\d\d to \d+:\d\d$/);
 });

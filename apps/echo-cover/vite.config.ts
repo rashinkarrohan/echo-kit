@@ -17,8 +17,8 @@ export default defineConfig({
       workbox: {
         // The speech runtime (about 27 MB) is cached on first use, not at install.
         globIgnores: ["**/*.wasm"],
-        // The sample sales' actor recordings (about 350 KB) work offline after first load.
-        globPatterns: ["**/*.{js,css,html,mp3,png,svg}"],
+        // The sample sales' actor recordings (about 350 KB) and the self-hosted font work offline after first load.
+        globPatterns: ["**/*.{js,css,html,mp3,png,svg,woff2}"],
         // The speech runtime and the 2 MB speech-check model (Silero VAD), on first use.
         runtimeCaching: [{ urlPattern: /\.(wasm|onnx)$/, handler: "CacheFirst", options: { cacheName: "echo-speech-runtime" } }],
       },
@@ -26,8 +26,8 @@ export default defineConfig({
         name: "Echo Cover",
         short_name: "Echo Cover",
         description: "Compare what hearing-aid sellers said",
-        theme_color: "#1F3A6E",
-        background_color: "#F3F4F8",
+        theme_color: "#1A4FBA",
+        background_color: "#F3F6FC",
         display: "standalone",
         start_url: "/#/home",
         icons: [

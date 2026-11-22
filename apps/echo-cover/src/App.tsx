@@ -3,15 +3,7 @@ import type { ReactElement } from "react";
 import { CONSENT_WORDING_VERSION, compareQuotes, quoteRecordFromFacts } from "@echo/engine";
 import type { Anchor, QuoteRecord, Receipt } from "@echo/engine";
 import {
-  CaptionView,
-  ChecklistView,
-  ComparisonTable,
-  ConsentSheet,
-  FINAL,
-  ReceiptList,
   RecordingController,
-  StatusMessage,
-  TrustPanel,
   clock,
   createPlayer,
   goTo,
@@ -24,10 +16,18 @@ import type { ConsentChoices, ViewStatus } from "@echo/ui";
 import { COVER } from "./copy";
 import { COMPARE_FIELDS, EVAL_SUMMARY, SALE, readLaunch } from "./env";
 import { draftConfirmMessage } from "./draft";
-import { HomePage } from "./HomePage";
-import { SavedSales } from "./SavedSales";
-import type { SavedSale } from "./SavedSales";
-import { CoverShell } from "./CoverShell";
+import { CV } from "./design/copy";
+import { CompareScreen } from "./design/CompareScreen";
+import { ConfirmScreen } from "./design/ConfirmScreen";
+import { ConsentScreen } from "./design/ConsentScreen";
+import { HomeScreen } from "./design/HomeScreen";
+import { NoticeScreen } from "./design/NoticeScreen";
+import { QuestionsScreen } from "./design/QuestionsScreen";
+import { ReceiptScreen } from "./design/ReceiptScreen";
+import { RecordScreen } from "./design/RecordScreen";
+import { SavedScreen } from "./design/SavedScreen";
+import type { SavedSale } from "./design/SavedScreen";
+import { TrustScreen } from "./design/TrustScreen";
 
 type Route =
   | "/home"
@@ -52,6 +52,7 @@ const ROUTES: readonly Route[] = [
 ];
 
 const fieldOrder = Object.fromEntries(SALE.facts.map((f) => [f.key, f.fields]));
+const QUESTION_IDS = SALE.checklist.map((item) => item.id);
 
 const PAGE_TITLES: Record<Route, string> = {
   "/home": "Echo Cover: compare what sellers said",
@@ -60,7 +61,7 @@ const PAGE_TITLES: Record<Route, string> = {
   "/questions": "Questions to ask | Echo Cover",
   "/record": "Record a seller | Echo Cover",
   "/review": "Seller receipt | Echo Cover",
-  "/compare": "Compare sellers | Echo Cover",
+  "/compare": "Seller ledger | Echo Cover",
   "/confirm": "Confirm in writing | Echo Cover",
   "/trust": "Test results | Echo Cover",
 };
@@ -89,10 +90,8 @@ export function App(): ReactElement {
   const [controller, setController] = useState<RecordingController>();
   const [sales, setSales] = useState<Sale[]>([]);
   const [salesStatus, setSalesStatus] = useState<ViewStatus>("loading");
-  const [deleteSaleId, setDeleteSaleId] = useState<string>();
-  const [discardConfirm, setDiscardConfirm] = useState(false);
   const [playing, setPlaying] = useState<{ anchor: Anchor; text: string }>();
-  const [copied, setCopied] = useState<string>();
+  const [copied, setCopied] = useState<"yes" | "failed">();
   const player = useRef(createPlayer());
   const rec = useRecording(controller);
 
@@ -146,19 +145,11 @@ export function App(): ReactElement {
   }, [param, route, routeReady]);
 
   if (route === "/home") {
-    return (
-      <CoverShell route={route} savedCount={launch.demo ? 0 : sales.length}>
-        <HomePage savedCount={launch.demo ? 0 : sales.length} />
-      </CoverShell>
-    );
+    return <HomeScreen savedCount={launch.demo ? 0 : sales.length} />;
   }
 
   if (!services) {
-    return (
-      <CoverShell route={route} savedCount={0}>
-        <StatusMessage status="loading" text={{ loading: COVER.loadingApp }} />
-      </CoverShell>
-    );
+    return <NoticeScreen title={CV.appName} status="loading" text={COVER.loadingApp} />;
   }
   const { store, ledger } = services;
 
@@ -180,7 +171,6 @@ export function App(): ReactElement {
       return;
     }
     setSellerError(undefined);
-    setDiscardConfirm(false);
     const c = new RecordingController();
     setController(c);
     const sample = launch.samples?.[sales.length % (launch.samples.length || 1)];
@@ -219,7 +209,6 @@ export function App(): ReactElement {
     };
     setSales((s) => [...s, sale]);
     setController(undefined);
-    setDiscardConfirm(false);
     setSeller(sampleSeller(sales.length + 1));
     goTo("/review", String(sales.length + 1));
   };
@@ -228,16 +217,22 @@ export function App(): ReactElement {
     if (!controller) return;
     await controller.discard();
     setController(undefined);
-    setDiscardConfirm(false);
+  };
+
+  const retry = async (): Promise<void> => {
+    await controller?.discard();
+    setController(undefined);
+    // Start again with the same name once the form is back.
+    window.setTimeout(start, 0);
   };
 
   const deleteSale = async (sale: Sale): Promise<void> => {
+    player.current.stop();
     const removed = await store.deleteSession(sale.receipt.conversationId);
     if (!removed.ok) return;
     setSales((all) =>
       all.filter((item) => item.receipt.conversationId !== sale.receipt.conversationId),
     );
-    setDeleteSaleId(undefined);
     goTo("/saved");
   };
 
@@ -262,6 +257,8 @@ export function App(): ReactElement {
       if (!r.ok) setPlaying({ anchor, text: COVER.playFailed });
     });
   };
+  const playingText = playing?.text ?? "";
+  const playingId = playing?.anchor.segmentIds.join(",") ?? "";
 
   const openSavedSale = (saved: SavedSale): void => {
     const index = sales.findIndex(
@@ -274,480 +271,182 @@ export function App(): ReactElement {
     try {
       if (!navigator.clipboard) throw new Error("Clipboard unavailable");
       await navigator.clipboard.writeText(message);
-      setCopied(COVER.copied);
+      setCopied("yes");
     } catch {
-      setCopied(COVER.copyFailed);
+      setCopied("failed");
     }
   };
 
-  const notes = Object.fromEntries(planned.map((id) => [id, COVER.planned]));
-  const disclaimer = <p className="echo-disclaimer">{FINAL.disclaimerCover}</p>;
-  const sampleBadge = launch.samples ? <p className="cover-badge">{COVER.sampleBadge}</p> : null;
-  const playingLine = (
-    <p
-      className="cover-playing"
-      role="status"
-      aria-live="polite"
-      data-playing={playing?.anchor.segmentIds.join(",") ?? ""}
-    >
-      {playing?.text ?? ""}
-    </p>
-  );
-  const sellersList =
-    sales.length > 0 ? (
-      <nav aria-label={COVER.sellersSoFar} className="cover-sellers">
-        <h2>{COVER.sellersSoFar}</h2>
-        <ol>
-          {sales.map((s, i) => (
-            <li key={s.receipt.conversationId}>
-              <a href={`#/review/${i + 1}`}>{s.seller}</a>
-            </li>
-          ))}
-        </ol>
-      </nav>
-    ) : null;
-  const saleAt = (p: string | undefined): Sale | undefined => sales[Number(p) - 1];
+  /** The device's own share sheet or mail app; Echo itself sends nothing. */
+  const shareMessage = async (title: string, message: string): Promise<void> => {
+    try {
+      if (typeof navigator.share === "function") {
+        await navigator.share({ title, text: message });
+        return;
+      }
+    } catch {
+      return; // The person closed the share sheet.
+    }
+    window.location.href = `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(message)}`;
+  };
 
-  let screen: ReactElement;
+  const sellerList = sales.map((s, i) => ({ name: s.seller, number: i + 1 }));
+  const saleAt = (p: string | undefined): Sale | undefined => sales[Number(p) - 1];
+  const sample = launch.samples !== undefined;
+
+  const noSale = (title: string): ReactElement => (
+    <NoticeScreen title={title} status="empty" text={CV.noSellers}>
+      <a className="cv-btn cv-btn--primary" href="#/consent">
+        {CV.startRecordingSeller}
+      </a>
+      {sales.length > 0 && (
+        <a className="cv-btn cv-btn--outline" href="#/saved">
+          {COVER.openSaved}
+        </a>
+      )}
+    </NoticeScreen>
+  );
+
   switch (route) {
     case "/saved":
-      screen = (
-        <SavedSales
+      return (
+        <SavedScreen
           sales={sales}
           status={salesStatus}
+          errorText={COVER.savedError}
+          loadingText={COVER.savedLoading}
           onOpen={openSavedSale}
-          onCompare={() => goTo("/compare")}
         />
       );
-      break;
 
     case "/consent":
-      screen = launch.demo ? (
-        <section className="echo-card">
-          <h1>{COVER.appName}</h1>
-          <p>{COVER.sampleIntro}</p>
-          <div className="echo-actions">
-            <button type="button" className="echo-button" onClick={() => goTo("/questions")}>
-              {FINAL.playSampleConsult}
-            </button>
-          </div>
-          <p className="echo-disclaimer">{FINAL.disclaimerCover}</p>
-        </section>
+      // The practice conversation needs no consent (actors, no microphone): go straight on.
+      return launch.demo ? (
+        <QuestionsScreen
+          items={SALE.checklist}
+          chosen={planned}
+          onChange={setPlanned}
+          backHref="#/home"
+          onStart={() => goTo("/record")}
+        />
       ) : (
-        <div className="cover-startup">
-          <a className="cover-back" href="#/home">
-            <span aria-hidden="true">←</span> {COVER.backHome}
-          </a>
-          <p className="cover-kicker">{COVER.consentStep}</p>
-          <ConsentSheet
-            choices={choices}
-            onChange={setChoices}
-            onAgree={agree}
-            disclaimer={FINAL.disclaimerCover}
-            status={services.persistent ? "ready" : "error"}
-            statusText={{ error: COVER.storageFallback }}
-            showShare={false}
-          />
-          <section className="echo-card cover-sample">
-            <p>{COVER.sampleIntro}</p>
-            <a
-              className="echo-button echo-button--secondary"
-              href="?sample=sales&demo=1#/questions"
-            >
-              {FINAL.playSampleConsult}
-            </a>
-          </section>
-        </div>
+        <ConsentScreen
+          choices={choices}
+          onChange={setChoices}
+          onAgree={agree}
+          storageOk={services.persistent}
+          storageText={COVER.storageFallback}
+        />
       );
-      break;
 
     case "/questions":
-      screen = (
-        <>
-          <p className="cover-kicker">{COVER.questionsStep}</p>
-          <h1>{FINAL.questionsBeforeYouBuy}</h1>
-          <p>{COVER.questionsHint}</p>
-          <ul className="cover-questions">
-            {SALE.checklist.map((item) => (
-              <li key={item.id} className="echo-card">
-                <label className="echo-switch">
-                  <span>{item.text}</span>
-                  <input
-                    type="checkbox"
-                    checked={planned.includes(item.id)}
-                    onChange={(e) =>
-                      setPlanned(
-                        e.target.checked
-                          ? [...planned, item.id]
-                          : planned.filter((p) => p !== item.id),
-                      )
-                    }
-                  />
-                </label>
-                {item.sourceUrl.startsWith("http") && (
-                  <a
-                    className="echo-checklist__source"
-                    href={item.sourceUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {FINAL.source}
-                    <span className="echo-visually-hidden">
-                      {" "}
-                      for: {item.text} (opens in a new tab)
-                    </span>
-                  </a>
-                )}
-              </li>
-            ))}
-          </ul>
-          <div className="echo-actions">
-            <button type="button" className="echo-button" onClick={() => goTo("/record")}>
-              {COVER.startRecordingSeller}
-            </button>
-          </div>
-          {disclaimer}
-        </>
+      return (
+        <QuestionsScreen
+          items={SALE.checklist}
+          chosen={planned.filter((id) => QUESTION_IDS.includes(id))}
+          onChange={setPlanned}
+          backHref={launch.demo ? "#/home" : "#/consent"}
+          onStart={() => goTo("/record")}
+        />
       );
-      break;
 
-    case "/record": {
-      const status = rec?.status ?? "idle";
-      const viewStatus: ViewStatus =
-        status === "starting" || status === "loading-model"
-          ? "loading"
-          : status === "permission-denied"
-            ? "permission-denied"
-            : status === "error"
-              ? "error"
-              : "ready";
-      const recording = status === "recording" || status === "paused";
-      screen = (
-        <>
-          <p className="cover-kicker">{COVER.recordStep(sales.length + 1)}</p>
-          <h1>{COVER.startRecording}</h1>
-          {sampleBadge}
-          {!controller ? (
-            <form
-              className="echo-card"
-              onSubmit={(e) => {
-                e.preventDefault();
-                start();
-              }}
-            >
-              <div className="echo-field">
-                <label htmlFor="cover-seller">{COVER.sellerName}</label>
-                <input
-                  id="cover-seller"
-                  type="text"
-                  autoComplete="off"
-                  aria-required="true"
-                  aria-invalid={sellerError !== undefined}
-                  aria-describedby={sellerError ? "cover-seller-error" : "cover-seller-hint"}
-                  value={seller}
-                  onChange={(e) => setSeller(e.target.value)}
-                />
-                <p id="cover-seller-hint" className="cover-field-hint">
-                  {COVER.sellerHint}
-                </p>
-                {sellerError && (
-                  <p id="cover-seller-error" className="cover-error" role="alert">
-                    {sellerError}
-                  </p>
-                )}
-              </div>
-              <button type="submit" className="echo-button">
-                {COVER.startRecording}
-              </button>
-            </form>
-          ) : (
-            <>
-              <p className="cover-badge" role="status">
-                {status === "stopping"
-                  ? COVER.stopping
-                  : recording
-                    ? COVER.recording(seller.trim())
-                    : ""}
-              </p>
-              <CaptionView
-                lines={rec?.lines ?? []}
-                status={viewStatus}
-                uncertainty={COVER.captionUncertainty}
-              />
-              <div className="echo-actions cover-record-actions">
-                <button
-                  type="button"
-                  className="echo-button echo-button--secondary"
-                  disabled={!recording}
-                  onClick={() => (status === "paused" ? controller.resume() : controller.pause())}
-                >
-                  {status === "paused" ? COVER.resume : FINAL.pause}
-                </button>
-                <button
-                  type="button"
-                  className="echo-button"
-                  disabled={!recording}
-                  onClick={() => void stop()}
-                >
-                  {FINAL.stopAndReview}
-                </button>
-                <button
-                  type="button"
-                  className="echo-button echo-button--secondary"
-                  onClick={() => setDiscardConfirm(true)}
-                >
-                  {COVER.discardRecording}
-                </button>
-              </div>
-              {discardConfirm && (
-                <div className="cover-confirm" role="group" aria-label={COVER.discardTitle}>
-                  <h2>{COVER.discardTitle}</h2>
-                  <p>{COVER.discardText}</p>
-                  <div className="echo-actions">
-                    <button
-                      type="button"
-                      className="echo-button echo-button--secondary"
-                      onClick={() => setDiscardConfirm(false)}
-                    >
-                      {COVER.cancel}
-                    </button>
-                    <button type="button" className="echo-button" onClick={() => void discard()}>
-                      {COVER.discardPermanently}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-          {sellersList}
-          {disclaimer}
-        </>
+    case "/record":
+      return (
+        <RecordScreen
+          sellerNumber={sales.length + 1}
+          seller={seller}
+          onSeller={setSeller}
+          sellerError={sellerError}
+          onStart={start}
+          active={controller !== undefined}
+          status={rec?.status ?? "idle"}
+          lines={rec?.lines ?? []}
+          sample={sample}
+          onPause={() => controller?.pause()}
+          onResume={() => controller?.resume()}
+          onStop={() => void stop()}
+          onDiscard={() => void discard()}
+          onRetry={() => void retry()}
+        />
       );
-      break;
-    }
 
     case "/review": {
       const sale = saleAt(param);
-      screen = sale ? (
-        <>
-          <h1>{COVER.reviewTitle(sale.seller)}</h1>
-          {sampleBadge}
-          {playingLine}
-          <section className="cover-progress" aria-label={COVER.comparisonProgress}>
-            <strong>{COVER.sellerProgress(sales.length)}</strong>
-            <span>{sales.length < 2 ? COVER.oneMoreSeller : COVER.readyToCompare}</span>
-          </section>
-          <ChecklistView
-            results={sale.receipt.checklist}
-            title={FINAL.questionsBeforeYouBuy}
-            showSources
-            notes={notes}
-            {...(sale.controller?.hasAudio
-              ? { onPlay: (a: Anchor, r: number) => play(a, r, sale) }
-              : {})}
-          />
-          <ReceiptList
-            facts={sale.receipt.facts}
-            fieldsByKey={fieldOrder}
-            title={COVER.saidTitle(sale.seller)}
-            {...(sale.controller?.hasAudio
-              ? { onPlay: (a: Anchor, r: number) => play(a, r, sale) }
-              : {})}
-          />
-          <div className="echo-actions cover-review-actions">
-            {sales.length >= 2 ? (
-              <button type="button" className="echo-button" onClick={() => goTo("/compare")}>
-                {COVER.compare}
-              </button>
-            ) : (
-              <button type="button" className="echo-button" onClick={() => goTo("/record")}>
-                {COVER.recordAnother}
-              </button>
-            )}
-            {sales.length >= 2 ? (
-              <button
-                type="button"
-                className="echo-button echo-button--secondary"
-                onClick={() => goTo("/record")}
-              >
-                {COVER.recordAnother}
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="echo-button echo-button--secondary"
-                disabled
-                aria-describedby="cover-compare-needed"
-              >
-                {COVER.compare}
-              </button>
-            )}
-            <button
-              type="button"
-              className="echo-button echo-button--secondary"
-              onClick={() => goTo("/confirm", param)}
-            >
-              {COVER.confirm}
-            </button>
-            <button
-              type="button"
-              className="echo-button echo-button--secondary"
-              onClick={() => setDeleteSaleId(sale.receipt.conversationId)}
-            >
-              {COVER.deleteSeller}
-            </button>
-          </div>
-          {sales.length < 2 && (
-            <p id="cover-compare-needed" className="cover-field-hint">
-              {COVER.oneMoreSeller}
-            </p>
-          )}
-          {deleteSaleId === sale.receipt.conversationId && (
-            <div className="cover-confirm" role="group" aria-label={COVER.deleteConfirmTitle}>
-              <h2>{COVER.deleteConfirmTitle}</h2>
-              <p>{COVER.deleteConfirmText}</p>
-              <div className="echo-actions">
-                <button
-                  type="button"
-                  className="echo-button echo-button--secondary"
-                  onClick={() => setDeleteSaleId(undefined)}
-                >
-                  {COVER.cancel}
-                </button>
-                <button type="button" className="echo-button" onClick={() => void deleteSale(sale)}>
-                  {COVER.deletePermanently}
-                </button>
-              </div>
-            </div>
-          )}
-          {sellersList}
-          {disclaimer}
-        </>
+      return sale ? (
+        <ReceiptScreen
+          seller={sale.seller}
+          receipt={sale.receipt}
+          number={Number(param)}
+          salesCount={sales.length}
+          sample={sample}
+          planned={planned}
+          fieldsByKey={fieldOrder}
+          {...(sale.controller?.hasAudio
+            ? { onPlay: (a: Anchor, r: number) => play(a, r, sale) }
+            : {})}
+          playingText={playingText}
+          playingId={playingId}
+          onDelete={() => void deleteSale(sale)}
+        />
       ) : (
-        <div className="cover-recovery">
-          <h1 className="echo-visually-hidden">{COVER.reviewEmptyTitle}</h1>
-          <StatusMessage status="empty" text={{ empty: COVER.noSellers }} />
-          <div className="echo-actions">
-            <a className="echo-button" href="#/record">
-              {COVER.startRecordingSeller}
-            </a>
-            {sales.length > 0 && (
-              <a className="echo-button echo-button--secondary" href="#/saved">
-                {COVER.openSaved}
-              </a>
-            )}
-          </div>
-        </div>
+        noSale(CV.reviewEmptyTitle)
       );
-      break;
     }
 
     case "/compare":
-      screen = (
-        <>
-          <h1>{COVER.compareTitle}</h1>
-          <p>{COVER.compareIntro}</p>
-          {sampleBadge}
-          {playingLine}
-          <ComparisonTable
-            rows={compareQuotes(
-              sales.map((s) => s.record),
-              COMPARE_FIELDS,
-            )}
-            onPlay={(a, r) => play(a, r)}
-            canPlay={canPlay}
-          />
-          <div className="echo-actions">
-            <button
-              type="button"
-              className="echo-button echo-button--secondary"
-              onClick={() => goTo("/record")}
-            >
-              {COVER.recordAnother}
-            </button>
-            {sales.length > 0 && (
-              <a className="echo-button echo-button--secondary" href="#/saved">
-                {COVER.openSaved}
-              </a>
-            )}
-          </div>
-          {sellersList}
-          {disclaimer}
-        </>
-      );
-      break;
-
-    case "/confirm": {
-      const sale = saleAt(param);
-      const message = sale
-        ? draftConfirmMessage(sale.record, sale.receipt.checklist, COMPARE_FIELDS)
-        : "";
-      screen = sale ? (
-        <>
-          <h1>{COVER.confirmTitle(sale.seller)}</h1>
-          <pre
-            className="echo-card cover-message"
-            tabIndex={0}
-            aria-label={COVER.confirmTitle(sale.seller)}
-          >
-            {message}
-          </pre>
-          <div className="echo-actions">
-            <button type="button" className="echo-button" onClick={() => void copyMessage(message)}>
-              {COVER.copyMessage}
-            </button>
-            <button
-              type="button"
-              className="echo-button echo-button--secondary"
-              onClick={() => goTo("/review", param)}
-            >
-              {COVER.backToReview(sale.seller)}
-            </button>
-            {sales.length >= 2 && (
-              <button
-                type="button"
-                className="echo-button echo-button--secondary"
-                onClick={() => goTo("/compare")}
-              >
-                {COVER.backToCompare}
-              </button>
-            )}
-          </div>
-          <p role="status" className="cover-badge">
-            {copied ?? ""}
-          </p>
-          <p>{COVER.notSent}</p>
-          {disclaimer}
-        </>
+      return sales.length >= 2 ? (
+        <CompareScreen
+          rows={compareQuotes(
+            sales.map((s) => s.record),
+            COMPARE_FIELDS,
+          )}
+          sellers={sellerList}
+          sample={sample}
+          onPlay={(a, r) => play(a, r)}
+          canPlay={canPlay}
+          playingText={playingText}
+          playingId={playingId}
+          backHref={`#/review/${sales.length}`}
+        />
       ) : (
-        <div className="cover-recovery">
-          <h1 className="echo-visually-hidden">{COVER.confirmEmptyTitle}</h1>
-          <StatusMessage status="empty" text={{ empty: COVER.noSellers }} />
-          <div className="echo-actions">
-            <a className="echo-button" href="#/record">
-              {COVER.startRecordingSeller}
-            </a>
-            <a className="echo-button echo-button--secondary" href="#/saved">
+        <NoticeScreen
+          title={CV.ledgerHeading}
+          status="empty"
+          text={CV.compareEmptyText}
+          active="compare"
+        >
+          <a className="cv-btn cv-btn--primary" href={sales.length > 0 ? "#/record" : "#/consent"}>
+            {CV.startRecordingSeller}
+          </a>
+          {sales.length > 0 && (
+            <a className="cv-btn cv-btn--outline" href="#/saved">
               {COVER.openSaved}
             </a>
-          </div>
-        </div>
+          )}
+        </NoticeScreen>
       );
-      break;
+
+    case "/confirm": {
+      const number = param === undefined ? sales.length : Number(param);
+      const sale = saleAt(String(number));
+      if (!sale) return noSale(CV.confirmTitle);
+      const message = draftConfirmMessage(sale.record, sale.receipt.checklist, COMPARE_FIELDS);
+      return (
+        <ConfirmScreen
+          seller={sale.seller}
+          message={message}
+          sellers={sellerList}
+          number={number}
+          sample={sample}
+          copied={copied === "yes"}
+          copyFailed={copied === "failed"}
+          onCopy={() => void copyMessage(message)}
+          onShare={() => void shareMessage(CV.messageTo(sale.seller), message)}
+        />
+      );
     }
 
     case "/trust":
-      screen = <TrustPanel summary={EVAL_SUMMARY} />;
-      break;
+      return <TrustScreen summary={EVAL_SUMMARY} />;
   }
-
-  return (
-    <CoverShell
-      route={route}
-      savedCount={launch.demo ? 0 : sales.length}
-      recording={route === "/record" && controller !== undefined}
-    >
-      {screen}
-    </CoverShell>
-  );
 }

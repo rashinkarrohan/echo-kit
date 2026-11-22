@@ -1,0 +1,23 @@
+/** Echo Cover design pack colours (DESIGN-SPEC.md). Used by tests; design.css holds the same values. */
+export const PALETTE = {
+  ink: "#0F1A33",
+  text2: "#44506A",
+  text3: "#26324D",
+  page: "#F3F6FC",
+  card: "#FFFFFF",
+  blue: "#1A4FBA",
+  blueTop: "#2A62D6",
+  navy: "#0F2F7A",
+  blue100: "#E3EDFF",
+  blue300: "#9DBBFF",
+  border: "#4A5B7A",
+  borderSoft: "#6F7C97",
+  divider: "#DCE3F1",
+  highlight: "#FFE08A",
+  amber100: "#FCEFD2",
+  amber700: "#6B3800",
+  notDiscussedBg: "#EBEFF7",
+  sampleBg: "#E8EDF7",
+  danger: "#8A1C1C",
+  dangerTint: "#FBE9E7",
+} as const;

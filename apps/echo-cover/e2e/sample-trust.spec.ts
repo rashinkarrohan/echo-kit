@@ -5,6 +5,7 @@
 
 import { test, expect } from "@playwright/test";
 import { readFileSync } from "node:fs";
+import { axe } from "./helpers";
 import { fileURLToPath } from "node:url";
 
 const results = JSON.parse(
@@ -15,12 +16,13 @@ const PREVIEW = "http://localhost:5184";
 
 test("/trust shows the latest eval numbers", async ({ page }) => {
   await page.goto("/#/trust");
+  await expect(page.getByRole("heading", { name: "How Echo did in tests" })).toBeFocused();
   await expect(
-    page.locator(".echo-trust div").filter({ hasText: "Facts kept" }).locator("dd"),
+    page.locator(".echo-trust div").filter({ hasText: "Facts kept" }).locator("dd").first(),
   ).toHaveText(`${results.totals.kept} of ${results.totals.plantedFacts}`);
-  await expect(
-    page.locator(".echo-trust div").filter({ hasText: "Test runs" }).locator("dd"),
-  ).toHaveText(String(results.runs));
+  await expect(page.getByRole("region", { name: "Test runs" })).toContainText(String(results.runs));
+  await expect(page.getByText(/scripted test conversations, not real purchases/)).toBeVisible();
+  await axe(page, "trust");
 });
 
 test("the app can be installed: manifest with standard and maskable icons that load", async ({
@@ -69,26 +71,37 @@ test("sample sales work offline after the first load, without a microphone or mo
     .toBe(true);
 
   await context.setOffline(true);
+  // The font is self-hosted, so the text looks the same offline.
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { name: "Compare what sellers said, side by side." }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(() =>
+      document.fonts.check("700 20px 'Atkinson Hyperlegible Next Variable'"),
+    ),
+  ).toBe(true);
   await page.getByRole("link", { name: "Play sample consult" }).click();
   await page.getByRole("button", { name: "Start recording a seller" }).click();
   await expect(page.getByLabel("Seller or clinic name")).toHaveValue("Seller A");
   await page.getByRole("button", { name: "Start recording", exact: true }).click();
   await expect(page.getByText(/If you prefer to pay monthly/)).toBeVisible({ timeout: 60_000 });
   await page.getByRole("button", { name: "Stop and review" }).click();
-  await page.getByRole("button", { name: "Record another seller" }).click();
+  await page.getByRole("link", { name: "Record another seller" }).click();
   await expect(page.getByLabel("Seller or clinic name")).toHaveValue("Seller D");
   await page.getByRole("button", { name: "Start recording", exact: true }).click();
   await expect(page.getByText(/I am paid a salary/)).toBeVisible({ timeout: 60_000 });
   await page.getByRole("button", { name: "Stop and review" }).click();
-  await page.getByRole("button", { name: "Compare sellers" }).click();
-  await expect(page.getByRole("columnheader")).toHaveText(["Seller A", "Seller D"]);
+  await page.getByRole("link", { name: "Compare sellers" }).click();
+  await expect(page.getByRole("region", { name: "Price" })).toContainText("Seller D");
   // The actor recordings are cached: Hear it is offered and plays, even offline.
   await page
     .getByRole("button", { name: /^Hear it/ })
     .first()
     .click();
-  await expect(page.locator(".cover-playing")).toHaveText(/^Playing \d+:\d\d to \d+:\d\d$/);
+  await expect(page.locator(".cv-playing")).toHaveText(/^Playing \d+:\d\d to \d+:\d\d$/);
   await context.setOffline(false);
-
   expect(requests.filter((u) => /huggingface|\.onnx|\.wasm|asr-worker/.test(u))).toEqual([]);
+  // Nothing was requested from any other site, fonts included.
+  expect(requests.filter((u) => u.startsWith("http") && !u.startsWith(PREVIEW))).toEqual([]);
 });

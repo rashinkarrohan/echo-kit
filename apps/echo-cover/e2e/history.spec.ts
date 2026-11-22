@@ -68,31 +68,33 @@ test("saved seller conversations reopen as a comparison without dead audio butto
   await page.goto("/");
   await seedReceipts(page);
   await page.reload();
-
   await expect(page.getByText("2 seller conversations saved on this phone")).toBeVisible();
-  await page.getByRole("link", { name: "Open saved comparisons" }).click();
+  await page.getByRole("link", { name: /Open saved comparisons/ }).click();
   await expect(page.getByRole("heading", { name: "Saved seller conversations" })).toBeFocused();
   await expect(page.getByText("North Clinic")).toBeVisible();
   await expect(page.getByText("West Hearing")).toBeVisible();
-  await page.getByRole("button", { name: "Compare these sellers" }).click();
-
-  await expect(page.getByRole("heading", { name: "Compare sellers" })).toBeVisible();
-  await expect(page.getByRole("columnheader")).toHaveText(["North Clinic", "West Hearing"]);
+  await page.getByRole("link", { name: "Compare these sellers" }).click();
+  await expect(page.getByRole("heading", { name: "Seller ledger" })).toBeVisible();
+  const price = page.getByRole("region", { name: "Price" });
+  await expect(price).toContainText("North Clinic");
+  await expect(price).toContainText("West Hearing");
   await expect(page.getByRole("button", { name: /^Hear it/ })).toHaveCount(0);
   await expect(page.getByText("Audio not kept")).toHaveCount(2);
   await page.reload();
-  await expect(page.getByRole("columnheader")).toHaveText(["North Clinic", "West Hearing"]);
-
+  await expect(page.getByRole("region", { name: "Price" })).toContainText("North Clinic");
+  await expect(page.getByRole("region", { name: "Price" })).toContainText("West Hearing");
   await page.getByRole("link", { name: "North Clinic" }).click();
   await page.getByRole("button", { name: "Delete this seller conversation" }).click();
-  const confirm = page.getByRole("group", { name: "Delete this seller conversation?" });
+  const confirm = page.getByRole("alertdialog", { name: "Delete North Clinic?" });
   await expect(confirm).toContainText("This cannot be undone");
-  await confirm.getByRole("button", { name: "Delete permanently" }).click();
+  await confirm.getByRole("button", { name: "No, keep it" }).click();
+  await expect(confirm).toHaveCount(0);
+  await page.getByRole("button", { name: "Delete this seller conversation" }).click();
+  await page.getByRole("button", { name: "Yes, delete it" }).click();
   await expect(page.getByRole("heading", { name: "Saved seller conversations" })).toBeVisible();
   await expect(page.getByText("North Clinic")).toHaveCount(0);
   await expect(page.getByText("West Hearing")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Compare these sellers" })).toHaveCount(0);
-
+  await expect(page.getByRole("link", { name: "Compare these sellers" })).toHaveCount(0);
   const axe = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
   expect(
     axe.violations
