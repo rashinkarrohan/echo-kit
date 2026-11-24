@@ -169,6 +169,13 @@ describe("dateDetector", () => {
     "today",
   ];
 
+  it("does not flag today or tomorrow in a question", () => {
+    const seg = makeSegment(0, 0, 3000, "Do you have any other questions for me today?");
+    expect(dateDetector.detect(seg)).toEqual([]);
+    const next = makeSegment(0, 0, 3000, "Can you come back tomorrow or next week?");
+    expect(dateDetector.detect(next).map((t) => t.value)).toEqual(["next week"]);
+  });
+
   testCases.forEach((input) => {
     it(`detects "${input}"`, () => {
       const seg = makeSegment(0, 0, 3000, input);

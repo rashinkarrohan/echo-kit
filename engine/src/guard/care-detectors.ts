@@ -228,8 +228,12 @@ export const dateDetector: EntityDetector = {
       /\b(january|february|march|april|may|june|july|august|september|october|november|december)\b/i,
     ];
 
+    // "Any other questions for me today?" asks something; it does not set a date.
+    const isQuestion = segment.text.trim().endsWith("?");
+
     for (const pattern of patterns) {
       const match = normalized.match(pattern);
+      if (match && isQuestion && /^(today|tomorrow)$/i.test(match[0])) continue;
       if (match) {
         const value = match[0];
 
