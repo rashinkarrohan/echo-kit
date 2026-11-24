@@ -31,7 +31,9 @@ pnpm dev:cover   # Echo Cover on http://localhost:5182
 
 Then open `http://localhost:5181/?sample=care-01&demo=1#/doctor-card` or `http://localhost:5182/?sample=sales&demo=1#/questions`.
 
-Live recording uses an on-device Whisper model (whisper-base.en by default, about 77 MB on first use) and needs a browser on `https` or `localhost`. Measurements so far are from a laptop; phone results are still to be recorded (docs/SPIKES.md).
+Live recording uses an on-device Whisper model (whisper-base.en by default, about 77 MB on first use) and needs a browser on `https` or `localhost`. The first run shows the download progress ("Downloading the speech model: X of Y MB. This happens once."), and the model then works offline.
+
+**Phone status.** Speed and accuracy have been measured on a laptop only. Nothing has been measured on a real phone yet (docs/SPIKES.md). Phones use the WebAssembly path, not WebGPU, because WebGPU on phones is untested. If the speech engine fails, the screen says why and stops the microphone; it does not sit blank. The phone changes were checked only in desktop Chromium with a phone profile and a fake microphone. If recording does not work on your phone, the on-screen reason is the most useful thing to report.
 
 ## How a fact earns its place on the receipt
 1. **Consent first.** Separate switches for recording and for speech-to-text, with all-party wording, are stored in a consent ledger. Recording cannot start without them; this is enforced in code.
