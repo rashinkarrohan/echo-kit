@@ -4,7 +4,8 @@
  *
  * A fact gets heard_clearly if:
  * - Every field value appears in its quote (normalized)
- * - No word in the quote has low confidence (< 0.6)
+ * - If the speech engine reports word confidence, no word in the quote is below 0.6
+ *   (the current Whisper adapter does not, so this only applies to engines that do)
  *
  * Otherwise it gets check_this.
  */
@@ -18,29 +19,37 @@ import { containsPhrase } from "../validate/validate-fact";
 
 export type { VerifiedFact } from "../types";
 
+const LOW_CONFIDENCE = 0.6;
+
 /**
- * Check if any word in the segment's quote region has low confidence.
+ * Check if any word of the quote has low confidence.
+ * Only applies when the speech engine reports per-word confidence (`segment.words`).
+ * The current Whisper adapter does not, so for it this check never fires (docs/SPIKES.md).
+ * Words are matched as whole words, so "a" never matches inside "metformin".
  */
 function hasLowConfidenceInQuote(quote: string, segment: Segment): boolean {
   if (!segment.words || segment.words.length === 0) {
     return false;
   }
 
-  const normalizedQuote = normaliseText(quote).toLowerCase();
+  // Normalising turns "five hundred" into "500", so the spoken words are checked too.
+  const normalisedQuote = normaliseText(quote);
+  const spokenQuote = quote
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
-  // Check all words in the segment
   for (const wordData of segment.words) {
-    const normalizedWord = normaliseText(wordData.word).toLowerCase();
-
-    // If this word appears in the quote and has low confidence, flag it
-    if (normalizedQuote.includes(normalizedWord) && wordData.confidence < 0.6) {
-      return true;
-    }
-
-    // Also check if the original word (before normalization) appears in original quote
-    const originalWord = wordData.word.toLowerCase();
-    const originalQuote = quote.toLowerCase();
-    if (originalQuote.includes(originalWord) && wordData.confidence < 0.6) {
+    if (wordData.confidence >= LOW_CONFIDENCE) continue;
+    const spoken = wordData.word
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}\s]/gu, "")
+      .trim();
+    if (
+      containsPhrase(normalisedQuote, normaliseText(wordData.word)) ||
+      (spoken.length > 0 && containsPhrase(spokenQuote, spoken))
+    ) {
       return true;
     }
   }
@@ -52,7 +61,7 @@ function hasLowConfidenceInQuote(quote: string, segment: Segment): boolean {
  * Verify facts and assign stamps.
  *
  * Stamp logic:
- * - heard_clearly: all field values in quote, no low confidence
+ * - heard_clearly: all field values in quote, name unambiguous, no low-confidence word (when reported)
  * - check_this: otherwise
  *
  * @param facts - Validated facts to verify
@@ -98,7 +107,7 @@ export function verifyFacts(
     if (stamp === "heard_clearly" && unclearCounts(normalizedQuote).length > 0) {
       stamp = "check_this";
     }
-    // Check 3: No low confidence tokens in the quote
+    // Check 3: no low-confidence word in the quote (only when the engine reports confidence)
     if (stamp === "heard_clearly") {
       // Check all segments referenced by this fact
       for (const segId of fact.anchor.segmentIds) {
