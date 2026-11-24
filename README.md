@@ -2,22 +2,39 @@
 
 **A receipt you can check for a spoken conversation.** Echo Kit turns a consented conversation into a list of facts. Each fact quotes the words it came from and links to that part of the audio. Anything Echo is unsure of is marked **Check this**; anything not mentioned is marked **Not said**. It never guesses.
 
+Most captioning apps show what a speech engine thinks was said, and most AI note-takers write a summary you have to trust. Echo Kit shows only what it can prove from the actual words, and says so when it cannot.
+
 It is built first for older adults with unaided hearing loss and their adult children. Two apps share one engine:
 
-| | **Echo Care** | **Echo Cover** |
-|---|---|---|
-| For | Doctor visits and the pharmacy counter | Hearing-aid purchase conversations |
-| During the conversation | Large-text captions with medicine names, doses, frequencies and dates highlighted; a full-screen "Please repeat" card; a card asking the doctor to face you and speak slowly | Captions with money, percentages, time periods and commission wording highlighted; a card of questions to ask, each with its source |
-| Afterwards | A receipt of medicines, follow-ups and warning signs; read-back with a screen to show the doctor; a check of the pharmacy label against what was said; a patient-controlled summary to share with family (no audio) | A receipt per seller; a side-by-side ledger of two or more sellers that never ranks them; a drafted "please confirm in writing" message |
+|                         | **Echo Care**                                                                                                                                                                                                       | **Echo Cover**                                                                                                                          |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| For                     | Doctor visits and the pharmacy counter                                                                                                                                                                              | Hearing-aid purchase conversations                                                                                                      |
+| During the conversation | Large-text captions with medicine names, doses, frequencies and dates highlighted; a full-screen "Please repeat" card; a card asking the doctor to face you and speak slowly                                        | Captions with money, percentages, time periods and commission wording highlighted; a card of questions to ask, each with its source     |
+| Afterwards              | A receipt of medicines, follow-ups and warning signs; read-back with a screen to show the doctor; a check of the pharmacy label against what was said; a patient-controlled summary to share with family (no audio) | A receipt per seller; a side-by-side ledger of two or more sellers that never ranks them; a drafted "please confirm in writing" message |
 
 Built for Kiroween 2026, Skeleton Crew category. The skeleton is `engine/` plus `ui/`; the two apps are the creatures built on it.
 
+## What makes it different
+
+|                          | A typical live-caption app       | A typical AI note-taker   | **Echo Kit**                                                                        |
+| ------------------------ | -------------------------------- | ------------------------- | ----------------------------------------------------------------------------------- |
+| Gives you                | A running transcript             | A written summary         | A receipt of facts, each with the exact words it came from                          |
+| Can you check a fact?    | Read back through the transcript | Usually trust the summary | Every fact links to that moment in the audio ("Hear it")                            |
+| When it is unsure        | Shows its best guess             | May smooth over the gap   | Marks it **Check this**; a missing item says **Not said**                           |
+| A misheard medicine name | Shown as if it were right        | May be corrected silently | Kept as heard, with "Sounds like metformin?" and a "Please repeat" card             |
+| How facts are made       | Not applicable                   | Usually a language model  | Rules, then a code check that rejects any fact whose quote is not in the transcript |
+| Where it runs            | Varies                           | Varies                    | On the phone; audio and text stay there                                             |
+
+The first two columns describe typical products in general terms, not named ones. The Echo Kit column is what this repository does and tests (see "How a fact earns its place" below).
+
 ## Try it
+
 Echo Care has a **Try a practice visit** button and Echo Cover a **Play sample consult** button on their home screens. It runs a fictional visit, read by an actor, with real audio behind every "Hear it" button. It needs no microphone and no model download, and it works offline after the first load.
 
 - **Echo Care:** https://echo-kit-17lm.vercel.app
 - **Echo Cover:** https://echo-kit-omega.vercel.app
-- Demo video (under 3 minutes): *YouTube link added before submission*
+- **See it refuse to guess** (Echo Care): open the app, add `?sample=misheard` to the address, start the visit, and watch two misheard medicine names stay as heard, each marked **Check this** with a reason. Nothing is corrected.
+- Demo video (under 3 minutes): _YouTube link added before submission_
 
 All docs are indexed in [docs/README.md](docs/README.md), grouped by the five judging criteria.
 
@@ -36,6 +53,7 @@ Live recording uses an on-device Whisper model (whisper-base.en by default, abou
 **Phone status.** Speed and accuracy have been measured on a laptop only. Nothing has been measured on a real phone yet (docs/SPIKES.md). Phones use the WebAssembly path, not WebGPU, because WebGPU on phones is untested. If the speech engine fails, the screen says why and stops the microphone; it does not sit blank. The phone changes were checked only in desktop Chromium with a phone profile and a fake microphone. If recording does not work on your phone, the on-screen reason is the most useful thing to report.
 
 ## How a fact earns its place on the receipt
+
 1. **Consent first.** Separate switches for recording and for speech-to-text, with all-party wording, are stored in a consent ledger. Recording cannot start without them; this is enforced in code.
 2. **Speech to text on the device.** Audio is cut into 3 to 8 second segments and transcribed in a Web Worker. Neither audio nor text leaves the phone.
 3. **Flagging.** Detectors highlight the details people mishear: doses, medicine names, frequencies, money, percentages and durations. Spoken numbers are normalised first ("five hundred" becomes 500; "one and a half" becomes 1.5).
@@ -45,18 +63,22 @@ Live recording uses an on-device Whisper model (whisper-base.en by default, abou
 7. **Stamps.** A fact is **Heard clearly** only when every value is in its quote and its medicine name is an exact, unambiguous match. Otherwise it is **Check this**. A checklist question nobody raised is **Not discussed**.
 
 ## How well it does (scripted tests)
+
 `pnpm evals` runs the whole pipeline on 27 scripted conversations (fictional, read by actors), including the attacks our red-team agent wrote to make Echo invent facts. Latest run: **83 of 83 planted facts kept, 0 made up, 0 without a quote**, and every number and medicine name flagged. The **Test results** page in each app shows the same numbers. On real speech, 12 mock GP consultations from the PriMock57 dataset (114 minutes, CC BY 4.0), the speech engine got 36.5% of words wrong. Even so, every medicine fact Echo built that the doctor did not say was stamped Check this, and none was marked Heard clearly (docs/SPIKES.md). The scripted runs are conversations written for testing, not real visits; real speech is harder, and the drug-name bench in docs/SPIKES.md shows where speech recognition still mishears names.
 
 ## What it does not do
+
 - It gives no medical, legal or financial advice and calculates no doses. It says what was said: "said", "sounds like", "check this".
 - It never ranks sellers or recommends a purchase.
 - It is not an interpreter and not an accommodation under disability law.
 - It makes no claim to reduce errors and no claim of legal-evidence value (docs/CLAIMS.md).
 
 ## Privacy
+
 Audio and transcripts stay on the device by default. After a visit, receipts are kept in the browser's storage and audio is not kept. Every visit can be deleted. Sharing is off by default, and a shared file has no audio. Sample and test data use only actors with written releases (docs/RELEASES.md). More in docs/PRIVACY.md.
 
 ## Repository
+
 ```
 engine/        pure TypeScript: detectors, extractor, anchor check, verifier, gap check, label and quote comparison, consent ledger, session
 ui/            shared React components, design tokens, browser platform code (capture, Whisper worker, storage, player)
@@ -70,6 +92,7 @@ docs/          start at docs/README.md: an index by judging criterion
 ```
 
 ## Checks
+
 ```bash
 pnpm lint && pnpm typecheck && pnpm test   # unit and property-based tests (fast-check)
 pnpm evals                                 # fails on any made-up or unanchored fact
@@ -79,7 +102,9 @@ pnpm --filter echo-cover e2e
 ```
 
 ## Built with Kiro
+
 All development used Kiro: spec-driven tasks in `.kiro/specs/`, steering in `.kiro/steering/`, four agent hooks, a custom eval MCP server, a Kiro power and two custom agents (schema writer, red team). Details and evidence are in docs/KIRO.md.
 
 ## Sources and licences
+
 Every model, dataset and library is listed with its licence in docs/SOURCES.md. Code is under the MIT licence (LICENSE).
