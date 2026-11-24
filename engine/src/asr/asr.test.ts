@@ -188,4 +188,53 @@ describe("WhisperAdapter", () => {
     expect(await a).toEqual({ ok: true, value: { text: "first" } });
     expect(await b).toEqual({ ok: true, value: { text: "second" } });
   });
+
+  it("passes the model download progress on, and still finishes loading", async () => {
+    let listener: ((r: WorkerReply) => void) | undefined;
+    const transport: AsrTransport = {
+      post(req) {
+        if (req.type === "load")
+          queueMicrotask(() => {
+            listener?.({ type: "progress", id: req.id, loaded: 10_000_000, total: 80_000_000 });
+            listener?.({ type: "progress", id: req.id, loaded: 80_000_000, total: 80_000_000 });
+            listener?.({ type: "loaded", id: req.id, device: "wasm" });
+          });
+        else queueMicrotask(() => listener?.({ type: "result", id: req.id, text: "ok", ms: 1 }));
+      },
+      onReply(fn) {
+        listener = fn;
+      },
+    };
+    const seen: Array<[number, number]> = [];
+    const asr = new WhisperAdapter(transport, { onProgress: (l, t) => seen.push([l, t]) });
+    expect(await asr.transcribe(silence(3000), 16000)).toEqual({ ok: true, value: { text: "ok" } });
+    expect(seen).toEqual([
+      [10_000_000, 80_000_000],
+      [80_000_000, 80_000_000],
+    ]);
+  });
+  it("turns a worker that crashes into an error, for the request waiting and every later one", async () => {
+    let fail: ((message: string) => void) | undefined;
+    const posted: WorkerRequest[] = [];
+    const transport: AsrTransport = {
+      post(req) {
+        posted.push(req); // the worker never answers
+      },
+      onReply() {},
+      onFailure(fn) {
+        fail = fn;
+      },
+    };
+    const asr = new WhisperAdapter(transport);
+    const waiting = asr.transcribe(silence(3000), 16000);
+    await new Promise((r) => setTimeout(r, 0));
+    fail?.("Out of memory");
+    expect(await waiting).toEqual({ ok: false, error: "The speech engine stopped: Out of memory" });
+    const before = posted.length;
+    expect(await asr.transcribe(silence(3000), 16000)).toEqual({
+      ok: false,
+      error: "The speech engine stopped: Out of memory",
+    });
+    expect(posted).toHaveLength(before);
+  });
 });

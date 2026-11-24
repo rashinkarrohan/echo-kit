@@ -4,13 +4,15 @@
  */
 
 import { DRUG_DICTIONARY, WhisperAdapter } from "@echo/engine";
-import { modelFromQuery } from "./whisper-models";
+import { devicesFor, modelFromQuery } from "./whisper-models";
 import type { AsrTransport, WhisperOptions, WorkerReply, WorkerRequest } from "@echo/engine";
 
 /** The parts of a Worker the transport uses. */
 export interface WorkerLike {
   postMessage(message: WorkerRequest, transfer?: Transferable[]): void;
   addEventListener(type: "message", listener: (event: MessageEvent<WorkerReply>) => void): void;
+  addEventListener(type: "error", listener: (event: { message?: string }) => void): void;
+  addEventListener(type: "messageerror", listener: (event: unknown) => void): void;
 }
 
 export function workerTransport(worker: WorkerLike): AsrTransport {
@@ -26,6 +28,14 @@ export function workerTransport(worker: WorkerLike): AsrTransport {
     },
     onReply(listener) {
       worker.addEventListener("message", (event) => listener(event.data));
+    },
+    onFailure(listener) {
+      // A worker that crashes (out of memory on a phone) or whose script cannot load never
+      // replies; without these the screen would wait for it forever.
+      worker.addEventListener("error", (event) =>
+        listener(event.message ? event.message : "the worker could not start"),
+      );
+      worker.addEventListener("messageerror", () => listener("a message could not be read"));
     },
   };
 }
@@ -65,6 +75,11 @@ export function createWhisperAdapter(
   const search = typeof location === "undefined" ? "" : location.search;
   return new WhisperAdapter(workerTransport(worker), {
     model: modelFromQuery(search),
+    devices: devicesFor(
+      search,
+      typeof navigator === "undefined" ? "" : navigator.userAgent,
+      typeof navigator === "undefined" ? 0 : navigator.maxTouchPoints,
+    ),
     ...promptOptions(search, vocabulary),
     ...options,
   });

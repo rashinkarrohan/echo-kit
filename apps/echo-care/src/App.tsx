@@ -429,6 +429,8 @@ export function App(): ReactElement {
         <CaptionsScreen
           status={rec?.status ?? "idle"}
           lines={rec?.lines ?? []}
+          {...(rec?.progress ? { progress: rec.progress } : {})}
+          {...(rec?.error ? { error: rec.error } : {})}
           {...(promptText ? { promptText } : {})}
           promptAsk={CARE.promptAsk}
           missing={!controller && !consentMissing}

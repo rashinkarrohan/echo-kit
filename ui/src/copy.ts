@@ -73,6 +73,10 @@ export const FINAL = {
 export const ADDED = {
   captionsEmpty: "Captions will appear here when someone speaks.",
   silentSegment: "(no speech)",
+  unreadSegment: "Echo could not read this part.",
+  /** First-run model download, in whole megabytes. */
+  downloadingModel: (loadedBytes: number, totalBytes: number): string =>
+    `Downloading the speech model: ${Math.round(loadedBytes / 1e6)} of ${Math.round(totalBytes / 1e6)} MB. This happens once.`,
   receiptTitle: "What was said",
   receiptLoading: "Building the receipt.",
   receiptEmpty: "No facts were heard in this conversation.",

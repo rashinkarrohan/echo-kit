@@ -28,6 +28,8 @@ import {
 } from "@echo/engine";
 import type { AsrDevice, WorkerReply, WorkerRequest } from "@echo/engine";
 import { dtypeFor, isMultilingual, usesMedicinePrompt } from "./whisper-models";
+import { DownloadProgress } from "./download-progress";
+import type { DownloadEvent } from "./download-progress";
 import { SileroVad } from "./silero-vad";
 import type { VadTensor } from "./silero-vad";
 
@@ -52,6 +54,20 @@ async function hasWebGpuAdapter(): Promise<boolean> {
     return false;
   }
 }
+
+/** Download progress for the load in flight, sent to the page at most every 250 ms. */
+let downloads = new DownloadProgress();
+let loadId = 0;
+let lastProgressAt = 0;
+function reportProgress(event: DownloadEvent): void {
+  downloads.update(event);
+  const now = Date.now();
+  if (event.status !== "done" && now - lastProgressAt < 250) return;
+  lastProgressAt = now;
+  const { loaded, total } = downloads.totals();
+  if (total > 0) scope.postMessage({ type: "progress", id: loadId, loaded, total });
+}
+const progress_callback = (event: unknown): void => reportProgress(event as DownloadEvent);
 
 type Transcriber = (audio: Float32Array) => Promise<{ text: string; unconfirmed?: string[] }>;
 let transcriber: Transcriber | undefined;
@@ -93,11 +109,12 @@ async function loadOn(
   device: AsrDevice,
   { medicines, words }: PromptSource,
 ): Promise<Transcriber> {
-  const processor = await AutoProcessor.from_pretrained(model);
-  const tokenizer = await AutoTokenizer.from_pretrained(model);
+  const processor = await AutoProcessor.from_pretrained(model, { progress_callback });
+  const tokenizer = await AutoTokenizer.from_pretrained(model, { progress_callback });
   const whisper = await WhisperForConditionalGeneration.from_pretrained(model, {
     device,
     dtype: dtypeFor(model, device),
+    progress_callback,
   });
 
   const token = (t: string): number => tokenizer.convert_tokens_to_ids(t);
@@ -141,12 +158,18 @@ async function loadOn(
   };
 }
 
+/** What the current engine was loaded with, so a WebGPU failure can reload on WebAssembly. */
+let loaded:
+  | { model: string; devices: AsrDevice[]; prompt: PromptSource; device: AsrDevice }
+  | undefined;
+
 async function load(model: string, devices: AsrDevice[], prompt: PromptSource): Promise<AsrDevice> {
   let lastError: unknown;
   for (const device of devices) {
     if (device === "webgpu" && !(await hasWebGpuAdapter())) continue;
     try {
       transcriber = await loadOn(model, device, prompt);
+      loaded = { model, devices, prompt, device };
       return device;
     } catch (e) {
       lastError = e;
@@ -158,11 +181,32 @@ async function load(model: string, devices: AsrDevice[], prompt: PromptSource): 
   );
 }
 
+/**
+ * A WebGPU model can load and then fail while transcribing (drivers, memory). Reload on
+ * WebAssembly once and try the same audio again, instead of failing every segment.
+ */
+async function transcribeWithFallback(
+  audio: Float32Array,
+): Promise<{ text: string; unconfirmed?: string[] }> {
+  try {
+    return await (transcriber as Transcriber)(audio);
+  } catch (e) {
+    const current = loaded;
+    if (!current || current.device !== "webgpu" || !current.devices.includes("wasm")) throw e;
+    transcriber = await loadOn(current.model, "wasm", current.prompt);
+    loaded = { ...current, device: "wasm", devices: ["wasm"] };
+    return await transcriber(audio);
+  }
+}
+
 scope.onmessage = (event) => {
   const req = event.data;
   void (async () => {
     try {
       if (req.type === "load") {
+        downloads = new DownloadProgress();
+        loadId = req.id;
+        lastProgressAt = 0;
         const [device] = await Promise.all([
           load(req.model, req.devices, {
             medicines: req.medicines ?? [],
@@ -189,7 +233,7 @@ scope.onmessage = (event) => {
         });
         return;
       }
-      const { text, unconfirmed } = await transcriber(req.samples);
+      const { text, unconfirmed } = await transcribeWithFallback(req.samples);
       scope.postMessage({
         type: "result",
         id: req.id,

@@ -12,6 +12,10 @@ import { captionPx, earlierLinePx, lineHeightPx } from "./captionSize";
 export interface CaptionsProps {
   status: RecordingStatus;
   lines: CaptionLine[];
+  /** Bytes of the speech model fetched so far (first run only) */
+  progress?: { loaded: number; total: number };
+  /** Why recording stopped, in words (speech engine failed) */
+  error?: string;
   /** Plain-words reason the newest medicine name or dose needs checking, if any */
   promptText?: string;
   promptAsk: string;
@@ -194,7 +198,14 @@ export function CaptionsScreen(props: CaptionsProps): ReactElement {
       ) : (
         <>
           {(status === "starting" || status === "loading-model") && (
-            <StatusMessage status="loading" text={{ loading: FINAL.modelLoading }} />
+            <StatusMessage
+              status="loading"
+              text={{
+                loading: props.progress
+                  ? ADDED.downloadingModel(props.progress.loaded, props.progress.total)
+                  : FINAL.modelLoading,
+              }}
+            />
           )}
           {status === "permission-denied" && (
             <StatusMessage
@@ -203,7 +214,12 @@ export function CaptionsScreen(props: CaptionsProps): ReactElement {
             />
           )}
           {status === "error" && (
-            <StatusMessage status="error" text={{ error: FINAL.genericError }} />
+            <StatusMessage
+              status="error"
+              text={{
+                error: props.error ? `${FINAL.genericError} ${props.error}` : FINAL.genericError,
+              }}
+            />
           )}
           {failed && (
             <div className="cd-recover">
@@ -217,7 +233,7 @@ export function CaptionsScreen(props: CaptionsProps): ReactElement {
           )}
           {lines.length === 0 && live && <p className="cd-note">{CD.captionsWaiting}</p>}
           <div role="log" aria-live="polite" aria-label="Captions so far" className="cd-lines">
-            {lines.map(({ segment, tokens }, i) => {
+            {lines.map(({ segment, tokens, failed: unread }, i) => {
               const newest = i === lines.length - 1;
               return (
                 <article
@@ -233,6 +249,8 @@ export function CaptionsScreen(props: CaptionsProps): ReactElement {
                   <p className="cd-line__text">
                     {segment.text ? (
                       <FlaggedText text={segment.text} tokens={tokens} />
+                    ) : unread ? (
+                      ADDED.unreadSegment
                     ) : (
                       ADDED.silentSegment
                     )}

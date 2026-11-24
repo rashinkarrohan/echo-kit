@@ -216,4 +216,119 @@ describe("RecordingController (live)", () => {
     expect(c.state.status).toBe("permission-denied");
     expect(loaded).toBe(false);
   });
+
+  /**
+   * Capture deps whose microphone plays `seconds` of a loud tone, one 128-sample frame at a time.
+   * With `pulsed`, the tone is on for 2 s and off for 1 s, so every 3 s segment holds speech.
+   */
+  const toneDeps = (seconds: number, pulsed = false): CaptureDeps => {
+    const port: { onmessage: ((e: { data: unknown }) => void) | null } = { onmessage: null };
+    return {
+      getUserMedia: () => Promise.resolve({ getTracks: () => [{ stop: () => {} }] }),
+      createContext: () => ({
+        sampleRate: 16000,
+        createMediaStreamSource: () => ({
+          connect: () => {
+            setTimeout(() => {
+              for (let i = 0; i < seconds * 16000; i += 128)
+                port.onmessage?.({
+                  data: new Float32Array(128).map((_, j) =>
+                    pulsed && (i + j) % 48000 >= 32000
+                      ? 0
+                      : 0.3 * Math.sin((2 * Math.PI * 180 * (i + j)) / 16000),
+                  ),
+                });
+            }, 0);
+          },
+          disconnect: () => {},
+        }),
+        createSilentSink: () => ({ connect: () => {}, disconnect: () => {} }),
+        close: () => Promise.resolve(),
+      }),
+      createWorkletNode: () =>
+        Promise.resolve({ node: { connect: () => {}, disconnect: () => {} }, port }),
+    };
+  };
+
+  it("shows how much of the speech model has downloaded, then clears it", async () => {
+    let report: ((loaded: number, total: number) => void) | undefined;
+    let finish: (() => void) | undefined;
+    const c = new RecordingController();
+    const started = c.start({
+      sessionId: "progress",
+      schema,
+      ledger: consented(),
+      source: {
+        kind: "live",
+        captureDeps: toneDeps(0.2),
+        createAsr: (onProgress) => {
+          report = onProgress;
+          return {
+            ...asr(),
+            load: () =>
+              new Promise((resolve) => {
+                finish = () => resolve({ ok: true, value: undefined });
+              }),
+          };
+        },
+      },
+    });
+    await new Promise((r) => setTimeout(r, 20));
+    expect(c.state.status).toBe("loading-model");
+    report?.(12_000_000, 90_000_000);
+    expect(c.state.progress).toEqual({ loaded: 12_000_000, total: 90_000_000 });
+    finish?.();
+    await started;
+    expect(c.state.status).toBe("recording");
+    expect(c.state.progress).toBeUndefined();
+    await c.discard();
+  });
+
+  it("stops with a clear error when the speech engine keeps failing, instead of showing no captions", async () => {
+    const c = new RecordingController();
+    await c.start({
+      sessionId: "failing",
+      schema,
+      ledger: consented(),
+      source: {
+        kind: "live",
+        captureDeps: toneDeps(30, true),
+        createAsr: () => ({
+          ...asr(),
+          transcribe: () => Promise.resolve({ ok: false, error: "out of memory" }),
+        }),
+      },
+    });
+    await new Promise((r) => setTimeout(r, 200));
+    expect(c.state.status).toBe("error");
+    expect(c.state.error).toContain("out of memory");
+    await c.discard();
+  });
+
+  it("keeps going when only one segment fails", async () => {
+    let calls = 0;
+    const c = new RecordingController();
+    await c.start({
+      sessionId: "one-bad",
+      schema,
+      ledger: consented(),
+      source: {
+        kind: "live",
+        captureDeps: toneDeps(30),
+        createAsr: () => ({
+          ...asr(),
+          transcribe: () =>
+            Promise.resolve(
+              ++calls === 1
+                ? { ok: false as const, error: "hiccup" }
+                : { ok: true as const, value: { text: "hello" } },
+            ),
+        }),
+      },
+    });
+    await new Promise((r) => setTimeout(r, 200));
+    expect(c.state.status).toBe("recording");
+    expect(c.state.lines.length).toBeGreaterThan(0);
+    await c.discard();
+  });
 });

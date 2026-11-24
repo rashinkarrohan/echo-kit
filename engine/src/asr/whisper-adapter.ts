@@ -45,12 +45,16 @@ export type WorkerReply =
       /** Exact medicine names the unprompted second hearing did not back up */
       unconfirmed?: string[];
     }
-  | { type: "error"; id: number; error: string };
+  | { type: "error"; id: number; error: string }
+  /** Model download so far, in bytes, for the load request `id`. Not a final reply. */
+  | { type: "progress"; id: number; loaded: number; total: number };
 
 /** How the adapter talks to its worker (a real Worker in the browser, a fake in tests). */
 export interface AsrTransport {
   post(request: WorkerRequest): void;
   onReply(listener: (reply: WorkerReply) => void): void;
+  /** The worker died or could not start (a crash, a script error, out of memory) */
+  onFailure?(listener: (message: string) => void): void;
 }
 
 export interface WhisperOptions {
@@ -69,6 +73,8 @@ export interface WhisperOptions {
    * (docs/SPIKES.md, Nov 21, 2026).
    */
   words?: string[];
+  /** Called while the model downloads, with bytes loaded and bytes expected so far */
+  onProgress?: (loadedBytes: number, totalBytes: number) => void;
 }
 
 /** base.en: better medicine names than tiny.en in the S16 bench, about 2x slower (docs/SPIKES.md). */
@@ -98,6 +104,9 @@ export class WhisperAdapter implements AsrAdapter {
   private nextId = 1;
   private loading: Promise<Result<void>> | undefined;
   private readonly waiting = new Map<number, (reply: WorkerReply) => void>();
+  private readonly onProgress: WhisperOptions["onProgress"];
+  /** Set once the worker has died: every later request fails at once instead of waiting forever */
+  private failure: string | undefined;
 
   constructor(
     private readonly transport: AsrTransport,
@@ -107,18 +116,32 @@ export class WhisperAdapter implements AsrAdapter {
     this.devices = options.devices ?? ["webgpu", "wasm"];
     this.medicines = options.medicines;
     this.words = options.words;
+    this.onProgress = options.onProgress;
     this.id = `whisper:${this.model}`;
     transport.onReply((reply) => {
+      if (reply.type === "progress") {
+        this.onProgress?.(reply.loaded, reply.total);
+        return;
+      }
       const resolve = this.waiting.get(reply.id);
       if (resolve) {
         this.waiting.delete(reply.id);
         resolve(reply);
       }
     });
+    transport.onFailure?.((message) => {
+      this.failure = `The speech engine stopped: ${message}`;
+      const stopped = [...this.waiting.entries()];
+      this.waiting.clear();
+      for (const [id, resolve] of stopped) resolve({ type: "error", id, error: this.failure });
+    });
   }
 
   private request(build: (id: number) => WorkerRequest): Promise<WorkerReply> {
     const id = this.nextId++;
+    if (this.failure !== undefined) {
+      return Promise.resolve({ type: "error", id, error: this.failure });
+    }
     return new Promise((resolve) => {
       this.waiting.set(id, resolve);
       this.transport.post(build(id));

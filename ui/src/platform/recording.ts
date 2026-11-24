@@ -39,7 +39,10 @@ export type RecordingStatus =
 export type RecordingSource =
   | {
       kind: "live";
-      createAsr?: () => AsrAdapter & { load?: () => Promise<Result<void>> };
+      /** Gets a callback for the model download progress (bytes loaded, bytes expected) */
+      createAsr?: (
+        onProgress: (loaded: number, total: number) => void,
+      ) => AsrAdapter & { load?: () => Promise<Result<void>> };
       captureDeps?: CaptureDeps;
     }
   | {
@@ -68,7 +71,12 @@ export interface RecordingSnapshot {
   prompts: RepeatPrompt[];
   receipt?: Receipt;
   error?: string;
+  /** While the speech model downloads (first run): bytes loaded and bytes expected so far */
+  progress?: { loaded: number; total: number };
 }
+
+/** This many segments in a row that the speech engine cannot read ends the recording with an error. */
+const MAX_FAILED_SEGMENTS = 3;
 
 export class RecordingController {
   private snapshot: RecordingSnapshot = { status: "idle", lines: [], prompts: [] };
@@ -79,6 +87,7 @@ export class RecordingController {
   private paused = false;
   private pending: Array<Promise<unknown>> = [];
   private audioAvailable = false;
+  private failedInARow = 0;
 
   get state(): RecordingSnapshot {
     return this.snapshot;
@@ -106,21 +115,26 @@ export class RecordingController {
   async start(options: RecordingOptions): Promise<void> {
     if (this.session) return;
     const { source } = options;
+    const onProgress = (loaded: number, total: number): void => {
+      if (this.snapshot.status === "loading-model" || this.snapshot.status === "starting")
+        this.set({ progress: { loaded, total } });
+    };
+    this.failedInARow = 0;
     const asr: AsrAdapter & { load?: () => Promise<Result<void>> } =
       source.kind === "scripted"
         ? new MockAdapter(scriptedLines(source.consult))
         : (
             source.createAsr ??
-            (() =>
+            ((progress: (loaded: number, total: number) => void) =>
               createWhisperAdapter(
-                {},
+                { onProgress: progress },
                 {
                   ...(options.medicines ? { medicines: options.medicines } : {}),
                   // The schema's own words (Echo Cover) replace the medicine prompt.
                   ...(options.schema.speechWords ? { words: options.schema.speechWords } : {}),
                 },
               ))
-          )();
+          )(onProgress);
 
     const session = new ConversationSession({
       id: options.sessionId,
@@ -137,9 +151,20 @@ export class RecordingController {
     this.session = session;
     this.set({ status: "starting", lines: [], prompts: [] });
 
-    session.on("caption", ({ segment }) =>
-      this.set({ lines: [...this.snapshot.lines, { segment, tokens: [] }] }),
-    );
+    // A segment the speech engine could not read still gets a (blank) caption right after its
+    // error; show it as unread, not as silence, and do not count it as a success.
+    const unread = new Set<string>();
+    session.on("caption", ({ segment, hasSpeech }) => {
+      const failed = unread.delete(segment.id);
+      // Only a segment the speech engine actually read counts as a success; silence never reaches it.
+      if (!failed && hasSpeech) this.failedInARow = 0;
+      this.set({
+        lines: [
+          ...this.snapshot.lines,
+          { segment, tokens: [], ...(failed ? { failed: true } : {}) },
+        ],
+      });
+    });
     session.on("flags", ({ segmentId, tokens }) =>
       this.set({
         lines: this.snapshot.lines.map((l) => (l.segment.id === segmentId ? { ...l, tokens } : l)),
@@ -148,6 +173,10 @@ export class RecordingController {
     session.on("prompt", (p) => this.set({ prompts: [...this.snapshot.prompts, p] }));
     session.on("error", (e) => {
       if (e.code === "store-failed") this.set({ error: e.message });
+      if (e.code === "transcription-failed") {
+        if (e.segmentId !== undefined) unread.add(e.segmentId);
+        void this.speechFailed(e.message);
+      }
     });
 
     const add = (segment: AudioSegment): void => {
@@ -175,6 +204,8 @@ export class RecordingController {
     const captured = await startCapture({
       ledger: options.ledger,
       onSegment: add,
+      // If a phone accepts the microphone but sends no audio, say so instead of showing a blank page.
+      firstFrameTimeoutMs: 3000,
       ...(source.captureDeps ? { deps: source.captureDeps } : {}),
     });
     if (!captured.ok) {
@@ -183,16 +214,51 @@ export class RecordingController {
     }
     this.capture = captured.value;
     this.audioAvailable = true;
+    if (this.hasFailed()) {
+      // Segments that arrived during start-up already failed three times in a row.
+      this.capture = undefined;
+      await captured.value.stop();
+      return;
+    }
     if (asr.load) {
       this.set({ status: "loading-model" });
       const loaded = await asr.load();
+      if (this.hasFailed()) return;
       if (!loaded.ok) {
         await this.capture.stop();
         this.set({ status: "error", error: loaded.error });
         return;
       }
     }
-    if (this.snapshot.status === "loading-model") this.set({ status: "recording" });
+    if (this.snapshot.status === "loading-model") {
+      const next = { ...this.snapshot, status: "recording" as const };
+      delete next.progress;
+      this.snapshot = next;
+      for (const l of [...this.listeners]) l();
+    }
+  }
+
+  private hasFailed(): boolean {
+    return this.snapshot.status === "error";
+  }
+
+  /**
+   * One segment the speech engine could not read is skipped. Several in a row mean it is broken
+   * (a model that will not run, no memory): the microphone is stopped and the screen says so,
+   * rather than sitting on "Listening" with no captions.
+   */
+  private async speechFailed(message: string): Promise<void> {
+    this.failedInARow += 1;
+    if (this.failedInARow < MAX_FAILED_SEGMENTS) return;
+    if (!["starting", "loading-model", "recording", "paused"].includes(this.snapshot.status))
+      return;
+    const capture = this.capture;
+    this.capture = undefined;
+    this.set({
+      status: "error",
+      error: `Speech to text stopped working: ${message}`,
+    });
+    await capture?.stop();
   }
 
   pause(): void {
