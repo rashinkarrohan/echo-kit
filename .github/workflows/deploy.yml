@@ -1,0 +1,39 @@
+# Tells Vercel to build and publish the latest `main` for both apps after every push.
+#
+# Why: Vercel's own "build on push" can miss a push. A deploy hook is a private URL that makes
+# Vercel pull the latest `main` from GitHub and build it, so a missed push no longer means a stale site.
+#
+# One-time setup (nothing is stored in the repo):
+#   1. In each Vercel project: Settings > Git > Deploy Hooks > create a hook for branch `main`.
+#   2. In GitHub: Settings > Secrets and variables > Actions > New repository secret:
+#        VERCEL_DEPLOY_HOOK_CARE   the hook URL from the Echo Care project
+#        VERCEL_DEPLOY_HOOK_COVER  the hook URL from the Echo Cover project
+# Until a secret is set, its step is skipped and the run still passes.
+# Run it by hand any time: GitHub > Actions > Deploy to Vercel > Run workflow.
+name: Deploy to Vercel
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+concurrency:
+  group: deploy-vercel
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  deploy:
+    name: Ask Vercel to build main
+    runs-on: ubuntu-latest
+    env:
+      CARE_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK_CARE }}
+      COVER_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK_COVER }}
+    steps:
+      - name: Build Echo Care
+        if: env.CARE_HOOK != ''
+        run: curl --fail --silent --show-error --max-time 60 -X POST "$CARE_HOOK" > /dev/null && echo "Echo Care build requested"
+      - name: Build Echo Cover
+        if: env.COVER_HOOK != ''
+        run: curl --fail --silent --show-error --max-time 60 -X POST "$COVER_HOOK" > /dev/null && echo "Echo Cover build requested"
+      - name: Nothing set up yet
+        if: env.CARE_HOOK == '' && env.COVER_HOOK == ''
+        run: echo "No deploy hooks are set. See the comment at the top of .github/workflows/deploy.yml."
