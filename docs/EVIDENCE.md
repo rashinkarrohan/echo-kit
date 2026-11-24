@@ -1,6 +1,6 @@
 # Evidence we produce (fill honestly; report n and limits)
 
-Status on Nov 21, 2026: sections 1 and 2 have measured results; sections 3 and 4 have not been run yet.
+Status on Nov 24, 2026: sections 1 and 2 have measured results; sections 3 and 4 have not been run yet. Section 2 numbers come from a laptop. No result in this file comes from a real phone; the phone hardening of Nov 24 is described in docs/SPIKES.md and has been checked only in desktop Chromium with a phone profile.
 
 ## 1. Eval harness (every build)
 Facts kept, dropped, invented, unanchored; flagged-token recall; checklist accuracy; number of runs. Gate: invented = 0 and unanchored = 0.

@@ -30,6 +30,14 @@ List what you tried, what failed and why (the judging criteria name experimentat
   - Kept: a real-speech test on PriMock57. It found ordinary words in the medicine list, ordinary words joined into medicines, and a prompt-induced wrong name stamped Heard clearly. All three are fixed, the last with a second, unprompted hearing.
   - Rejected: per-word confidence. Medicine names heard correctly scored as low as misheard ones (docs/SPIKES.md).
 
+- **Nov 23 to 24, 2026, design packs and phone hardening (Kiro IDE; commits `9efd37b`, `8b5d221`, `7c4fae3`, `767b778`, `cc57d49`):**
+  - Done: both apps were rebuilt to the owner's design packs, each in its own scoped style layer (`apps/echo-care/src/design/`, `apps/echo-cover/src/design/`). The text-size control used by both moved into `@echo/ui` once, rather than being copied between apps. Care self-hosts its font (Atkinson Hyperlegible Next, OFL) instead of loading it from Google Fonts.
+  - Done: a phone report ("recording works but no captions") led to a read of the capture, worker and adapter code. Kiro found places where a failure was silent: a crashed worker, no download progress, and a failed segment shown as "(no speech)". The fixes were written test first (new tests in `engine/src/asr/asr.test.ts`, `ui/src/platform/capture.test.ts`, `whisper-models.test.ts`, `download-progress.test.ts`, `recording.test.ts`).
+  - Caught by a test: a new test for "three failed segments in a row stop the microphone" failed. Silent segments, which never reach the speech engine, were resetting the failure count. The count now resets only on a segment the engine actually read.
+  - Rejected: keeping WebGPU first on phones (unmeasured, and a WebGPU model that loads but fails while transcribing left a blank screen), and a generic error message.
+  - Not verified: real phones. The check was desktop Chromium with a Pixel 7 profile and a fake microphone (captions after about 33 s, medicine name, dose and frequency flagged). See docs/SPIKES.md.
+  - Deploy: Vercel stopped building after commit `036a311`. Kiro found this by comparing the live bundle names with local builds, and added `.github/workflows/deploy.yml` (commit `448943f`). It needs two deploy-hook secrets that only the owner can create.
+
 ## Kiro-only statement
 All development of this project used Kiro only (IDE, CLI, Web and Crew). Note which Kiro app was used for which task.
 
