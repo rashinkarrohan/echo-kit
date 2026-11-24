@@ -10,7 +10,7 @@ Start with the main [README](../README.md). Each doc below stands alone.
 | Technological Implementation | [KIRO.md](KIRO.md): the eight write-up prompts with dates, commits and evidence, plus the experiment log.<br>[SPIKES.md](SPIKES.md): every technical decision, the measurements behind it, and what was rejected.<br>`.kiro/`: steering, specs, hooks and custom agents. |
 | Design                       | [appendix/UI-SPEC.md](appendix/UI-SPEC.md): every screen and state.<br>[appendix/DESIGN-TOKENS.md](appendix/DESIGN-TOKENS.md): colours with contrast checked.<br>[PRIVACY.md](PRIVACY.md): consent, storage and sharing.                                                 |
 | Innovation                   | The main [README](../README.md): one skeleton (`engine/`) and two distinct apps, with every fact quoted from the audio, nothing guessed, and quotes compared without ranking sellers.                                                                                    |
-| Presentation                 | The demo video (link in the main README).<br>[DEMO-VIDEO-SCRIPT.md](DEMO-VIDEO-SCRIPT.md): the shot-by-shot plan for it.                                                                                                                                                 |
+| Presentation                 | The demo video (link in the main README).                                                                                                                                                                                                                                |
 
 ## Rules and licences
 
