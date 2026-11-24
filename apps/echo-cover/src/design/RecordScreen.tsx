@@ -27,6 +27,10 @@ export interface RecordProps {
   active: boolean;
   status: RecordingStatus;
   lines: CaptionLine[];
+  /** Bytes of the speech model fetched so far (first run only) */
+  progress?: { loaded: number; total: number };
+  /** Why recording stopped, in words (speech engine failed) */
+  error?: string;
   sample: boolean;
   onPause: () => void;
   onResume: () => void;
@@ -129,13 +133,25 @@ export function RecordScreen(props: RecordProps): ReactElement {
         </div>
         {sample && <Chip tone="sample">{CV.sampleChip}</Chip>}
         {(status === "starting" || status === "loading-model") && (
-          <StatusMessage status="loading" text={{ loading: FINAL.modelLoading }} />
+          <StatusMessage
+            status="loading"
+            text={{
+              loading: props.progress
+                ? ADDED.downloadingModel(props.progress.loaded, props.progress.total)
+                : FINAL.modelLoading,
+            }}
+          />
         )}
         {status === "permission-denied" && (
           <StatusMessage status="permission-denied" text={{ permissionDenied: FINAL.micDenied }} />
         )}
         {status === "error" && (
-          <StatusMessage status="error" text={{ error: FINAL.genericError }} />
+          <StatusMessage
+            status="error"
+            text={{
+              error: props.error ? `${FINAL.genericError} ${props.error}` : FINAL.genericError,
+            }}
+          />
         )}
         {failed && (
           <button type="button" className="cv-btn cv-btn--primary" onClick={props.onRetry}>
@@ -144,7 +160,7 @@ export function RecordScreen(props: RecordProps): ReactElement {
         )}
         {lines.length === 0 && live && <p className="cv-note">{CV.waiting}</p>}
         <div role="log" aria-live="polite" aria-label="Captions so far" className="cv-caps">
-          {lines.map(({ segment, tokens }) => (
+          {lines.map(({ segment, tokens, failed: unread }) => (
             <article
               key={segment.id}
               className="cv-cap"
@@ -153,6 +169,8 @@ export function RecordScreen(props: RecordProps): ReactElement {
               <p>
                 {segment.text ? (
                   <FlaggedText text={segment.text} tokens={tokens} />
+                ) : unread ? (
+                  ADDED.unreadSegment
                 ) : (
                   ADDED.silentSegment
                 )}

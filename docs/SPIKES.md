@@ -248,3 +248,15 @@ Both apps are on Vercel (Hobby), one project per app, built from `apps/<app>/ver
   - Audio through the fake microphone is degraded: "metformin" came out as "my reforming". That is not matched as a medicine, because both words are everyday English, so the dose without a medicine name raises the "Please repeat" prompt.
 
 **Still to do:** real phones (S16/S29), on Android Chrome and iPhone Safari.
+
+## Phone recording hardening, Nov 24, 2026 (phone still not measured)
+
+Report: on a phone, recording started but no captions came. Nothing has been run on a real phone yet, so these changes close known weak points found by reading the code and by running Chromium with a Pixel 7 profile and a fake microphone. They are not proof that phones now work.
+
+- **Silent hangs now show a reason.** A worker that crashes or cannot start, a speech model that fails to load, and three failed segments in a row stop the microphone and show the reason on screen. A single failed segment shows "Echo could not read this part." instead of "(no speech)". Silence does not reset the failure count; only a segment the speech engine read does.
+- **Download progress.** The first run fetches about 100 MB. The screen shows "Downloading the speech model: X of Y MB. This happens once."
+- **Phones use WebAssembly only.** WebGPU on phones is unmeasured. `?device=webgpu` or `?device=wasm` overrides. If WebGPU loads on a desktop and then fails while transcribing, the worker reloads on WebAssembly once and retries.
+- **Audio capture.** The audio context is resumed (iOS Safari starts it suspended). If a 16 kHz context sends no audio within 3 s, capture retries at the device's own rate.
+- **Fake-microphone check (Pixel 7 profile, desktop Chromium):** "Getting ready" for about 33 s, then captions from the 10-second actor clip with the medicine name, dose and frequency flagged.
+
+**To confirm on a phone:** open the deployed HTTPS page, start a visit, and watch for the download message, then captions. If it stops, the screen now names the reason; please send that text.

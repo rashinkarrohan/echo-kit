@@ -42,8 +42,8 @@ describe("workerTransport", () => {
     const posted: WorkerRequest[] = [];
     const worker: WorkerLike = {
       postMessage: (msg) => posted.push(msg),
-      addEventListener: (_t, l) => {
-        handler = l;
+      addEventListener: (_t: string, l: unknown) => {
+        handler = l as typeof handler;
       },
     };
     const replies: WorkerReply[] = [];
@@ -53,5 +53,24 @@ describe("workerTransport", () => {
     handler?.({ data: { type: "loaded", id: 1, device: "wasm" } } as MessageEvent<WorkerReply>);
     expect(posted[0]).toEqual({ type: "load", id: 1, model: "m", devices: ["wasm"] });
     expect(replies).toEqual([{ type: "loaded", id: 1, device: "wasm" }]);
+  });
+  it("reports a worker that crashes or cannot start", () => {
+    const handlers = new Map<string, (e: unknown) => void>();
+    const worker: WorkerLike = {
+      postMessage: () => {},
+      addEventListener: (type: string, l: unknown) => {
+        handlers.set(type, l as (e: unknown) => void);
+      },
+    };
+    const failures: string[] = [];
+    workerTransport(worker).onFailure?.((m) => failures.push(m));
+    handlers.get("error")?.({ message: "Uncaught RangeError: Array buffer allocation failed" });
+    handlers.get("error")?.({ message: "" });
+    handlers.get("messageerror")?.({});
+    expect(failures).toEqual([
+      "Uncaught RangeError: Array buffer allocation failed",
+      "the worker could not start",
+      "a message could not be read",
+    ]);
   });
 });

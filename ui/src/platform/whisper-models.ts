@@ -55,3 +55,19 @@ export function dtypeFor(model: string, device: AsrDevice): ModelDtype {
 
 /** Weight precision, for the whole model or per part. */
 export type ModelDtype = "q4" | "q8" | { encoder_model: "fp32"; decoder_model_merged: "q4" };
+
+/**
+ * Which devices to try, in order. Phones and tablets use WebAssembly only: WebGPU on a phone
+ * is not measured (docs/SPIKES.md), and a WebGPU model that loads but fails while transcribing
+ * left the screen with no captions. `?device=webgpu` or `?device=wasm` overrides, for testing.
+ */
+export function devicesFor(search: string, userAgent: string, maxTouchPoints: number): AsrDevice[] {
+  const asked = new URLSearchParams(search).get("device");
+  if (asked === "webgpu") return ["webgpu", "wasm"];
+  if (asked === "wasm") return ["wasm"];
+  // iPadOS reports itself as a Mac, but a Mac has no touch screen.
+  const phone =
+    /Android|iPhone|iPad|iPod|Mobile/i.test(userAgent) ||
+    (/Macintosh/.test(userAgent) && maxTouchPoints > 1);
+  return phone || asked !== null ? ["wasm"] : ["webgpu", "wasm"];
+}

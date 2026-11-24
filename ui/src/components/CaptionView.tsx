@@ -8,6 +8,8 @@ import { FlaggedText } from "./FlaggedText";
 export interface CaptionLine {
   segment: Segment;
   tokens: FlaggedToken[];
+  /** The speech engine could not read this part (not the same as silence) */
+  failed?: boolean;
 }
 
 /**
@@ -33,7 +35,7 @@ export function CaptionView({
       />
       <div role="log" aria-live="polite" aria-label="Captions so far">
         <ol className="echo-captions__log">
-          {lines.map(({ segment, tokens }) => (
+          {lines.map(({ segment, tokens, failed }) => (
             <li
               key={segment.id}
               className={
@@ -44,6 +46,8 @@ export function CaptionView({
             >
               {segment.text ? (
                 <FlaggedText text={segment.text} tokens={tokens} />
+              ) : failed ? (
+                ADDED.unreadSegment
               ) : (
                 ADDED.silentSegment
               )}

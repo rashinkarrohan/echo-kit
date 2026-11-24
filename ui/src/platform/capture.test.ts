@@ -115,3 +115,83 @@ describe("startCapture", () => {
     expect(port.onmessage).toBeNull();
   });
 });
+
+describe("startCapture on phones", () => {
+  /** A context whose microphone only produces audio at the rates in `audibleRates`. */
+  function phoneDeps(audibleRates: number[], opts: { suspended?: boolean } = {}) {
+    const port: CapturePort = { onmessage: null };
+    const resumes: number[] = [];
+    const closes: number[] = [];
+    const trackStop = vi.fn();
+    const make = (rate: number): CaptureContext => ({
+      sampleRate: rate,
+      createMediaStreamSource: () => ({
+        connect: () => {
+          if (audibleRates.includes(rate))
+            queueMicrotask(() => port.onmessage?.({ data: new Float32Array(128) }));
+        },
+        disconnect: vi.fn(),
+      }),
+      createSilentSink: () => ({ connect: vi.fn(), disconnect: vi.fn() }),
+      resume: () => {
+        resumes.push(rate);
+        return opts.suspended ? new Promise<void>(() => {}) : Promise.resolve();
+      },
+      close: () => {
+        closes.push(rate);
+        return Promise.resolve();
+      },
+    });
+    const deps: CaptureDeps = {
+      getUserMedia: () => Promise.resolve({ getTracks: () => [{ stop: trackStop }] }),
+      createContext: (sr) => make(sr ?? 48000),
+      createWorkletNode: () =>
+        Promise.resolve({ node: { connect: vi.fn(), disconnect: vi.fn() }, port }),
+    };
+    return { deps, resumes, closes, trackStop };
+  }
+
+  it("resumes the audio context, because iOS Safari starts it suspended", async () => {
+    const { deps, resumes } = phoneDeps([16000]);
+    const r = await startCapture({ ledger: consented(), onSegment: () => {}, deps });
+    expect(r.ok).toBe(true);
+    expect(resumes).toEqual([16000]);
+  });
+
+  it("tries the device's own rate when no audio arrives at 16 kHz", async () => {
+    const { deps, closes } = phoneDeps([48000]);
+    const r = await startCapture({
+      ledger: consented(),
+      onSegment: () => {},
+      deps,
+      firstFrameTimeoutMs: 30,
+    });
+    expect(r.ok && r.value.deviceSampleRate).toBe(48000);
+    expect(closes).toEqual([16000]); // the silent 16 kHz context was closed
+  });
+
+  it("says audio is unavailable (a designed error) when no audio arrives at either rate", async () => {
+    const { deps, closes, trackStop } = phoneDeps([]);
+    const r = await startCapture({
+      ledger: consented(),
+      onSegment: () => {},
+      deps,
+      firstFrameTimeoutMs: 30,
+    });
+    expect(r).toEqual({ ok: false, error: "audio-unavailable" });
+    expect(closes).toEqual([16000, 48000]);
+    expect(trackStop).toHaveBeenCalled();
+  });
+
+  it("does not wait forever for a context that will not resume", async () => {
+    const { deps } = phoneDeps([16000], { suspended: true });
+    const r = await startCapture({
+      ledger: consented(),
+      onSegment: () => {},
+      deps,
+      firstFrameTimeoutMs: 30,
+      resumeTimeoutMs: 20,
+    });
+    expect(r.ok).toBe(true);
+  });
+});

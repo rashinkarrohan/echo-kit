@@ -361,6 +361,8 @@ export function App(): ReactElement {
           active={controller !== undefined}
           status={rec?.status ?? "idle"}
           lines={rec?.lines ?? []}
+          {...(rec?.progress ? { progress: rec.progress } : {})}
+          {...(rec?.error ? { error: rec.error } : {})}
           sample={sample}
           onPause={() => controller?.pause()}
           onResume={() => controller?.resume()}
