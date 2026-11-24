@@ -20,10 +20,9 @@ jobs:
         with:
           node-version: "20"
 
+      # Version comes from "packageManager" in package.json, the same one Vercel installs with.
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: "9"
 
       - name: Get pnpm store path
         id: pnpm-cache
