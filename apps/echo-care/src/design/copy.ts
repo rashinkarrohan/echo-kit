@@ -8,7 +8,8 @@ export const CD = {
   appName: "Echo Care",
   homeTag: "Doctor and pharmacy visits",
   homeTitle: "Read what your doctor says, as they say it.",
-  homeLead: "Big, clear captions on your screen, then a written summary you can check.",
+  homeLead:
+    "Big, clear captions, then a summary that quotes the doctor. If Echo is unsure, it says so.",
   startVisit: "Start a visit",
   practiceVisit: "Try a practice visit",
   liveExample: "Live caption example",

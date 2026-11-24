@@ -2487,3 +2487,173 @@
   padding: 0 8px;
   gap: 6px;
 }
+
+/* ---------- Design audit fixes ---------- */
+/* Test results: stat cards instead of a plain list (same dl/dt/dd markup, so tests and readers still work) */
+.cd .cd-shared .echo-card--trust {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.cd .cd-shared .echo-card--trust {
+  box-shadow: none;
+}
+.cd .cd-shared .echo-card--trust h1 {
+  margin: 0;
+  font-size: 36px;
+  line-height: 42px;
+}
+@media (min-width: 960px) {
+  .cd .cd-shared .echo-card--trust h1 {
+    font-size: 52px;
+    line-height: 58px;
+  }
+}
+.cd .cd-shared .echo-card--trust > p {
+  margin: 0;
+  font-size: 20px;
+  line-height: 30px;
+  color: var(--cd-text2);
+}
+.cd .cd-shared .echo-trust {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 0;
+}
+.cd .cd-shared .echo-trust .echo-receipt__field {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 18px 20px;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: var(--cd-shadow-soft);
+  min-width: 0;
+}
+.cd .cd-shared .echo-trust .echo-receipt__field:first-child,
+.cd .cd-shared .echo-trust .echo-receipt__field:last-child {
+  grid-column: span 2;
+}
+.cd .cd-shared .echo-trust dt {
+  min-width: 0;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 500;
+  color: var(--cd-text2);
+}
+.cd .cd-shared .echo-trust dd {
+  margin: 0;
+  font-size: 36px;
+  line-height: 42px;
+  font-weight: 700;
+  color: var(--cd-ink);
+}
+.cd .cd-shared .echo-trust .echo-receipt__field:last-child dd {
+  font-size: 22px;
+  line-height: 30px;
+}
+.cd .cd-shared .echo-trust .echo-trust__note {
+  display: block;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 500;
+  color: var(--cd-text2);
+}
+
+/* Live captions: older lines fade out under the status row instead of being cut off */
+.cd .cd-cap__log {
+  padding-top: 28px;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 24px);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 24px);
+}
+
+/* Floating bottom bar: nothing shows through the gap under it */
+.cd .cd-nav::after {
+  content: "";
+  position: absolute;
+  left: -12px;
+  right: -12px;
+  top: 100%;
+  height: 14px;
+  background: var(--cd-page);
+}
+
+/* Consent: the main button stays in reach while the wording scrolls */
+.cd .cd-mic-cta {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 -24px;
+  padding: 16px 24px 12px;
+  background: linear-gradient(180deg, rgba(246, 244, 239, 0), var(--cd-page) 20px);
+}
+@media (min-width: 960px) {
+  .cd .cd-mic-cta {
+    position: static;
+    margin: 0;
+    padding: 0;
+    background: none;
+  }
+}
+
+/* ---------- High contrast (system setting: Increase contrast / forced colours) ---------- */
+@media (prefers-contrast: more) {
+  .echo.cd {
+    --cd-text2: #101c1a;
+    --cd-border: #063f37;
+    --cd-hairline: #063f37;
+    --cd-shadow: none;
+    --cd-shadow-soft: none;
+  }
+  .cd .cd-card,
+  .cd .cd-line,
+  .cd .cd-pill,
+  .cd .cd-nav,
+  .cd .cd-status,
+  .cd .cd-link-card,
+  .cd .cd-med-row,
+  .cd .cd-meds-list,
+  .cd .cd-toggle,
+  .cd .cd-consent__row,
+  .cd .cd-live,
+  .cd .cd-last,
+  .cd .cd-prompt,
+  .cd .cd-shared .echo-trust .echo-receipt__field {
+    box-shadow: inset 0 0 0 2px var(--cd-border);
+  }
+  .cd .cd-nav {
+    box-shadow: 0 0 0 2px var(--cd-border);
+  }
+}
+@media (forced-colors: active) {
+  .cd .cd-card,
+  .cd .cd-line,
+  .cd .cd-pill,
+  .cd .cd-nav,
+  .cd .cd-status,
+  .cd .cd-link-card,
+  .cd .cd-med-row,
+  .cd .cd-meds-list,
+  .cd .cd-toggle,
+  .cd .cd-consent__row,
+  .cd .cd-live,
+  .cd .cd-last,
+  .cd .cd-prompt,
+  .cd .cd-shared .echo-trust .echo-receipt__field {
+    border: 1px solid CanvasText;
+  }
+}
+@media (forced-colors: active) {
+  .cd .cd-hero {
+    border: 1px solid CanvasText;
+  }
+}

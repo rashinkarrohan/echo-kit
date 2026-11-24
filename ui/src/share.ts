@@ -54,7 +54,7 @@ export function escapeHtml(s: string): string {
 }
 
 function day(ms: number): string {
-  return new Date(ms).toLocaleDateString("en-GB", { dateStyle: "long" });
+  return new Date(ms).toLocaleDateString(undefined, { dateStyle: "long" });
 }
 
 function section(shared: SharedReceipt, options: ShareOptions): string {
