@@ -32,7 +32,7 @@ export function Logo({ size = 56 }: { size?: number }): ReactElement {
 
 /**
  * Home illustration: two offers side by side. The numbers are made-up example prices in a
- * drawing, not a quote from any seller, and the mark between them does not pick one.
+ * drawing, not a quote from any seller, and the "vs" between them does not pick one.
  */
 export function HeroArt(): ReactElement {
   return (
@@ -51,25 +51,28 @@ export function HeroArt(): ReactElement {
         Seller 1
       </text>
       <text x="24" y="84" fontSize="30" fontWeight="700" fill="#0F2F7A" fontFamily={FONT}>
-        3,800
+        $3,800
       </text>
       <rect x="24" y="96" width="74" height="10" rx="5" fill="#C9DBFF" />
       <text x="200" y="62" fontSize="18" fontWeight="700" fill="#0F2F7A" fontFamily={FONT}>
         Seller 2
       </text>
       <text x="198" y="100" fontSize="30" fontWeight="700" fill="#0F2F7A" fontFamily={FONT}>
-        4,200
+        $4,200
       </text>
       <rect x="200" y="112" width="74" height="10" rx="5" fill="#EAF2FF" />
       <circle cx="160" cy="76" r="22" fill="#FFE08A" stroke="#0F2F7A" strokeWidth="4" />
-      <path
-        d="M149 76l8 8 14-16"
-        fill="none"
-        stroke="#0F2F7A"
-        strokeWidth="6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+      <text
+        x="160"
+        y="83"
+        textAnchor="middle"
+        fontSize="20"
+        fontWeight="700"
+        fill="#0F2F7A"
+        fontFamily={FONT}
+      >
+        vs
+      </text>
     </svg>
   );
 }

@@ -75,7 +75,7 @@ export function MicScreen({
           {!storageOk && <StatusMessage status="error" text={{ error: storageText }} />}
 
           <div className="cd-spacer" />
-          <div className="cd-stack" style={{ gap: 14 }}>
+          <div className="cd-mic-cta">
             <button
               type="button"
               className="cd-btn cd-btn--primary"
@@ -86,6 +86,8 @@ export function MicScreen({
               <span>{CD.allowMic}</span>
             </button>
             {!ready && <p className="cd-note cd-note--center">{CD.consentNeedBoth}</p>}
+          </div>
+          <div className="cd-stack" style={{ gap: 14 }}>
             <a className="cd-btn cd-btn--outline" href="#/home">
               {CD.notNow}
             </a>

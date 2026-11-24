@@ -1556,3 +1556,60 @@
 .cv .cv-kv span {
   flex: none;
 }
+
+/* ---------- Design audit fixes ---------- */
+/* Floating bottom bar: nothing shows through the gap under it */
+.cv .cv-nav::after {
+  content: "";
+  position: absolute;
+  left: -12px;
+  right: -12px;
+  top: 100%;
+  height: 14px;
+  background: var(--cv-page, #f1f5ff);
+}
+
+/* ---------- High contrast (system setting: Increase contrast / forced colours) ---------- */
+@media (prefers-contrast: more) {
+  .echo.cv {
+    --cv-text2: #0f1a33;
+    --cv-text3: #0f1a33;
+    --cv-soft: #26324d;
+    --cv-border: #0f2f7a;
+    --cv-divider: #0f2f7a;
+    --cv-shadow: none;
+    --cv-shadow-soft: none;
+  }
+  .cv .cv-card,
+  .cv .cv-qcard,
+  .cv .cv-saved-card,
+  .cv .cv-stat,
+  .cv .cv-step,
+  .cv .cv-switchcard,
+  .cv .cv-ledgerwrap,
+  .cv .cv-livepill,
+  .cv .cv-nav {
+    box-shadow: inset 0 0 0 2px var(--cv-border);
+  }
+  .cv .cv-nav {
+    box-shadow: 0 0 0 2px var(--cv-border);
+  }
+}
+@media (forced-colors: active) {
+  .cv .cv-card,
+  .cv .cv-qcard,
+  .cv .cv-saved-card,
+  .cv .cv-stat,
+  .cv .cv-step,
+  .cv .cv-switchcard,
+  .cv .cv-ledgerwrap,
+  .cv .cv-livepill,
+  .cv .cv-nav {
+    border: 1px solid CanvasText;
+  }
+}
+@media (forced-colors: active) {
+  .cv .cv-hero {
+    border: 1px solid CanvasText;
+  }
+}

@@ -73,7 +73,7 @@ export function TrustScreen({ summary }: { summary?: EvalSummary }): ReactElemen
           <div className="cv-kv">
             <span>{CV.lastRun}</span>
             <strong>
-              {new Date(summary.date).toLocaleString("en-GB", {
+              {new Date(summary.date).toLocaleString(undefined, {
                 dateStyle: "long",
                 timeStyle: "short",
               })}

@@ -24,6 +24,25 @@ const cellChip = (state: Said): ReactElement => (
   <Chip tone={state}>{state === "said" ? CV.said : CV.notDiscussed}</Chip>
 );
 
+/** The three steps, shared by Home and the empty seller ledger. */
+export function Steps(): ReactElement {
+  return (
+    <ol className="cv-steps">
+      {STEPS.map(([n, title, text]) => (
+        <li key={n} className="cv-step">
+          <span className="cv-step__num" aria-hidden="true">
+            {n}
+          </span>
+          <div className="cv-step__text">
+            <span className="cv-step__title">{title}</span>
+            <span className="cv-step__body">{text}</span>
+          </div>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
 /** Home: no permission needed, so it renders while on-device storage opens. */
 export function HomeScreen({ savedCount }: { savedCount: number }): ReactElement {
   const desktop = useDesktop();
@@ -124,19 +143,7 @@ export function HomeScreen({ savedCount }: { savedCount: number }): ReactElement
         </div>
 
         <h2 className="cv-section-title">{CV.howTitle}</h2>
-        <ol className="cv-steps">
-          {STEPS.map(([n, title, text]) => (
-            <li key={n} className="cv-step">
-              <span className="cv-step__num" aria-hidden="true">
-                {n}
-              </span>
-              <div className="cv-step__text">
-                <span className="cv-step__title">{title}</span>
-                <span className="cv-step__body">{text}</span>
-              </div>
-            </li>
-          ))}
-        </ol>
+        <Steps />
 
         <section className="cv-private" aria-labelledby="cv-private-title">
           <span className="cv-private__icon" aria-hidden="true">

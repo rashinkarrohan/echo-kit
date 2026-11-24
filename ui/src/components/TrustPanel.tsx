@@ -38,11 +38,11 @@ export function TrustPanel({ summary }: { summary?: EvalSummary }): ReactElement
     [ADDED.trustRuns, String(summary.runs)],
     [
       ADDED.trustDate,
-      new Date(summary.date).toLocaleString("en-GB", { dateStyle: "long", timeStyle: "short" }),
+      new Date(summary.date).toLocaleString(undefined, { dateStyle: "long", timeStyle: "short" }),
     ],
   ];
   return (
-    <section className="echo-card" aria-labelledby="echo-trust-title">
+    <section className="echo-card echo-card--trust" aria-labelledby="echo-trust-title">
       <h1 id="echo-trust-title">{ADDED.trustTitle}</h1>
       <p>{ADDED.trustIntro(t.consults)}</p>
       <dl className="echo-trust">

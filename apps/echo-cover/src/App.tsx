@@ -18,6 +18,7 @@ import { COMPARE_FIELDS, EVAL_SUMMARY, SALE, readLaunch } from "./env";
 import { draftConfirmMessage } from "./draft";
 import { CV } from "./design/copy";
 import { CompareScreen } from "./design/CompareScreen";
+import { Steps } from "./design/HomeScreen";
 import { ConfirmScreen } from "./design/ConfirmScreen";
 import { ConsentScreen } from "./design/ConsentScreen";
 import { HomeScreen } from "./design/HomeScreen";
@@ -420,6 +421,7 @@ export function App(): ReactElement {
           <a className="cv-btn cv-btn--primary" href={sales.length > 0 ? "#/record" : "#/consent"}>
             {CV.startRecordingSeller}
           </a>
+          <Steps />
           {sales.length > 0 && (
             <a className="cv-btn cv-btn--outline" href="#/saved">
               {COVER.openSaved}
