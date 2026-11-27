@@ -73,7 +73,7 @@ test("keyboard only: home, consent, questions, two sellers, comparison", async (
 
   await tabTo(page, /^Compare sellers$/);
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("heading", { name: "Seller ledger" })).toBeFocused();
+  await expect(page.getByRole("heading", { name: "Seller comparison" })).toBeFocused();
   await expect(page.getByRole("region", { name: "Price" })).toContainText("Seller B");
   await tabTo(page, /^Hear it/);
   await page.keyboard.press("Enter");

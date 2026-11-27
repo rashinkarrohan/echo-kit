@@ -77,10 +77,24 @@ export const ADDED = {
   /** First-run model download, in whole megabytes. */
   downloadingModel: (loadedBytes: number, totalBytes: number): string =>
     `Downloading the speech model: ${Math.round(loadedBytes / 1e6)} of ${Math.round(totalBytes / 1e6)} MB. This happens once.`,
+  prepTitle: "Get ready at home",
+  prepText:
+    "Download Echo's speech model once, on Wi-Fi (about 80 MB). After that a visit starts straight away and works without internet.",
+  prepButton: "Download now",
+  prepWorking: (loadedBytes: number, totalBytes: number): string =>
+    totalBytes > 0
+      ? `Downloading: ${Math.round(loadedBytes / 1e6)} of ${Math.round(totalBytes / 1e6)} MB. Keep this page open.`
+      : "Starting the download. Keep this page open.",
+  prepReady: "Ready. Echo can listen without internet.",
+  prepError: (reason: string): string =>
+    `The download stopped (${reason}). Check your connection and try again.`,
+  prepRetry: "Try again",
+  heardClearlyNote:
+    "Heard clearly means Echo heard it plainly. It can still be wrong, so read it back to the person.",
   receiptTitle: "What was said",
   receiptLoading: "Building the receipt.",
   receiptEmpty: "No facts were heard in this conversation.",
-  stampLegend: "What the stamps mean",
+  stampLegend: "What the labels mean",
   checklistEmpty: "No questions in this list.",
   compareTitle: "What each seller said",
   compareEmpty: "Record at least two sellers to compare them.",

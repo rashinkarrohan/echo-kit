@@ -62,7 +62,7 @@ const PAGE_TITLES: Record<Route, string> = {
   "/questions": "Questions to ask | Echo Cover",
   "/record": "Record a seller | Echo Cover",
   "/review": "Seller receipt | Echo Cover",
-  "/compare": "Seller ledger | Echo Cover",
+  "/compare": "Seller comparison | Echo Cover",
   "/confirm": "Confirm in writing | Echo Cover",
   "/trust": "Test results | Echo Cover",
 };

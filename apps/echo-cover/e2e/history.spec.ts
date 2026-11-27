@@ -74,7 +74,7 @@ test("saved seller conversations reopen as a comparison without dead audio butto
   await expect(page.getByText("North Clinic")).toBeVisible();
   await expect(page.getByText("West Hearing")).toBeVisible();
   await page.getByRole("link", { name: "Compare these sellers" }).click();
-  await expect(page.getByRole("heading", { name: "Seller ledger" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Seller comparison" })).toBeVisible();
   const price = page.getByRole("region", { name: "Price" });
   await expect(price).toContainText("North Clinic");
   await expect(price).toContainText("West Hearing");

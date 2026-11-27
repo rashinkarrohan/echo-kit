@@ -4,7 +4,7 @@ import { CD } from "./copy";
 import { CareIcon } from "./icons";
 import { Hero } from "./Brand";
 import { Shell } from "./Shell";
-import { useDesktop } from "@echo/ui";
+import { ADDED, useDesktop, useModelPrep } from "@echo/ui";
 import { dayLabel, lastVisitTitle } from "./visitView";
 
 export type LastVisit = SavedVisit;
@@ -34,6 +34,50 @@ function PracticeButton({ desktop }: { desktop: boolean }): ReactElement {
       <CareIcon name="circlePlay" size={desktop ? 28 : 24} strokeWidth={2.25} />
       <span>{CD.practiceVisit}</span>
     </a>
+  );
+}
+
+/** "Get ready at home": download the speech model once, ahead of the first visit. */
+function GetReady(): ReactElement {
+  const { prep, start } = useModelPrep();
+  return (
+    <section className="cd-prep" aria-labelledby="cd-prep-title" data-state={prep.status}>
+      <h2 className="cd-prep__title" id="cd-prep-title">
+        {ADDED.prepTitle}
+      </h2>
+      {prep.status === "ready" ? (
+        <p className="cd-prep__text" role="status">
+          <CareIcon name="check" size={22} strokeWidth={2.5} />
+          <span>{ADDED.prepReady}</span>
+        </p>
+      ) : (
+        <>
+          <p className="cd-prep__text">{ADDED.prepText}</p>
+          {prep.status === "working" && (
+            <>
+              <progress
+                className="cd-prep__bar"
+                aria-label={ADDED.prepTitle}
+                {...(prep.totalBytes > 0 ? { value: prep.loadedBytes, max: prep.totalBytes } : {})}
+              />
+              <p className="cd-prep__text" role="status">
+                {ADDED.prepWorking(prep.loadedBytes, prep.totalBytes)}
+              </p>
+            </>
+          )}
+          {prep.status === "error" && (
+            <p className="cd-prep__text cd-prep__error" role="alert">
+              {ADDED.prepError(prep.error ?? "unknown")}
+            </p>
+          )}
+          {prep.status !== "working" && (
+            <button type="button" className="cd-btn cd-btn--outline" onClick={start}>
+              {prep.status === "error" ? ADDED.prepRetry : ADDED.prepButton}
+            </button>
+          )}
+        </>
+      )}
+    </section>
   );
 }
 
@@ -105,6 +149,7 @@ export function HomeScreen({
               <Hero />
             </section>
             {lastCard}
+            <GetReady />
           </div>
         ) : (
           <>
@@ -113,6 +158,7 @@ export function HomeScreen({
               <PracticeButton desktop={false} />
             </div>
             {lastCard}
+            <GetReady />
           </>
         )}
 

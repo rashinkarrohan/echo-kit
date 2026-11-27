@@ -2,7 +2,7 @@
  * Two scripted sales (actors, fictional prices) that differ in financing show both values with
  * anchors, a missing field shows Not said, and no ranking or recommendation appears. Also: the
  * questions card with sources, the gap check, and the confirm-in-writing message. In the Echo
- * Cover design: home, consent, questions, name, live captions, receipt, seller ledger, draft.
+ * Cover design: home, consent, questions, name, live captions, receipt, seller comparison, draft.
  */
 import { test, expect } from "@playwright/test";
 import {
@@ -32,8 +32,8 @@ test("two sellers: financing differs with both anchors, a missing field is Not s
     "rgb(255, 255, 255)",
   );
   await expect(homeHeading).toHaveCSS("outline-style", "none");
-  await expect(page.getByLabel("Example seller ledger")).toContainText("Seller 1");
-  await expect(page.getByLabel("Example seller ledger")).toContainText("Seller 2");
+  await expect(page.getByLabel("Example seller comparison")).toContainText("Seller 1");
+  await expect(page.getByLabel("Example seller comparison")).toContainText("Seller 2");
   await axe(page, "home");
   await page.getByRole("link", { name: "Start comparing" }).click();
 
@@ -95,8 +95,8 @@ test("two sellers: financing differs with both anchors, a missing field is Not s
   await recordSeller(page, "Seller B", /I am paid a salary/);
   await page.getByRole("link", { name: "Compare sellers" }).click();
 
-  // The seller ledger.
-  await expect(page.getByRole("heading", { name: "Seller ledger" })).toBeFocused();
+  // The seller comparison.
+  await expect(page.getByRole("heading", { name: "Seller comparison" })).toBeFocused();
   await expect(page.getByText("2 sellers recorded")).toBeVisible();
   const financing = page.getByRole("region", { name: "Financing" });
   await expect(financing).toContainText("Seller A");
@@ -184,7 +184,7 @@ test("the ledger and the receipt page without a conversation say so and lead on"
   page,
 }) => {
   await page.goto("/?sample=sales&demo=1#/compare");
-  await expect(page.getByRole("heading", { name: "Seller ledger" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Seller comparison" })).toBeVisible();
   await expect(page.getByText("Record at least two sellers to compare them")).toBeVisible();
   await axe(page, "empty ledger");
   await page.goto("/?sample=sales&demo=1#/review/1");
@@ -216,7 +216,7 @@ test.describe("desktop layout (1280 px)", () => {
     await expect(nav.getByRole("link", { name: "Home" })).toHaveAttribute("aria-current", "page");
     await expect(nav.getByRole("link", { name: "Compare" })).toBeVisible();
     await expect(nav.getByRole("link", { name: "Test results" })).toBeVisible();
-    await expect(page.getByLabel("Example seller ledger")).toBeVisible();
+    await expect(page.getByLabel("Example seller comparison")).toBeVisible();
     await axe(page, "desktop home");
     await page.goto("/?sample=sales&demo=1&speed=40#/questions");
     await page.getByRole("button", { name: "Start recording a seller" }).click();
@@ -231,7 +231,7 @@ test.describe("desktop layout (1280 px)", () => {
       }
     }
     await page.getByRole("link", { name: "Compare sellers" }).click();
-    await expect(page.getByRole("heading", { name: "Seller ledger" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Seller comparison" })).toBeVisible();
     await expect(
       page.getByRole("link", { name: "Draft a message to confirm in writing" }),
     ).toBeVisible();

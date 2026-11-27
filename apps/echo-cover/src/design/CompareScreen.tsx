@@ -9,7 +9,7 @@ import { BackLink, Chip, HearButtons } from "./parts";
 import { rowNote } from "./ledger";
 
 /**
- * The seller ledger: one card per topic, sellers side by side in the order they were recorded. It
+ * The seller comparison: one card per topic, sellers side by side in the order they were recorded. It
  * says what each seller said and what nobody said. It never picks, ranks or scores a seller.
  */
 export function CompareScreen({

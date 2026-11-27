@@ -2657,3 +2657,48 @@
     border: 1px solid CanvasText;
   }
 }
+
+/* ---------- Get ready at home, and the Heard clearly note ---------- */
+.cd .cd-prep {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: var(--cd-shadow-soft);
+}
+.cd .cd-prep__title {
+  margin: 0;
+  font-size: 24px;
+  line-height: 30px;
+  color: var(--cd-ink);
+}
+.cd .cd-prep__text {
+  margin: 0;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 20px;
+  line-height: 28px;
+  color: var(--cd-text2);
+}
+.cd .cd-prep[data-state="ready"] .cd-prep__text {
+  color: var(--cd-teal900);
+  font-weight: 600;
+}
+.cd .cd-prep__error {
+  color: #8a1c1c;
+  font-weight: 600;
+}
+.cd .cd-prep__bar {
+  width: 100%;
+  height: 16px;
+  accent-color: var(--cd-teal700);
+}
+.cd .cd-glance__hint {
+  margin: 4px 0 0;
+  font-size: 18px;
+  line-height: 26px;
+  color: var(--cd-text2);
+}

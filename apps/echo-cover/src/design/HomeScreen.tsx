@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { useDesktop } from "@echo/ui";
+import { ADDED, useDesktop, useModelPrep } from "@echo/ui";
 import { CV } from "./copy";
 import { CoverIcon } from "./icons";
 import { HeroArt } from "./Brand";
@@ -21,10 +21,10 @@ const STEPS: ReadonlyArray<readonly [string, string, string]> = [
 ];
 
 const cellChip = (state: Said): ReactElement => (
-  <Chip tone={state}>{state === "said" ? CV.said : CV.notDiscussed}</Chip>
+  <Chip tone={state}>{state === "said" ? CV.said : CV.notSaid}</Chip>
 );
 
-/** The three steps, shared by Home and the empty seller ledger. */
+/** The three steps, shared by Home and the empty seller comparison. */
 export function Steps(): ReactElement {
   return (
     <ol className="cv-steps">
@@ -40,6 +40,49 @@ export function Steps(): ReactElement {
         </li>
       ))}
     </ol>
+  );
+}
+
+/** "Get ready at home": download the speech model once, ahead of the first conversation. */
+function GetReady(): ReactElement {
+  const { prep, start } = useModelPrep();
+  return (
+    <section className="cv-prep" aria-labelledby="cv-prep-title" data-state={prep.status}>
+      <h2 className="cv-prep__title" id="cv-prep-title">
+        {ADDED.prepTitle}
+      </h2>
+      {prep.status === "ready" ? (
+        <p className="cv-prep__text" role="status">
+          {ADDED.prepReady}
+        </p>
+      ) : (
+        <>
+          <p className="cv-prep__text">{ADDED.prepText}</p>
+          {prep.status === "working" && (
+            <>
+              <progress
+                className="cv-prep__bar"
+                aria-label={ADDED.prepTitle}
+                {...(prep.totalBytes > 0 ? { value: prep.loadedBytes, max: prep.totalBytes } : {})}
+              />
+              <p className="cv-prep__text" role="status">
+                {ADDED.prepWorking(prep.loadedBytes, prep.totalBytes)}
+              </p>
+            </>
+          )}
+          {prep.status === "error" && (
+            <p className="cv-prep__text cv-prep__error" role="alert">
+              {ADDED.prepError(prep.error ?? "unknown")}
+            </p>
+          )}
+          {prep.status !== "working" && (
+            <button type="button" className="cv-btn cv-btn--outline" onClick={start}>
+              {prep.status === "error" ? ADDED.prepRetry : ADDED.prepButton}
+            </button>
+          )}
+        </>
+      )}
+    </section>
   );
 }
 
@@ -140,6 +183,7 @@ export function HomeScreen({ savedCount }: { savedCount: number }): ReactElement
             )}
             <p className="cv-note">{CV.ledgerNote}</p>
           </section>
+          <GetReady />
         </div>
 
         <h2 className="cv-section-title">{CV.howTitle}</h2>
