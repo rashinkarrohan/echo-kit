@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactElement } from "react";
 import type { Anchor, Receipt, VerifiedFact } from "@echo/engine";
-import { AnchorChip, FINAL, clock } from "@echo/ui";
+import { ADDED, AnchorChip, FINAL, clock } from "@echo/ui";
 import type { PlayAnchor } from "@echo/ui";
 import type { Stage } from "../env";
 import { CD } from "./copy";
@@ -120,6 +120,7 @@ export function SummaryScreen(props: SummaryProps): ReactElement {
           <span className="cd-glance__num">{g.notSaid}</span>
         </div>
       </div>
+      {g.heard > 0 && <p className="cd-glance__hint">{ADDED.heardClearlyNote}</p>}
     </section>
   );
 

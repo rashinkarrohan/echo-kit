@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { ReactElement } from "react";
 import type { Receipt } from "@echo/engine";
-import { FINAL, factLabel, fieldLabel } from "@echo/ui";
+import { ADDED, FINAL, factLabel, fieldLabel } from "@echo/ui";
 import type { PlayAnchor } from "@echo/ui";
 import { CV } from "./copy";
 import { CoverIcon } from "./icons";
@@ -89,6 +89,7 @@ export function ReceiptScreen({
             <Chip tone="check">{FINAL.checkThis}</Chip>
             <Chip tone="none">{FINAL.notSaid}</Chip>
           </div>
+          <p className="cv-note">{ADDED.heardClearlyNote}</p>
         </section>
 
         <h2 className="echo-visually-hidden">{CV.factsHeading(seller)}</h2>

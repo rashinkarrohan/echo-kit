@@ -14,8 +14,8 @@ export const CV = {
   sampleNote:
     "The sample uses conversations read by actors, with made-up prices. No microphone. Nothing is kept.",
   ledgerKicker: "After two conversations",
-  ledgerTitle: "Seller ledger",
-  ledgerExample: "Example seller ledger",
+  ledgerTitle: "Seller comparison",
+  ledgerExample: "Example seller comparison",
   seller1: "Seller 1",
   seller2: "Seller 2",
   totalPrice: "Total price",
@@ -110,7 +110,7 @@ export const CV = {
   keepIt: "No, keep it",
   deleteIt: "Yes, delete it",
 
-  ledgerHeading: "Seller ledger",
+  ledgerHeading: "Seller comparison",
   sellersRecorded: (n: number) => `${n} sellers recorded`,
   ledgerLead: "What each seller said, side by side. Echo does not rank sellers.",
   notThere: "-",

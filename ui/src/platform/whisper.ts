@@ -5,7 +5,13 @@
 
 import { DRUG_DICTIONARY, WhisperAdapter } from "@echo/engine";
 import { devicesFor, modelFromQuery } from "./whisper-models";
-import type { AsrTransport, WhisperOptions, WorkerReply, WorkerRequest } from "@echo/engine";
+import type {
+  AsrTransport,
+  Result,
+  WhisperOptions,
+  WorkerReply,
+  WorkerRequest,
+} from "@echo/engine";
 
 /** The parts of a Worker the transport uses. */
 export interface WorkerLike {
@@ -83,4 +89,42 @@ export function createWhisperAdapter(
     ...promptOptions(search, vocabulary),
     ...options,
   });
+}
+
+/**
+ * "Get ready": download the speech model now (about 100 MB, on Wi-Fi at home) so the first visit
+ * does not wait. Loads it in a worker exactly as a visit would, so the browser caches the same
+ * files, then stops the worker to free its memory. Nothing is recorded and no microphone is used.
+ */
+export async function prepareSpeechModel(
+  onProgress: (loadedBytes: number, totalBytes: number) => void,
+): Promise<Result<void>> {
+  if (typeof Worker === "undefined") {
+    return { ok: false, error: "this browser cannot run the speech model" };
+  }
+  const search = typeof location === "undefined" ? "" : location.search;
+  let worker: Worker | undefined;
+  try {
+    worker = new Worker(new URL("./asr-worker.ts", import.meta.url), { type: "module" });
+    const adapter = new WhisperAdapter(workerTransport(worker), {
+      model: modelFromQuery(search),
+      devices: devicesFor(
+        search,
+        typeof navigator === "undefined" ? "" : navigator.userAgent,
+        typeof navigator === "undefined" ? 0 : navigator.maxTouchPoints,
+      ),
+      medicines: [],
+      onProgress,
+    });
+    return await adapter.load();
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  } finally {
+    worker?.terminate();
+  }
+}
+
+/** The speech model this page uses (for the "ready" flag). */
+export function speechModelName(): string {
+  return modelFromQuery(typeof location === "undefined" ? "" : location.search);
 }

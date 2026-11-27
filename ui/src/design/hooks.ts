@@ -1,4 +1,6 @@
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useRef, useState, useSyncExternalStore } from "react";
+import { isModelReady, markModelReady } from "../platform/model-ready";
+import { prepareSpeechModel, speechModelName } from "../platform/whisper";
 import { readTextSize, saveTextSize } from "./textSize";
 import type { TextSize } from "./textSize";
 
@@ -56,4 +58,38 @@ export function useTextSize(): [TextSize, (next: TextSize) => void] {
     for (const listener of listeners) listener();
   }, []);
   return [size, set];
+}
+
+export interface ModelPrep {
+  status: "idle" | "working" | "ready" | "error";
+  loadedBytes: number;
+  totalBytes: number;
+  error?: string;
+}
+
+/** State for the "Get ready" card: download the speech model ahead of the first visit. */
+export function useModelPrep(): { prep: ModelPrep; start: () => void } {
+  const [prep, setPrep] = useState<ModelPrep>(() => ({
+    status: isModelReady(speechModelName()) ? "ready" : "idle",
+    loadedBytes: 0,
+    totalBytes: 0,
+  }));
+  const running = useRef(false);
+  const start = useCallback(() => {
+    if (running.current) return;
+    running.current = true;
+    setPrep({ status: "working", loadedBytes: 0, totalBytes: 0 });
+    void prepareSpeechModel((loadedBytes, totalBytes) =>
+      setPrep((p) => ({ ...p, status: "working", loadedBytes, totalBytes })),
+    ).then((result) => {
+      running.current = false;
+      if (result.ok) {
+        markModelReady(speechModelName());
+        setPrep({ status: "ready", loadedBytes: 0, totalBytes: 0 });
+      } else {
+        setPrep({ status: "error", loadedBytes: 0, totalBytes: 0, error: result.error });
+      }
+    });
+  }, []);
+  return { prep, start };
 }
