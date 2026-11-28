@@ -1,10 +1,13 @@
 # Sources, models, datasets and licences
+
 Record the licence and the date opened for every item. Anything not written during the submission period must be disclosed.
 
 ## Rules and hackathon
+
 - Kiroween 2026 official rules and overview (Devpost), saved Nov 12, 2026: https://kiroween.devpost.com/rules
 
 ## Problem evidence (from the validation doc v2; open and verify each)
+
 - WHO deafness and hearing loss: https://www.who.int/health-topics/hearing-loss
 - Global Burden of Disease 2019, hearing loss (Lancet): https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(21)00516-X/fulltext
 - RNID evidence review: https://rnid.org.uk/what-we-do/evidence-hub/access-to-healthcare-evidence-pack/evidence-review/consequences-for-healthcare/
@@ -28,6 +31,7 @@ Record the licence and the date opened for every item. Anything not written duri
 - DOJ Trinity Health settlement: https://www.justice.gov/opa/pr/justice-department-reaches-americans-disabilities-act-settlement-trinity-health-systems-iowa
 
 ## Models, libraries, datasets (fill as chosen; record licence)
+
 - `idb` 8.0.4 (IndexedDB wrapper, used by `ui/src/platform/idb-store.ts`): ISC licence, checked on the npm registry Nov 12, 2026: https://www.npmjs.com/package/idb
 - On-device English speech model (spike S16, provisional): `Xenova/whisper-tiny.en`, Apache-2.0 per its Hugging Face model card (checked Nov 12, 2026): https://huggingface.co/Xenova/whisper-tiny.en . Alternative under evaluation: `Xenova/whisper-base.en`, Apache-2.0: https://huggingface.co/Xenova/whisper-base.en . Both are ONNX conversions of OpenAI Whisper.
 - `@huggingface/transformers` 4.3.2 (runs the speech model on the device, `ui/src/platform/asr-worker.ts`): Apache-2.0, checked on the npm registry Nov 12, 2026: https://www.npmjs.com/package/@huggingface/transformers . Pulls in `onnxruntime-web` and `onnxruntime-node` (MIT), `sharp` (Apache-2.0), `@huggingface/jinja` (MIT) and `@huggingface/tokenizers` (Apache-2.0) as its own dependencies (licences checked on npm the same day).
@@ -52,6 +56,7 @@ Record the licence and the date opened for every item. Anything not written duri
 - Hindi/Hinglish model Shruti (stretch only): https://huggingface.co/udgamlabs/Shruti , Apache-2.0 per its card
 
 ## Development and test tools (not shipped to users; licences checked on npm Nov 13, 2026)
+
 - `@modelcontextprotocol/server` and `@modelcontextprotocol/client` 2.4.0 (eval MCP server and its test): Apache-2.0. `zod` 4.6.7: MIT.
 - `@playwright/test` 1.65.0 and its Chromium download: Apache-2.0.
 - `@axe-core/playwright` 4.14.0 and `axe-core` 4.14.0 (accessibility checks): MPL-2.0. Used unmodified as test dependencies.
@@ -59,6 +64,20 @@ Record the licence and the date opened for every item. Anything not written duri
 - `vite-node` 2.1.8 (runs the eval harness): MIT.
 
 ## Pre-existing work disclosed
+
 None. No code was written before the submission period. The first commit (`523680d`, Nov 12, 2026) holds the project scaffold plus the planning material the build started from: steering, specs, the docs in this folder, and the `seed/` starter files, since removed.
 
 **Owner to confirm** that this planning material was also written after Oct 30, 2026.
+
+## Pinned model revisions
+
+Speech models are loaded from Hugging Face at these exact commits (`MODEL_REVISIONS` in `ui/src/platform/whisper-models.ts`, checked Nov 28, 2026), so an upstream change cannot alter the apps or the numbers in docs/SPIKES.md without a code change here.
+
+| Model                                 | Commit                                   |
+| ------------------------------------- | ---------------------------------------- |
+| Xenova/whisper-tiny.en                | 79fb389fc764e7c395bd330e9531d9d32ada7049 |
+| Xenova/whisper-base.en (default)      | 95bf40a508535962c6483ead40270b2e32267508 |
+| Xenova/whisper-small.en               | fa16a75f5d91e83ecb6a2ccb690f14d91ef00ca4 |
+| onnx-community/whisper-large-v3-turbo | 360ebcde2559d60bb474678be3c1de9ef347d01a |
+
+The speech runtime (onnxruntime-web WebAssembly files) is fetched from jsDelivr by the transformers.js version pinned in `pnpm-lock.yaml`. The apps send a Content-Security-Policy that allows only their own files, Hugging Face and jsDelivr.

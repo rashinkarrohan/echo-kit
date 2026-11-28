@@ -1,6 +1,16 @@
 {
   "name": "echo-kit",
   "version": "0.0.0",
+  "description": "A receipt you can check for a spoken conversation: every fact quotes its words and links to the audio.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rashinkarrohan/echo-kit.git"
+  },
+  "homepage": "https://github.com/rashinkarrohan/echo-kit#readme",
+  "bugs": {
+    "url": "https://github.com/rashinkarrohan/echo-kit/issues"
+  },
   "private": true,
   "packageManager": "pnpm@12.18.0",
   "engines": {

@@ -6,6 +6,9 @@ import {
   isMultilingual,
   devicesFor,
   modelFromQuery,
+  revisionFor,
+  isLargeModel,
+  MODEL_REVISIONS,
   usesMedicinePrompt,
 } from "./whisper-models";
 
@@ -71,5 +74,25 @@ describe("devicesFor", () => {
     expect(devicesFor("?device=webgpu", ANDROID, 5)).toEqual(["webgpu", "wasm"]);
     expect(devicesFor("?device=wasm", LAPTOP, 0)).toEqual(["wasm"]);
     expect(devicesFor("?device=nonsense", ANDROID, 5)).toEqual(["wasm"]);
+  });
+});
+
+describe("revisionFor", () => {
+  it("pins every selectable model to a full commit hash", () => {
+    for (const model of Object.values(WHISPER_MODELS)) {
+      expect(revisionFor(model)).toMatch(/^[0-9a-f]{40}$/);
+      expect(MODEL_REVISIONS[model]).toBeDefined();
+    }
+  });
+
+  it("falls back to main for a model that is not listed", () => {
+    expect(revisionFor("someone/else")).toBe("main");
+  });
+});
+
+describe("isLargeModel", () => {
+  it("is true only for the large model", () => {
+    expect(isLargeModel(WHISPER_MODELS.turbo)).toBe(true);
+    expect(isLargeModel(WHISPER_MODELS.base)).toBe(false);
   });
 });
