@@ -22,7 +22,7 @@ jobs:
 
       # Version comes from "packageManager" in package.json, the same one Vercel installs with.
       - name: Set up pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: Get pnpm store path
         id: pnpm-cache
@@ -76,7 +76,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
       - run: pnpm install --frozen-lockfile
       - name: Install Chromium
         run: pnpm --filter ${{ matrix.app }} exec playwright install --with-deps chromium
