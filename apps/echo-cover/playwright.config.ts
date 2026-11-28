@@ -3,8 +3,15 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "./e2e",
   timeout: 120_000,
+  // CI runners are slower and replay real-time audio; retry once or twice and keep a trace.
+  retries: process.env.CI ? 2 : 0,
   reporter: [["list"]],
-  use: { baseURL: "http://localhost:5182", ...devices["Pixel 7"], browserName: "chromium" },
+  use: {
+    trace: "on-first-retry",
+    baseURL: "http://localhost:5182",
+    ...devices["Pixel 7"],
+    browserName: "chromium",
+  },
   webServer: [
     {
       command: "vite",
