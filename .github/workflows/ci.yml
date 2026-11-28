@@ -84,7 +84,7 @@ jobs:
         run: pnpm --filter ${{ matrix.app }} e2e
       - name: Keep the report when a test fails
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-${{ matrix.app }}
           path: apps/${{ matrix.app }}/test-results
