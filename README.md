@@ -50,7 +50,7 @@ Then open `http://localhost:5181/?sample=care-01&demo=1#/doctor-card` or `http:/
 
 Live recording uses an on-device Whisper model (whisper-base.en by default, about 77 MB on first use) and needs a browser on `https` or `localhost`. The first run shows the download progress ("Downloading the speech model: X of Y MB. This happens once."), and the model then works offline.
 
-**Phone status.** Speed and accuracy numbers come from a laptop. On Nov 25, 2026 the apps were tried on a Samsung S23 in Chrome and worked (owner-reported); no phone timings or accuracy were recorded, and iPhone Safari has not been tried (docs/SPIKES.md). Phones use the WebAssembly path, not WebGPU, because WebGPU on phones is untested. If the speech engine fails, the screen says why and stops the microphone; it does not sit blank. If recording does not work on your phone, the on-screen reason is the most useful thing to report.
+**Phone status.** Speed and accuracy numbers come from a laptop. On Nov 25, 2026 the apps were tried on a Samsung S23 in Chrome and worked (owner-reported). On Nov 28, 2026 the speech model download on the live site took about 10 seconds on the S23 (owner-reported, stopwatch, not a benchmark). Caption delay and accuracy on a phone were not recorded, and iPhone Safari has not been tried (docs/SPIKES.md). Phones use the WebAssembly path, not WebGPU, because WebGPU on phones is untested. If the speech engine fails, the screen says why and stops the microphone; it does not sit blank. If recording does not work on your phone, the on-screen reason is the most useful thing to report.
 
 ## How a fact earns its place on the receipt
 
