@@ -27,7 +27,7 @@ import {
   promptOnlyNames,
 } from "@echo/engine";
 import type { AsrDevice, WorkerReply, WorkerRequest } from "@echo/engine";
-import { dtypeFor, isMultilingual, usesMedicinePrompt } from "./whisper-models";
+import { dtypeFor, isMultilingual, revisionFor, usesMedicinePrompt } from "./whisper-models";
 import { DownloadProgress } from "./download-progress";
 import type { DownloadEvent } from "./download-progress";
 import { SileroVad } from "./silero-vad";
@@ -109,12 +109,14 @@ async function loadOn(
   device: AsrDevice,
   { medicines, words }: PromptSource,
 ): Promise<Transcriber> {
-  const processor = await AutoProcessor.from_pretrained(model, { progress_callback });
-  const tokenizer = await AutoTokenizer.from_pretrained(model, { progress_callback });
+  const revision = revisionFor(model);
+  const processor = await AutoProcessor.from_pretrained(model, { progress_callback, revision });
+  const tokenizer = await AutoTokenizer.from_pretrained(model, { progress_callback, revision });
   const whisper = await WhisperForConditionalGeneration.from_pretrained(model, {
     device,
     dtype: dtypeFor(model, device),
     progress_callback,
+    revision,
   });
 
   const token = (t: string): number => tokenizer.convert_tokens_to_ids(t);

@@ -20,6 +20,28 @@ export const WHISPER_MODELS = {
 
 export type WhisperModelName = keyof typeof WHISPER_MODELS;
 
+/**
+ * Exact Hugging Face commits the measurements in docs/SPIKES.md describe. Loading by commit
+ * means an upstream change cannot silently alter what the apps do (docs/SOURCES.md).
+ * A model not listed here loads from "main".
+ */
+export const MODEL_REVISIONS: Readonly<Record<string, string>> = {
+  "Xenova/whisper-tiny.en": "79fb389fc764e7c395bd330e9531d9d32ada7049",
+  "Xenova/whisper-base.en": "95bf40a508535962c6483ead40270b2e32267508",
+  "Xenova/whisper-small.en": "fa16a75f5d91e83ecb6a2ccb690f14d91ef00ca4",
+  "onnx-community/whisper-large-v3-turbo": "360ebcde2559d60bb474678be3c1de9ef347d01a",
+};
+
+/** The commit to load a model at. */
+export function revisionFor(model: string): string {
+  return MODEL_REVISIONS[model] ?? "main";
+}
+
+/** Large models are about 1 GB; the apps ask before downloading one. */
+export function isLargeModel(model: string): boolean {
+  return /large/i.test(model);
+}
+
 function isModelName(name: string): name is WhisperModelName {
   return Object.prototype.hasOwnProperty.call(WHISPER_MODELS, name);
 }

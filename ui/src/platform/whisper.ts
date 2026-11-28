@@ -4,7 +4,8 @@
  */
 
 import { DRUG_DICTIONARY, WhisperAdapter } from "@echo/engine";
-import { devicesFor, modelFromQuery } from "./whisper-models";
+import { devicesFor, isLargeModel, modelFromQuery } from "./whisper-models";
+import { DEFAULT_WHISPER_MODEL } from "@echo/engine";
 import type {
   AsrTransport,
   Result,
@@ -70,6 +71,25 @@ export function promptOptions(
 }
 
 /**
+ * The model to load. A large model (about 1 GB) is only used after the person agrees to the
+ * download; otherwise the default small model is used.
+ */
+function chosenModel(search: string): string {
+  const model = modelFromQuery(search);
+  if (
+    !isLargeModel(model) ||
+    typeof window === "undefined" ||
+    typeof window.confirm !== "function"
+  ) {
+    return model;
+  }
+  const agreed = window.confirm(
+    "This speech model is a download of about 1 GB. Continue only on Wi-Fi. Press Cancel to use the smaller default model.",
+  );
+  return agreed ? model : DEFAULT_WHISPER_MODEL;
+}
+
+/**
  * Create an on-device Whisper adapter running in a module worker, prompted as
  * `promptOptions` describes.
  */
@@ -80,7 +100,7 @@ export function createWhisperAdapter(
   const worker = new Worker(new URL("./asr-worker.ts", import.meta.url), { type: "module" });
   const search = typeof location === "undefined" ? "" : location.search;
   return new WhisperAdapter(workerTransport(worker), {
-    model: modelFromQuery(search),
+    model: chosenModel(search),
     devices: devicesFor(
       search,
       typeof navigator === "undefined" ? "" : navigator.userAgent,
@@ -107,7 +127,7 @@ export async function prepareSpeechModel(
   try {
     worker = new Worker(new URL("./asr-worker.ts", import.meta.url), { type: "module" });
     const adapter = new WhisperAdapter(workerTransport(worker), {
-      model: modelFromQuery(search),
+      model: chosenModel(search),
       devices: devicesFor(
         search,
         typeof navigator === "undefined" ? "" : navigator.userAgent,

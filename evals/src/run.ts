@@ -41,17 +41,15 @@ function main(): number {
 
   if (!broken) {
     const resultsPath = join(evalsDir, "results.json");
-    let runs = 0;
+    let previous: { runs?: number; date?: string } & Record<string, unknown> = {};
     if (existsSync(resultsPath)) {
       try {
-        runs = (JSON.parse(readFileSync(resultsPath, "utf8")) as { runs?: number }).runs ?? 0;
+        previous = JSON.parse(readFileSync(resultsPath, "utf8")) as typeof previous;
       } catch {
-        runs = 0;
+        previous = {};
       }
     }
-    const out = {
-      date: new Date().toISOString(),
-      runs: runs + 1,
+    const body = {
       extractor: "rules",
       passed,
       totals,
@@ -62,8 +60,20 @@ function main(): number {
         return rest;
       }),
     };
-    writeFileSync(resultsPath, `${JSON.stringify(out, null, 2)}\n`);
-    console.log(`Wrote evals/results.json (run ${out.runs})`);
+    // Same results as the last run: leave the file alone so a re-run makes no diff.
+    const { date: _date, runs: _runs, ...previousBody } = previous;
+    void _date;
+    void _runs;
+    const unchanged = JSON.stringify(previousBody) === JSON.stringify(body);
+    const out = unchanged
+      ? { date: previous.date, runs: previous.runs ?? 1, ...body }
+      : { date: new Date().toISOString(), runs: (previous.runs ?? 0) + 1, ...body };
+    if (!unchanged) writeFileSync(resultsPath, `${JSON.stringify(out, null, 2)}\n`);
+    console.log(
+      unchanged
+        ? `evals/results.json already up to date (run ${out.runs})`
+        : `Wrote evals/results.json (run ${out.runs})`,
+    );
   }
 
   if (!passed) {
