@@ -14,7 +14,7 @@
     "@huggingface/transformers": "4.3.2",
     "@types/node": "22.20.5",
     "vite-node": "2.1.8",
-    "vitest": "2.1.8"
+    "vitest": "5.1.2"
   },
   "dependencies": {
     "@echo/engine": "workspace:*"
